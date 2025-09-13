@@ -19,9 +19,6 @@ const Navbar = () => {
     setIsLoginDropdownOpen(false);
 
     switch (userType) {
-      case 'admin':
-        router.push('/admin');
-        break;
       case 'customer':
         router.push('/customer');
         break;
@@ -35,15 +32,16 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100">
-      <div className="max-w-8xl mx-auto flex justify-between items-center px-2 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto flex justify-between items-center px-0 lg:px-7 py-0">
         {/* Logo */}
 <div className="flex items-center space-x-2">
   <img
     src="/images/logo.svg"
     alt="Petneo Logo"
-    className="w-33 h-33 sm:w-20 sm:h-20" // Increased size
+    className="w-50 h-50 sm:w-28 sm:h-28" // bigger sizes
   />
 </div>
+
 
 
         {/* Desktop Links */}
@@ -99,14 +97,13 @@ const Navbar = () => {
             {isLoginDropdownOpen && (
               <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
                 {[
-                  { type: 'admin', label: 'Admin Login' },
-                  { type: 'customer', label: 'Customer Login' },
-                  { type: 'doctor', label: 'Doctor Login' }
+                  { type: 'customer', label: 'User' },
+                  { type: 'doctor', label: 'Agent' }
                 ].map(({ type, label }, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleLoginSelect(type)}
-                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 w-full text-left transition-colors duration-150"
+                    className="flex items-center px-4 py-3 text-m text-black hover:bg-blue-50 hover:text-blue-700 w-full text-left transition-colors duration-150"
                   >
                     <span className="w-4 h-4 mr-3">🔹</span>
                     {label}

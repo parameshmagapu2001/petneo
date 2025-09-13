@@ -18,21 +18,21 @@ const testimonials = [
     name: "Anna & Tobby",
     feedback: "Amazing Products & Delivery on time.",
     rating: 4.2,
-    img: "/images/testimonial1.png",
+    img: "/images/customer1.svg",
   },
   {
     id: 2,
     name: "Christine & Tom",
     feedback: "Love the overall Shopping experience!",
     rating: 4.5,
-    img: "/images/testimonial2.png",
+    img: "/images/customer2.svg",
   },
   {
     id: 3,
     name: "Sindy & Kitch",
     feedback: "Kitch loves food from the pup-hub.",
     rating: 4.8,
-    img: "/images/testimonial3.png",
+    img: "/images/customer3.svg",
   },
 ];
 
@@ -73,7 +73,7 @@ export default function AffiliateAndTestimonials() {
       
 
       {/* === Testimonials Section === */}
-      <div className="bg-pink-100 py-16 px-6 md:px-16">
+      <div className="bg-pink-100 py-15 px-6 md:px-16">
         {/* Heading */}
         <div className="text-left mb-12">
           <h3 className="text-xl font-semibold text-gray-900">
@@ -95,7 +95,7 @@ export default function AffiliateAndTestimonials() {
               className="w-[300px] bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
             >
               {/* Image */}
-              <div className="w-full h-[260px] relative">
+              <div className="w-full h-[360px] relative">
                 <Image
                   src={item.img}
                   alt={item.name}

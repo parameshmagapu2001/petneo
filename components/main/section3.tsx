@@ -2,17 +2,14 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react"; // removed Play
 
 const categories = [
-  { id: 1, name: "Accessories", products: "84 products", img: "/accessories.jpg" },
-  { id: 2, name: "Food", products: "64 products", img: "/food.jpg" },
-  { id: 3, name: "Furniture", products: "22 products", img: "/furniture.jpg" },
-  { id: 4, name: "Bags", products: "16 products", img: "/bags.jpg" },
-  { id: 5, name: "Toys", products: "40 products", img: "/toys.jpg" },
-    { id: 3, name: "Furniture", products: "22 products", img: "/furniture.jpg" },
-  { id: 4, name: "Bags", products: "16 products", img: "/bags.jpg" },
-  { id: 5, name: "Toys", products: "40 products", img: "/toys.jpg" },
+  { id: 1, name: "Accessories", products: "84 products", img: "/images/img2.png" },
+  { id: 2, name: "Food", products: "64 products", img: "/images/img1.png" },
+  { id: 3, name: "Furniture", products: "22 products", img: "/images/img4.png" },
+  { id: 4, name: "Bags", products: "16 products", img: "/images/img2.png" },
+  { id: 5, name: "Toys", products: "40 products", img: "/images/img3.png" },
 ];
 
 export default function HomeSection() {
@@ -34,8 +31,8 @@ export default function HomeSection() {
         <div className="flex justify-between items-center mb-20">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
             Browse By Category
-          </h2><br /><br />
-          <div className="flex space-x-3"><br /><br />
+          </h2>
+          <div className="flex space-x-3">
             <button
               onClick={() => scroll("left")}
               className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center hover:bg-pink-200 transition"
@@ -58,7 +55,7 @@ export default function HomeSection() {
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className="min-w-[250px] flex-shrink-0 rounded-3xl overflow-hidden shadow-xl bg-white hover:scale-105 transform transition"
+              className="min-w-[250px] flex-shrink-0 rounded-2xl overflow-hidden bg-white border"
             >
               <div className="w-full h-48 relative">
                 <Image src={cat.img} alt={cat.name} fill className="object-cover" />
@@ -68,7 +65,7 @@ export default function HomeSection() {
                   <h3 className="text-lg font-semibold text-gray-900">{cat.name}</h3>
                   <p className="text-sm text-gray-600">{cat.products}</p>
                 </div>
-                <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-pink-600 shadow">
+                <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-pink-600">
                   ➝
                 </span>
               </div>
@@ -82,35 +79,13 @@ export default function HomeSection() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           {/* LEFT SIDE */}
           <div className="relative flex justify-center items-center">
-            <div className="absolute -z-10 w-[90%] h-[90%] bg-pink-200 rounded-[60%] rotate-6" />
+            <div className="absolute -z-10 w-[130%] h-[130%] bg-pink-200 rounded-[0%] rotate-6" />
             <Image
-              src="/dog.png"
+              src="/images/ldog.svg"
               alt="Dog"
-              width={450}
-              height={400}
-              className="relative z-10 rounded-xl shadow-lg"
-            />
-
-            <div className="absolute top-10 right-10 z-20 flex flex-col items-center">
-              <button className="w-16 h-16 rounded-full bg-pink-600 flex items-center justify-center text-white shadow-lg">
-                <Play size={24} />
-              </button>
-              <span className="text-sm text-white mt-2">Learn more</span>
-            </div>
-
-            <Image
-              src="/icons/paw.svg"
-              alt="Paw"
-              width={50}
-              height={50}
-              className="absolute top-8 left-8 opacity-70"
-            />
-            <Image
-              src="/icons/bone.svg"
-              alt="Bone"
-              width={40}
-              height={40}
-              className="absolute bottom-8 left-1/2 opacity-70"
+              width={650}
+              height={500}
+              className="relative z-10 rounded-xl"
             />
           </div>
 
@@ -126,7 +101,7 @@ export default function HomeSection() {
               biscuit caramels tobp.
             </p>
 
-            <button className="bg-pink-600 text-white px-6 py-3 rounded-md shadow-lg hover:bg-pink-700 transition inline-flex items-center">
+            <button className="bg-pink-600 text-white px-6 py-3 rounded-md hover:bg-pink-700 transition inline-flex items-center">
               Explore More <span className="ml-2">➝</span>
             </button>
           </div>

@@ -28,22 +28,22 @@ export default function Footer() {
           </div>
 
           {/* Boarding & Day care */}
-          <div>
-            <h4 className="font-semibold mb-2">Boarding & Day care</h4>
-            <p className="text-lg font-medium">(616)-459-8622</p>
-            <p className="text-sm mt-1">
-              2125 Howard Street, Grand Rapids, MI Michigan
-            </p>
-          </div>
+         <div>
+  <h4 className="font-semibold mb-2">Boarding & Day care (Hyderabad)</h4>
+  <p className="text-lg font-medium">+91-98765-43210</p>
+  <p className="text-sm mt-1">
+    Kokapet Main Road, Financial District, Hyderabad, Telangana
+  </p>
+</div>
 
-          {/* Health care */}
-          <div>
-            <h4 className="font-semibold mb-2">Health care</h4>
-            <p className="text-lg font-medium">(616)-566-5896</p>
-            <p className="text-sm mt-1">
-              2125 Howard Street, Grand Rapids, MI Michigan
-            </p>
-          </div>
+{/* Health care – Hyderabad */}
+<div>
+  <h4 className="font-semibold mb-2">Health care (Hyderabad)</h4>
+  <p className="text-lg font-medium">+91-98765-12345</p>
+  <p className="text-sm mt-1">
+    HITEC City, Madhapur, Hyderabad, Telangana
+  </p>
+</div>
         </div>
 
         {/* Divider */}

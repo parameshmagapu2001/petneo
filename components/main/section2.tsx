@@ -18,12 +18,12 @@ const lato = Lato({
 });
 
 const pets = [
-  { id: 1, name: "Dog", img: "/dog.png" },
-  { id: 2, name: "Cat", img: "/cat.png" },
-  { id: 3, name: "Parrot", img: "/parrot.png" },
-  { id: 4, name: "Hamster", img: "/hamster.png" },
-  { id: 5, name: "Rabbit", img: "/rabbit.png" },
-  { id: 6, name: "Turtle", img: "/turtle.png" },
+  { id: 1, name: "Dog", img: "/images/dog1.svg" },
+  { id: 2, name: "Cat", img: "/images/cat1.svg" },
+  { id: 3, name: "Parrot", img: "/images/parrot.svg" },
+  { id: 4, name: "Hamster", img: "/images/hamster.svg" },
+  { id: 5, name: "Dog", img: "/images/dog1.svg" },
+  { id: 6, name: "Cat", img: "/images/cat1.svg" },
   // ➝ add as many as you want here
 ];
 
@@ -36,43 +36,45 @@ export default function Section2() {
   return (
     <>
       {/* Hero Section */}
-     <section className="relative w-screen h-screen overflow-hidden font-[Poppins]">
-  {/* Background Image (70vh) */}
-  <div className="w-full h-[70vh] relative">
+    {/* Hero Section */}
+<section className="relative w-full overflow-hidden font-[Poppins]">
+  {/* Background Image (60vh on desktop, 50vh on mobile) */}
+  <div className="w-full h-[60vh] md:h-[70vh] lg:h-[70vh] relative">
     <Image
-      src="/images/img1.svg"
+      src="/images/frame1.svg"
       alt="Background"
       fill
       className="object-cover"
       priority
     />
 
-    {/* Text Content (bottom-left) */}
-    <div className="absolute bottom-8 left-30 max-w-lg text-white">
-      <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+    {/* Text Content */}
+    <div className="absolute bottom-12 left-6 md:bottom-19 md:left-18 max-w-sm md:max-w-xl text-white">
+      <h1 className="text-3xl md:text-5xl font-bold leading-tight">
         "Caring Hands for Happy Paws"
       </h1>
-      <p className="mt-4 text-lg md:text-xl font-light">
+      <p className="mt-3 text-base md:text-xl font-light">
         Expert veterinary care to keep your pets healthy and thriving.
       </p>
     </div>
   </div>
 
-  {/* White Space (30vh) */}
-  <div className="w-full h-[30vh] bg-white"></div>
+  {/* White Space */}
+  <div className="w-full h-[20vh] bg-white"></div>
 
-  {/* Dog Image (bottom-right) */}
-  <div className="absolute bottom-0 right-[10%] h-full flex items-end">
+  {/* Dog Image */}
+  <div className="absolute bottom-10 right-[5%] md:right-[10%] flex items-end">
     <Image
-      src="/images/cat.svg"
+      src="/images/dog.svg"
       alt="Dog"
-      width={400}
-      height={400}
-      className="object-contain"
+      width={250}
+      height={250}
+      className="object-contain md:w-[400px] md:h-[400px]"
       priority
     />
   </div>
 </section>
+
 
 
       {/* Pets Section */}
@@ -170,7 +172,7 @@ export default function Section2() {
         {/* Center Paw Image */}
         <div className="relative md:w-2/4 flex justify-center items-center">
           <Image
-            src="/paw-shape.png" // 👈 Replace with your paw collage image
+            src="/images/paw.svg" // 👈 Replace with your paw collage image
             alt="Paw Shape"
             width={500}
             height={500}
@@ -191,28 +193,28 @@ export default function Section2() {
       {/* Bottom Images Row */}
       <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 px-6">
         <Image
-          src="/cat1.jpg"
+          src="/images/cats1.svg"
           alt="Cat"
           width={200}
           height={200}
           className="rounded-2xl object-cover"
         />
         <Image
-          src="/dog1.jpg"
+          src="/images/cats2.svg"
           alt="Dog"
           width={200}
           height={200}
           className="rounded-2xl object-cover"
         />
         <Image
-          src="/cat2.jpg"
+          src="/images/cats3.svg"
           alt="Cat"
           width={200}
           height={200}
           className="rounded-2xl object-cover"
         />
         <Image
-          src="/dog2.jpg"
+          src="/images/cats4.svg"
           alt="Dog"
           width={200}
           height={200}
