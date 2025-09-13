@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react"; // removed Play
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
+// ✅ Make sure these files exist inside /public/images/
 const categories = [
   { id: 1, name: "Accessories", products: "84 products", img: "/images/img2.png" },
   { id: 2, name: "Food", products: "64 products", img: "/images/img1.png" },
@@ -58,7 +59,14 @@ export default function HomeSection() {
               className="min-w-[250px] flex-shrink-0 rounded-2xl overflow-hidden bg-white border"
             >
               <div className="w-full h-48 relative">
-                <Image src={cat.img} alt={cat.name} fill className="object-cover" />
+                {/* ✅ Works in production if file in /public/images */}
+                <Image
+                  src={cat.img}
+                  alt={cat.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 250px"
+                />
               </div>
               <div className="bg-pink-100 p-4 flex items-center justify-between">
                 <div>
@@ -80,6 +88,7 @@ export default function HomeSection() {
           {/* LEFT SIDE */}
           <div className="relative flex justify-center items-center">
             <div className="absolute -z-10 w-[130%] h-[130%] bg-pink-200 rounded-[0%] rotate-6" />
+            {/* ✅ This file must exist in /public/images/ */}
             <Image
               src="/images/ldog.svg"
               alt="Dog"
