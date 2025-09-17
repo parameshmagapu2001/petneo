@@ -22,7 +22,7 @@ export default function LoginPage() {
       if (agentTab) {
         router.push("/doctor/dashboard"); // doctor/agent dashboard
       } else {
-        router.push("/user/dashboard"); // user dashboard
+        router.push("/customer/dashboard"); // user dashboard
       }
     }, 1000);
   };
