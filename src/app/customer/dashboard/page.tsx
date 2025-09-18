@@ -1,11 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   FaExclamationTriangle,
   FaBars,
   FaMapMarkerAlt
 } from "react-icons/fa";
+import {
+  FaUserFriends,
+  FaUserCircle,
+  FaLock,
+  FaQuestionCircle,
+  FaInfoCircle,
+  FaChevronRight,
+} from "react-icons/fa";
+import { ListGroup, Overlay, Card } from "react-bootstrap";
 import { IoIosArrowForward } from "react-icons/io";
 import C_DashboardMain from "../../../../components/customer/cDashboard";
 import C_VetDetails from "../../../../components/customer/cVetDetails";
@@ -28,7 +37,16 @@ const BreadCrumbsData = [
 ];
 
 const [pageType, setPageType] = useState("dashboard");
-const [menuOpen, setMenuOpen] = useState(false);
+const [isOpen, setIsOpen] = useState(false);
+const menuButtonRef = useRef(null);
+
+const menuItems = [
+  { icon: <FaUserFriends />, label: "My Pets" },
+  { icon: <FaUserCircle />, label: "My Bio" },
+  { icon: <FaLock />, label: "Privacy" },
+  { icon: <FaQuestionCircle />, label: "Help" },
+  { icon: <FaInfoCircle />, label: "About" },
+];
 
 const [breadCrumbs, setBreadCrumbs] = useState<BreadCrumb[]>([{id: "dashboard", label:"Home"}]);
 
@@ -87,10 +105,48 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
             aria-label="Menu"
             className="text-2xl font-bold focus:outline-none"
             type="button"
-          >
+            ref={menuButtonRef}
+            onClick={() => setIsOpen(true)}
+         >
             <FaBars className="w-6 h-6" />
           </button>
         </nav>
+        {/* user menu popup */}
+        <Overlay
+        target={menuButtonRef.current}
+        placement="bottom"
+        show={isOpen}
+        onHide={() => setIsOpen(false)}
+        >
+            <div className="w-90 pt-10 pr-20">
+            <Card className="max-w-xs rounded-xl shadow-md p-4 bg-white">
+                <ListGroup variant="flush" className="mb-4">
+                    {menuItems.map(({ icon, label }) => (
+                    <ListGroup.Item
+                        key={label}
+                        className="cursor-pointer border-0 px-0 py-2"
+                    >
+                        <div className="flex flex-row flex-nowrap items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white text-lg">
+                                {icon}
+                            </div>
+                            <span className="font-semibold text-black">{label}</span>
+                            </div>
+                            <FaChevronRight className="text-gray-400" />
+                        </div>
+                        
+                    </ListGroup.Item>
+                    ))}
+                </ListGroup>
+                <button
+                    className="w-full h-10 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-lg"
+                    onClick={() => setIsOpen(false)}>
+                    Logout
+                </button>
+            </Card>
+            </div>
+        </Overlay>
       </header>
        {/* Location Bar */}
         <div className="flex items-center justify-between bg-[#d6dafc] px-6 py-2 text-sm text-gray-700 font-semibold select-none">
@@ -112,12 +168,11 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
             </div>
         </div>
 
-      <main>
+      <main className={`${isOpen ? "blur-sm" : ""}`}>
         {pageType === "dashboard" && <C_DashboardMain onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === "vetDetails" && <C_VetDetails onPageTypeChange={handlePageTypeChange}/>}
         {pageType === "petInfo" && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
         {pageType === "myAppointments" && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
-        
       </main>
     </div>
   );
