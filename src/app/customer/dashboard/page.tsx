@@ -149,12 +149,12 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
         
       </header>
        {/* Location Bar */}
-        <div className="flex items-center justify-between bg-[#d6dafc] px-6 py-2 text-sm text-gray-700 font-semibold select-none">
+        <div className={`${isOpen ? "blur-sm pointer-events-none" : ""} flex items-center justify-between bg-[#d6dafc] px-6 py-2 text-sm text-gray-700 font-semibold select-none`}>
             <div className="flex items-center gap-1">
                 {breadCrumbs.map((item, index) => {
                     const isLast = index === breadCrumbs.length - 1;
                     return (
-                        <div className="flex flex-nowrap items-center">
+                        <div key={item.id} className="flex flex-nowrap items-center">
                         {index === 0 && <span className={`${!isLast && "cursor-pointer"}`} onClick={handleBreadCrumbsClick(item)}>{item.label}</span>}
                         {index > 0 && <IoIosArrowForward />}
                         {index > 0 && <span className={`${!isLast && "cursor-pointer"}`}>{item.label}</span>}

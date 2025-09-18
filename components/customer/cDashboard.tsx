@@ -143,7 +143,7 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
                     <h3 className="text-pink-600 font-semibold mb-2 select-none">My Pets</h3>
                     <div className="flex items-center space-x-4">
                         {pets.map((item)=> (
-                            <div className="flex-col items-center">
+                            <div key={item.name} className="flex-col items-center">
                                 {/* Pet Image card */}
                                 <button
                                     onClick={() => handlePetClick(item.name)}
