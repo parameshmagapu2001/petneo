@@ -14,12 +14,12 @@ import {
   FaInfoCircle,
   FaChevronRight,
 } from "react-icons/fa";
-import { ListGroup, Overlay, Card } from "react-bootstrap";
 import { IoIosArrowForward } from "react-icons/io";
 import C_DashboardMain from "../../../../components/customer/cDashboard";
 import C_VetDetails from "../../../../components/customer/cVetDetails";
 import C_PetInfo from "../../../../components/customer/cPetInfo";
 import C_MyAppointments from "../../../../components/customer/cMyAppointments";
+import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 
 export default function CustomerDashboard()  {
 type BreadCrumb = {
@@ -112,41 +112,41 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
           </button>
         </nav>
         {/* user menu popup */}
-        <Overlay
-        target={menuButtonRef.current}
-        placement="bottom"
-        show={isOpen}
-        onHide={() => setIsOpen(false)}
-        >
-            <div className="w-90 pt-10 pr-20">
-            <Card className="max-w-xs rounded-xl shadow-md p-4 bg-white">
-                <ListGroup variant="flush" className="mb-4">
-                    {menuItems.map(({ icon, label }) => (
-                    <ListGroup.Item
-                        key={label}
-                        className="cursor-pointer border-0 px-0 py-2"
-                    >
-                        <div className="flex flex-row flex-nowrap items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white text-lg">
-                                {icon}
+        {isOpen && <SimpleOverlay
+                        targetRef={menuButtonRef}
+                        placement="bottom"
+                        show={isOpen}
+                        offset={40}
+                        offSetY={350}
+                        onHide={() => {setIsOpen(false)}}
+                        >
+                            <div className="w-90 max-w-xs rounded-xl shadow-md p-4 bg-white">
+                                <div className="mb-4">
+                                    {menuItems.map(({ icon, label }) => (
+                                    <div
+                                        key={label}
+                                        className="cursor-pointer border-0 px-0 py-2"
+                                    >
+                                        <div className="flex flex-row flex-nowrap items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white text-lg">
+                                                {icon}
+                                            </div>
+                                            <span className="font-semibold text-black">{label}</span>
+                                            </div>
+                                            <FaChevronRight className="text-gray-400" />
+                                        </div> 
+                                    </div>
+                                    ))}
+                                </div>
+                                <button
+                                    className="w-full h-10 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-lg"
+                                    onClick={() => setIsOpen(false)}>
+                                    Logout
+                                </button>
                             </div>
-                            <span className="font-semibold text-black">{label}</span>
-                            </div>
-                            <FaChevronRight className="text-gray-400" />
-                        </div>
-                        
-                    </ListGroup.Item>
-                    ))}
-                </ListGroup>
-                <button
-                    className="w-full h-10 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-lg"
-                    onClick={() => setIsOpen(false)}>
-                    Logout
-                </button>
-            </Card>
-            </div>
-        </Overlay>
+                    </SimpleOverlay>}
+        
       </header>
        {/* Location Bar */}
         <div className="flex items-center justify-between bg-[#d6dafc] px-6 py-2 text-sm text-gray-700 font-semibold select-none">
@@ -168,7 +168,7 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
             </div>
         </div>
 
-      <main className={`${isOpen ? "blur-sm" : ""}`}>
+      <main className={`${isOpen ? "blur-sm pointer-events-none" : ""}`}>
         {pageType === "dashboard" && <C_DashboardMain onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === "vetDetails" && <C_VetDetails onPageTypeChange={handlePageTypeChange}/>}
         {pageType === "petInfo" && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
