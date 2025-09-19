@@ -189,11 +189,8 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
                     <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-6 max-w-md">
                         <h2 className="col-span-3 font-semibold mb-2 text-gray-800">Quick Services for Your Pet</h2>
                         {services.map(({ id, icon, label }) => (
-                            <div className="flex flex-col items-center">
-                        <div
-                            key={id}
-                            className="w-36 h-36 bg-white rounded-xl shadow-sm cursor-pointer hover:shadow-lg transition-shadow"
-                        > 
+                            <div  key={id} className="flex flex-col items-center">
+                        <div className="w-36 h-36 bg-white rounded-xl shadow-sm cursor-pointer hover:shadow-lg transition-shadow"> 
                             <img src={icon} alt={label} className="w-14 h-14 m-11 object-contain"  onClick={() => HandleClickOnServices(id)}/>  
                         </div>
                         <span className="text-black text-sm font-semibold pt-4">{label}</span>
