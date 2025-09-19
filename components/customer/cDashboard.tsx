@@ -7,6 +7,7 @@ import {
   FaVideo,
   FaStar
 } from "react-icons/fa";
+import { PageType } from "@/app/customer/dashboard/page";
 
 interface C_DashboardMainProps {
     onPageTypeChange: (pageType: string) => void;
@@ -100,7 +101,7 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
 
     // Handler for clicking on a pet image
       const handlePetClick = (petName: string) => {
-        onPageTypeChange("petInfo");
+        onPageTypeChange(PageType.PET_INFO);
       };
     
       // Handler for clicking the add button
@@ -112,13 +113,13 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
         // Handler for clicking on services
       const HandleClickOnServices = (id: string) => {
         if (id === "clinicVisit") {
-            onPageTypeChange("vetDetails");
+            onPageTypeChange(PageType.VET_DETAILS);
         }
       };
     
       // Handler for clicking on view all appointments
       const HandleViewAllAppointments = () => {
-        onPageTypeChange("myAppointments");
+        onPageTypeChange(PageType.MY_APPOINTMENTS);
       };
 
     return (

@@ -3,26 +3,16 @@
 import React from "react";
 import { FiSearch, FiMapPin, FiFilter } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
+import { VetInterface } from "@/app/customer/dashboard/page";
 
 
 interface C_VetDetailsProps {
-    onPageTypeChange: (pageType: string) => void;
-}
-
-export interface VetInterface {
-    id: number;
-    name: string;
-    experience: number;
-    rating: number;
-    ratingCount: number;
-    availableToday: boolean;
-    address: string;
-    tags: string[];
-    image: string;
+    onVetSelection: (vet: VetInterface) => void;
 }
 
 interface C_VetCardProp {
     vet : VetInterface;
+    onBookAppointmentClick: () => void;
 }
 
 const vetsData = [
@@ -94,7 +84,7 @@ const vetsData = [
   },
 ];
 
-function C_VetCard({vet}: C_VetCardProp) {
+function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
     return (
         <>
             <div
@@ -142,6 +132,7 @@ function C_VetCard({vet}: C_VetCardProp) {
                 <button
                 type="button"
                 className="mt-auto bg-pink-600 hover:bg-pink-700 focus:ring-4 focus:ring-pink-300 text-white font-semibold text-sm rounded-md py-3 transition"
+                onClick={onBookAppointmentClick}
                 >
                 Book Appointment
                 </button>
@@ -151,7 +142,10 @@ function C_VetCard({vet}: C_VetCardProp) {
 }
 
 
-export default function C_VetDetails({ onPageTypeChange }: C_VetDetailsProps) {
+export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
+    const handleBookAppointmentClick = (vet: VetInterface) => {
+        return () => onVetSelection(vet);
+    };
     return (
         <>
             <div className="bg-gray-50 min-h-screen p-6">
@@ -180,7 +174,7 @@ export default function C_VetDetails({ onPageTypeChange }: C_VetDetailsProps) {
                 {/* Vet cards grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-20 gap-y-10 px-10">
                     {vetsData.map((vet) => (
-                    <C_VetCard key={vet.id} vet={vet}/>
+                    <C_VetCard key={vet.id} vet={vet} onBookAppointmentClick={handleBookAppointmentClick(vet)}/>
                     ))}
                 </div>
             </div>

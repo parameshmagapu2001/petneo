@@ -20,6 +20,28 @@ import C_VetDetails from "../../../../components/customer/cVetDetails";
 import C_PetInfo from "../../../../components/customer/cPetInfo";
 import C_MyAppointments from "../../../../components/customer/cMyAppointments";
 import SimpleOverlay from "../../../../components/customer/simpleOverlay";
+import C_VetProfile from "../../../../components/customer/cVetProfile";
+
+export interface VetInterface {
+    id: number;
+    name: string;
+    experience: number;
+    rating: number;
+    ratingCount: number;
+    availableToday: boolean;
+    address: string;
+    tags: string[];
+    image: string;
+}
+
+export enum PageType {
+    DASHBOARD = "dashboard",
+    VET_DETAILS = "vetDetails",
+    VET_PROFILE = "vetProfile",
+    VET_APPOINTMENT = "appointments",
+    PET_INFO = "petInfo",
+    MY_APPOINTMENTS = "myAppointments"
+}
 
 export default function CustomerDashboard()  {
 type BreadCrumb = {
@@ -28,29 +50,17 @@ type BreadCrumb = {
 };
 
 const BreadCrumbsData = [
-    { id: "home", label: "Home"},
-    {id: "vetDetails", label: "Vet Details"},
-    {id: "vetProfile", label: "Vet Profile"},
-    {id: "vetAppointment", label: "Appointments"},
-    {id: "petInfo", label: "Pet Details"},
-    {id: "myAppointments", label: "My Appointments"}
+    { id: PageType.DASHBOARD, label: "Home"},
+    {id: PageType.VET_DETAILS, label: "Vet Details"},
+    {id: PageType.VET_PROFILE, label: "Vet Profile"},
+    {id: PageType.VET_APPOINTMENT, label: "Appointments"},
+    {id: PageType.PET_INFO, label: "Pet Details"},
+    {id: PageType.MY_APPOINTMENTS, label: "My Appointments"}
 ];
 
-const [pageType, setPageType] = useState("dashboard");
-const [isOpen, setIsOpen] = useState(false);
-const menuButtonRef = useRef(null);
+const [breadCrumbs, setBreadCrumbs] = useState<BreadCrumb[]>([BreadCrumbsData[0]]);
 
-const menuItems = [
-  { icon: <FaUserFriends />, label: "My Pets" },
-  { icon: <FaUserCircle />, label: "My Bio" },
-  { icon: <FaLock />, label: "Privacy" },
-  { icon: <FaQuestionCircle />, label: "Help" },
-  { icon: <FaInfoCircle />, label: "About" },
-];
-
-const [breadCrumbs, setBreadCrumbs] = useState<BreadCrumb[]>([{id: "dashboard", label:"Home"}]);
-
-const handlePageTypeChange = (pageType: string) => {
+const handlePageTypeChange = (pageType: PageType) => {
      const bcIndex = breadCrumbs.findIndex((item) => item.id === pageType);
      let breadCrumbsLocal: BreadCrumb[] = [];
         if (bcIndex >= 0) {
@@ -65,6 +75,25 @@ const handlePageTypeChange = (pageType: string) => {
         setBreadCrumbs(breadCrumbsLocal);
     setPageType(pageType);  
 };
+
+const [pageType, setPageType] = useState(PageType.DASHBOARD);
+const [isOpen, setIsOpen] = useState(false);
+const menuButtonRef = useRef(null);
+
+const menuItems = [
+  { icon: <FaUserFriends />, label: "My Pets" },
+  { icon: <FaUserCircle />, label: "My Bio" },
+  { icon: <FaLock />, label: "Privacy" },
+  { icon: <FaQuestionCircle />, label: "Help" },
+  { icon: <FaInfoCircle />, label: "About" },
+];
+
+const [selectedVet, setSelectedVet] = useState<VetInterface | null>(null);
+
+const handleVetSelection = (vet: VetInterface) => {
+    setSelectedVet(vet);
+    handlePageTypeChange(PageType.VET_PROFILE);
+}
 
 const [locationText, setLocationText] = useState("Hyderabad, TN");
 
@@ -157,7 +186,7 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
                         <div key={item.id} className="flex flex-nowrap items-center">
                         {index === 0 && <span className={`${!isLast && "cursor-pointer"}`} onClick={handleBreadCrumbsClick(item)}>{item.label}</span>}
                         {index > 0 && <IoIosArrowForward />}
-                        {index > 0 && <span className={`${!isLast && "cursor-pointer"}`}>{item.label}</span>}
+                        {index > 0 && <span className={`${!isLast && "cursor-pointer"}`} onClick={handleBreadCrumbsClick(item)}>{item.label}</span>}
                         </div>
                     );
                     })}
@@ -169,10 +198,11 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
         </div>
 
       <main className={`${isOpen ? "blur-sm pointer-events-none" : ""}`}>
-        {pageType === "dashboard" && <C_DashboardMain onPageTypeChange = {handlePageTypeChange}/>}
-        {pageType === "vetDetails" && <C_VetDetails onPageTypeChange={handlePageTypeChange}/>}
-        {pageType === "petInfo" && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
-        {pageType === "myAppointments" && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
+        {pageType === PageType.DASHBOARD && <C_DashboardMain onPageTypeChange = {handlePageTypeChange}/>}
+        {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}/>}
+        {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet}/>}
+        {pageType === PageType.PET_INFO && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
+        {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
       </main>
     </div>
   );
