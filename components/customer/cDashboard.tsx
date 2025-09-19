@@ -7,14 +7,16 @@ import {
   FaVideo,
   FaStar
 } from "react-icons/fa";
-import { PageType } from "@/app/customer/dashboard/page";
+import { PageType, Pet, User } from "@/app/customer/dashboard/page";
 
 interface C_DashboardMainProps {
+    user: User | null;
+    pets: Pet[];
     onPageTypeChange: (pageType: PageType) => void;
 }
 
 
-export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainProps) {
+export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_DashboardMainProps) {
     type Service = {
     id: string;
     label: string;
@@ -87,18 +89,6 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
     },
     ];
 
-    const pets = [
-        {
-            name: "sam",
-            profilePhoto: "../images/customer/petCardDefaultImage.png"
-
-        },{
-            name: "sam2",
-            profilePhoto: "../images/customer/petCardDefaultImage.png"
-
-        }
-    ];
-
     // Handler for clicking on a pet image
       const handlePetClick = (petName: string) => {
         onPageTypeChange(PageType.PET_INFO);
@@ -134,7 +124,7 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
                     src="../images/customer/paws.png"
                     />            
                     <div>
-                    <h2 className="text-lg font-semibold">Hello, Ram</h2>
+                    <h2 className="text-lg font-semibold">Hello, {user?.name}</h2>
                     <p className="text-gray-500 text-sm">
                         Let's get started from where we left.
                     </p>
@@ -144,7 +134,7 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
                     <h3 className="text-pink-600 font-semibold mb-2 select-none">My Pets</h3>
                     <div className="flex items-center space-x-4">
                         {pets.map((item)=> (
-                            <div key={item.name} className="flex-col items-center">
+                            <div key={item.id} className="flex-col items-center">
                                 {/* Pet Image card */}
                                 <button
                                     onClick={() => handlePetClick(item.name)}
@@ -153,7 +143,7 @@ export default function C_DashboardMain({ onPageTypeChange }: C_DashboardMainPro
                                     type="button"
                                 >
                                     <img
-                                    src={item.profilePhoto}
+                                    src={item.profile_url}
                                     alt={item.name}
                                     className="object-cover w-full h-full"
                                     draggable={false}

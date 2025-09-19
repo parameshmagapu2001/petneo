@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { VetInterface } from "@/app/customer/dashboard/page";
+import { PageType, VetInterface } from "@/app/customer/dashboard/page";
 import { BsStarFill } from "react-icons/bs";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { LuHandHeart } from "react-icons/lu";
@@ -9,24 +9,29 @@ import { PiClockCountdownBold } from "react-icons/pi";
 
 interface C_VetProfileProps {
     selectedVet: VetInterface | null;
+    onPageTypeChange: (pageType: PageType) => void;
 }
 
 
-export default function C_VetProfile({ selectedVet }: C_VetProfileProps) {
-const doctor = {
-  name: selectedVet?.name,
-  experience: selectedVet?.experience,
-  rating: selectedVet?.rating,
-  ratingsCount: selectedVet?.ratingCount,
-  image: selectedVet?.image,
-  services: selectedVet?.tags,
-  timings: {
-    days: "Mon - Sat",
-    hours: "6:00 AM - 4:00 PM",
-  },
-  address: selectedVet?.address,
-  map: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.829553506717!2d78.38392851506132!3d17.44797868804353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb92a04c4cddf7%3A0x9e1b2a5d1c0b6eeb!2sIKEA%20Hyderabad!5e0!3m2!1sen!2sin!4v1687733812376!5m2!1sen!2sin",
-}; 
+export default function C_VetProfile({ selectedVet, onPageTypeChange }: C_VetProfileProps) {
+    const doctor = {
+    name: selectedVet?.name,
+    experience: selectedVet?.experience,
+    rating: selectedVet?.rating,
+    ratingsCount: selectedVet?.ratingCount,
+    image: selectedVet?.image,
+    services: selectedVet?.tags,
+    timings: {
+        days: "Mon - Sat",
+        hours: "6:00 AM - 4:00 PM",
+    },
+    address: selectedVet?.address,
+    map: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.829553506717!2d78.38392851506132!3d17.44797868804353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb92a04c4cddf7%3A0x9e1b2a5d1c0b6eeb!2sIKEA%20Hyderabad!5e0!3m2!1sen!2sin!4v1687733812376!5m2!1sen!2sin",
+    };
+    const handleScheduleNowBtnClick = () => {
+        onPageTypeChange(PageType.VET_APPOINTMENT_BOOKING);
+    };
+
     return (
         <div className="min-h-screen bg-[#e3e8f9] flex flex-col items-center py-10 px-6">
             <div className="w-full max-w-6xl flex flex-col md:flex-row gap-10">
@@ -103,7 +108,8 @@ const doctor = {
                 </div>
 
                 {/* Schedule now button */}
-                <button className="bg-pink-600 hover:bg-pink-700 transition text-white rounded-xl py-3 px-8 max-w-xl w-full font-semibold">
+                <button className="bg-pink-600 hover:bg-pink-700 transition text-white rounded-xl py-3 px-8 max-w-xl w-full font-semibold"
+                onClick={handleScheduleNowBtnClick}>
                     Schedule now
                 </button>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   FaExclamationTriangle,
   FaBars,
@@ -21,6 +21,7 @@ import C_PetInfo from "../../../../components/customer/cPetInfo";
 import C_MyAppointments from "../../../../components/customer/cMyAppointments";
 import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import C_VetProfile from "../../../../components/customer/cVetProfile";
+import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
 
 export interface VetInterface {
     id: number;
@@ -34,75 +35,116 @@ export interface VetInterface {
     image: string;
 }
 
+export interface User {
+    id: number;
+    name: string;
+    profile_url: string;
+    location?: string;
+}
+
+export interface Pet {
+    id: number;
+    name: string;
+    profile_url: string;
+}
+
 export enum PageType {
     DASHBOARD = "dashboard",
     VET_DETAILS = "vetDetails",
     VET_PROFILE = "vetProfile",
-    VET_APPOINTMENT = "appointments",
+    VET_APPOINTMENT_BOOKING = "vet_appointment_booking",
     PET_INFO = "petInfo",
     MY_APPOINTMENTS = "myAppointments"
 }
 
 export default function CustomerDashboard()  {
-type BreadCrumb = {
-    id: PageType;
-    label: string;
-};
 
-const BreadCrumbsData = [
-    { id: PageType.DASHBOARD, label: "Home"},
-    {id: PageType.VET_DETAILS, label: "Vet Details"},
-    {id: PageType.VET_PROFILE, label: "Vet Profile"},
-    {id: PageType.VET_APPOINTMENT, label: "Appointments"},
-    {id: PageType.PET_INFO, label: "Pet Details"},
-    {id: PageType.MY_APPOINTMENTS, label: "My Appointments"}
-];
-
-const [breadCrumbs, setBreadCrumbs] = useState<BreadCrumb[]>([BreadCrumbsData[0]]);
-
-const handlePageTypeChange = (pageType: PageType) => {
-     const bcIndex = breadCrumbs.findIndex((item) => item.id === pageType);
-     let breadCrumbsLocal: BreadCrumb[] = [];
-        if (bcIndex >= 0) {
-            breadCrumbsLocal = breadCrumbs.slice(0, bcIndex + 1);
-        } else {
-            const breadCrumb = BreadCrumbsData.find((item) => item.id === pageType);
-            if (breadCrumb) {
-                breadCrumbs.push(breadCrumb);
-                breadCrumbsLocal = breadCrumbs;
-            }
-        }
-        setBreadCrumbs(breadCrumbsLocal);
-    setPageType(pageType);  
-};
-
-const [pageType, setPageType] = useState(PageType.DASHBOARD);
-const [isOpen, setIsOpen] = useState(false);
-const menuButtonRef = useRef(null);
-
-const menuItems = [
-  { icon: <FaUserFriends />, label: "My Pets" },
-  { icon: <FaUserCircle />, label: "My Bio" },
-  { icon: <FaLock />, label: "Privacy" },
-  { icon: <FaQuestionCircle />, label: "Help" },
-  { icon: <FaInfoCircle />, label: "About" },
-];
-
-const [selectedVet, setSelectedVet] = useState<VetInterface | null>(null);
-
-const handleVetSelection = (vet: VetInterface) => {
-    setSelectedVet(vet);
-    handlePageTypeChange(PageType.VET_PROFILE);
-}
-
-const [locationText, setLocationText] = useState("Hyderabad, TN");
-
-
-const handleBreadCrumbsClick = (item: BreadCrumb) => {
-    return () => {
-        handlePageTypeChange(item.id);
+    type BreadCrumb = {
+        id: PageType;
+        label: string;
     };
-};
+
+    const BreadCrumbsData = [
+        { id: PageType.DASHBOARD, label: "Home"},
+        {id: PageType.VET_DETAILS, label: "Vet Details"},
+        {id: PageType.VET_PROFILE, label: "Vet Profile"},
+        {id: PageType.VET_APPOINTMENT_BOOKING, label: "Appointments"},
+        {id: PageType.PET_INFO, label: "Pet Details"},
+        {id: PageType.MY_APPOINTMENTS, label: "My Appointments"}
+    ];
+
+    const [breadCrumbs, setBreadCrumbs] = useState<BreadCrumb[]>([BreadCrumbsData[0]]);
+
+    const handlePageTypeChange = (pageType: PageType) => {
+        const bcIndex = breadCrumbs.findIndex((item) => item.id === pageType);
+        let breadCrumbsLocal: BreadCrumb[] = [];
+            if (bcIndex >= 0) {
+                breadCrumbsLocal = breadCrumbs.slice(0, bcIndex + 1);
+            } else {
+                const breadCrumb = BreadCrumbsData.find((item) => item.id === pageType);
+                if (breadCrumb) {
+                    breadCrumbs.push(breadCrumb);
+                    breadCrumbsLocal = breadCrumbs;
+                }
+            }
+            setBreadCrumbs(breadCrumbsLocal);
+        setPageType(pageType);  
+    };
+
+    const [pageType, setPageType] = useState(PageType.DASHBOARD);
+
+    const [user, setUser] = useState<User | null>(null);
+    const [userPets, setUserPets] = useState<Pet[]>([]);
+    useEffect(() => {
+        if (pageType === PageType.DASHBOARD) {
+            //TODO fetch data and assign it.
+            setUser({
+                id: 123,
+                name: "Charan",
+                profile_url: "/images/customer/defaultUserImage.png",
+                location: "Hyderabad, TN"
+            })
+            setUserPets([
+                {
+                    id: 1234,
+                    name: "sam",
+                    profile_url: "/images/customer/petCardDefaultImage.png"
+
+                },{
+                    id: 1235,
+                    name: "sam2",
+                    profile_url: "/images/customer/petCardDefaultImage.png"
+
+                }
+            ])
+        } 
+    }, [pageType]);
+
+
+    const [isOpen, setIsOpen] = useState(false);
+    const menuButtonRef = useRef(null);
+
+    const menuItems = [
+        { icon: <FaUserFriends />, label: "My Pets" },
+        { icon: <FaUserCircle />, label: "My Bio" },
+        { icon: <FaLock />, label: "Privacy" },
+        { icon: <FaQuestionCircle />, label: "Help" },
+        { icon: <FaInfoCircle />, label: "About" },
+    ];
+
+    const [selectedVet, setSelectedVet] = useState<VetInterface | null>(null);
+
+    const handleVetSelection = (vet: VetInterface) => {
+        setSelectedVet(vet);
+        handlePageTypeChange(PageType.VET_PROFILE);
+    }
+
+
+    const handleBreadCrumbsClick = (item: BreadCrumb) => {
+        return () => {
+            handlePageTypeChange(item.id);
+        };
+    };
 
   return (
      <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
@@ -123,9 +165,9 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
           </button>
           <div className="flex items-center space-x-2">
             <span>Hello,</span>
-            <span className="font-semibold text-pink-600">Dr. Mohan</span>
+            <span className="font-semibold text-pink-600">{user?.name}</span>
             <img
-              src="../images/customer/defaultUserImage.png"
+              src={user?.profile_url}
               alt="Profile"
               className="w-8 h-8 rounded-full object-cover"
             />
@@ -193,14 +235,15 @@ const handleBreadCrumbsClick = (item: BreadCrumb) => {
             </div>
             <div className="flex items-center gap-1 text-red-600">
             <FaMapMarkerAlt className="w-5 h-5" />
-            {locationText}
+            {user?.location}
             </div>
         </div>
 
       <main className={`${isOpen ? "blur-sm pointer-events-none" : ""}`}>
-        {pageType === PageType.DASHBOARD && <C_DashboardMain onPageTypeChange = {handlePageTypeChange}/>}
+        {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}/>}
-        {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet}/>}
+        {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
+        {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === PageType.PET_INFO && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
       </main>
