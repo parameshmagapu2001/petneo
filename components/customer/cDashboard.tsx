@@ -10,7 +10,7 @@ import {
 import { PageType } from "@/app/customer/dashboard/page";
 
 interface C_DashboardMainProps {
-    onPageTypeChange: (pageType: string) => void;
+    onPageTypeChange: (pageType: PageType) => void;
 }
 
 

@@ -1,7 +1,9 @@
 "use client";
 
+import { PageType } from "@/app/customer/dashboard/page";
+
 interface C_MyAppointmentsProps {
-    onPageTypeChange: (pageType: string) => void;
+    onPageTypeChange: (pageType: PageType) => void;
 }
 
 

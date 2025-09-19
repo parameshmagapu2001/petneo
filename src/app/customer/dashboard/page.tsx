@@ -45,7 +45,7 @@ export enum PageType {
 
 export default function CustomerDashboard()  {
 type BreadCrumb = {
-    id: string;
+    id: PageType;
     label: string;
 };
 
