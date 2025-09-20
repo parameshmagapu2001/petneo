@@ -25,6 +25,11 @@ enum VISIT_TYPE {
     ONLINE = "Online"
 }
 
+enum SCREEN_TYPE {
+    BOOKING = "booking",
+    CONFIRMATION = "confirmation"
+}
+
 // ------------------ Dummy Data ------------------
 const VISIT_TYPES = [VISIT_TYPE.CLINIC_VISIT, VISIT_TYPE.HOME_VISIT, VISIT_TYPE.ONLINE];
 
@@ -39,8 +44,21 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         setSelectedDateTimeSlot(selected);
     }
 
-    return (
-        <div className="min-h-screen bg-[#e3e8f9] flex flex-col items-center py-10 px-6">
+    const [screenType, setScreenType] = useState<SCREEN_TYPE>(SCREEN_TYPE.BOOKING);
+
+    function handleConfirmBtnClick(): void {
+        if (selectedVisitType && selectedDateTimeSlot && selectedDateTimeSlot.date && 
+            selectedDateTimeSlot.time && selectedService && selectedPet
+        ) {
+            setScreenType(SCREEN_TYPE.CONFIRMATION);
+        } else {
+            alert("Please provide the information");
+        }
+        
+    }
+
+    function renderBookingScreen() {
+        return (
             <div className="w-full max-w-7xl flex flex-col md:flex-row gap-10">
                 {/* Left Profile */}
                 <div className="flex flex-row items-center md:items-start md:w-1/4 space-y-4">
@@ -122,12 +140,38 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                     </div>
 
                     {/* Confirm Button */}
-                    <button className="w-full py-3 rounded-md bg-pink-500 text-white font-semibold">
+                    <button className="w-full py-3 rounded-md bg-pink-500 text-white font-semibold"
+                    onClick={handleConfirmBtnClick}>
                     Confirm
                     </button>
                 </div>
             </div>
-        
+        );
+    }
+
+    function renderConfirmationScreen() {
+        return (
+            <div>
+                userName: {user?.name}
+                <br/>
+                selected visit: {selectedVisitType}
+                <br/>
+                selected service: {selectedService}
+                <br/>
+                booked date: {selectedDateTimeSlot?.date}
+                <br/>
+                booked time: {selectedDateTimeSlot?.time}
+                <br/>
+                vet address: {vet?.address}
+                <br/>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-[#e3e8f9] flex flex-col items-center py-10 px-6">
+            {screenType === SCREEN_TYPE.BOOKING && renderBookingScreen()}
+            {screenType === SCREEN_TYPE.CONFIRMATION && renderConfirmationScreen()}
         </div>
     );
 }
