@@ -24,10 +24,10 @@ import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
 import { api, setAccessToken } from "@/utils/api";
 
-export interface VetInterface {
+export interface Vet {
     id: number;
     name: string;
-    experience: number;
+    experience: string;
     rating: number;
     ratingCount: number;
     availableToday: boolean;
@@ -109,9 +109,9 @@ export default function CustomerDashboard()  {
         { icon: <FaInfoCircle />, label: "About" },
     ];
 
-    const [selectedVet, setSelectedVet] = useState<VetInterface | null>(null);
+    const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
 
-    const handleVetSelection = (vet: VetInterface) => {
+    const handleVetSelection = (vet: Vet) => {
         setSelectedVet(vet);
         handlePageTypeChange(PageType.VET_PROFILE);
     }

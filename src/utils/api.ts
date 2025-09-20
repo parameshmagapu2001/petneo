@@ -1,3 +1,5 @@
+"use client";
+
 // utils/api.ts
 const API_BASE_URL = "https://unbiased-dane-new.ngrok-free.app/";
 const ACCESS_TOKEN_KEY = "accessToken";
@@ -16,7 +18,7 @@ export function clearAccessToken() {
 }
 
 // --- Wrapper for fetch with auth ---
-async function request(endpoint: string, options: RequestInit = {}) {
+async function request(endpoint: string, options: RequestInit = {}, queryParams?: Record<string, any>) {
   const token = getAccessToken();
 
   const headers: HeadersInit = {
@@ -27,7 +29,15 @@ async function request(endpoint: string, options: RequestInit = {}) {
     "ngrok-skip-browser-warning": "69420"
   };
 
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
+
+  const safeParams = queryParams ?? {};
+  
+  Object.entries(safeParams).forEach(([key, value]) => {
+    url.searchParams.set(key, String(value));
+  });
+
+  const res = await fetch(url, {
     ...options,
     headers,
   });
@@ -42,7 +52,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
 
 // --- Public API methods ---
 export const api = {
-  get: (endpoint: string) => request(endpoint),
+  get: (endpoint: string, queryParams?: Record<string, any>) => request(endpoint, {}, queryParams),
   post: (endpoint: string, body: any) =>
     request(endpoint, { method: "POST", body: JSON.stringify(body) }),
   put: (endpoint: string, body: any) =>

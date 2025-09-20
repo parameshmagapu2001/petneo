@@ -3,14 +3,14 @@
 import React, { useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
-import { PageType, Pet, User, VetInterface } from "@/app/customer/dashboard/page";
+import { PageType, Pet, User, Vet } from "@/app/customer/dashboard/page";
 import LocationSelector from "./locationSelector";
 import SlotPicker from "./slotPicker";
 import AppointmentStatus from "./appointmentStatus";
 
 interface C_VetAppointmentBookingProps {
     user: User | null;
-    vet: VetInterface | null;
+    vet: Vet | null;
     userPets: Pet[];
     onPageTypeChange: (pageType: PageType) => void;
 }

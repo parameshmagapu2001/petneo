@@ -1,88 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FiSearch, FiMapPin, FiFilter } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
-import { VetInterface } from "@/app/customer/dashboard/page";
+import { Vet } from "@/app/customer/dashboard/page";
+import { api } from "@/utils/api";
 
 
 interface C_VetDetailsProps {
-    onVetSelection: (vet: VetInterface) => void;
+    onVetSelection: (vet: Vet) => void;
 }
 
 interface C_VetCardProp {
-    vet : VetInterface;
+    vet : Vet;
     onBookAppointmentClick: () => void;
 }
-
-const vetsData = [
-  {
-    id: 1,
-    name: "Dr. Charan",
-    experience: 17,
-    rating: 5.0,
-    ratingCount: 150,
-    availableToday: true,
-    address: "Kphb Colony, Hyderabad, 500055",
-    tags: ["Grooming", "X ray", "Home Visit", "Online"],
-    image:"../images/customer/defaultUserImage.png",
-  },
-  {
-    id: 2,
-    name: "Dr. Vijay",
-    experience: 15,
-    rating: 5.0,
-    ratingCount: 400,
-    availableToday: true,
-    address: "Kphb Colony, Hyderabad, 500055",
-    tags: ["Grooming", "X ray", "Home Visit", "Online"],
-    image: "../images/customer/defaultUserImage.png",
-  },
-  {
-    id: 3,
-    name: "Dr. Mohan",
-    experience: 6,
-    rating: 4.0,
-    ratingCount: 70,
-    availableToday: true,
-    address: "Kphb Colony, Hyderabad, 500055",
-    tags: ["Grooming", "X ray", "Home Visit", "Online"],
-    image: "../images/customer/defaultUserImage.png",
-  },
-  {
-    id: 4,
-    name: "Dr. Ravi",
-    experience: 15,
-    rating: 5.0,
-    ratingCount: 170,
-    availableToday: true,
-    address: "Kphb Colony, Hyderabad, 500055",
-    tags: ["Grooming", "X ray", "Home Visit", "Online"],
-    image: "../images/customer/defaultUserImage.png",
-  },
-  {
-    id: 5,
-    name: "Dr. Sai",
-    experience: 4,
-    rating: 5.0,
-    ratingCount: 120,
-    availableToday: true,
-    address: "Kphb Colony, Hyderabad, 500055",
-    tags: ["Grooming", "X ray", "Home Visit", "Online"],
-    image: "../images/customer/defaultUserImage.png",
-  },
-  {
-    id: 6,
-    name: "Dr. Indu",
-    experience: 20,
-    rating: 5.0,
-    ratingCount: 300,
-    availableToday: true,
-    address: "Kphb Colony, Hyderabad, 500055",
-    tags: ["Grooming", "X ray", "Home Visit", "Online"],
-    image: "../images/customer/defaultUserImage.png",
-  },
-];
 
 function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
     return (
@@ -99,7 +31,7 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
                 />
                 <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 text-lg">{vet.name}</h3>
-                    <p className="text-gray-500 text-sm">{vet.experience} years Exp</p>
+                    <p className="text-gray-500 text-sm">{vet.experience}</p>
                     <div className="flex items-center text-yellow-500 text-sm mt-1">
                     <AiFillStar className="mr-1" />
                     <span className="font-semibold">{vet.rating.toFixed(1)}</span>
@@ -141,9 +73,88 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
     );
 }
 
+const defaultNearByRadius = 100;
+
+type Coordinates = {
+  latitude: number | null;
+  longitude: number | null;
+  error: string | null;
+  loading: boolean;
+};
+
+export function useBrowserCoordinates() {
+  const [coordinates, setCoordinates] = useState<Coordinates>({
+    latitude: null,
+    longitude: null,
+    error: null,
+    loading: true,
+  });
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setCoordinates({
+        latitude: null,
+        longitude: null,
+        error: "Geolocation is not supported by your browser",
+        loading: false,
+      });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          error: null,
+          loading: false,
+        });
+      },
+      (error) => {
+        setCoordinates({
+          latitude: null,
+          longitude: null,
+          error: error.message,
+          loading: false,
+        });
+      }
+    );
+  }, []);
+
+  return coordinates;
+}
 
 export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
-    const handleBookAppointmentClick = (vet: VetInterface) => {
+
+    const coordinates = useBrowserCoordinates();
+    const [vets, setVets] = useState<Vet[]>([]);
+    useEffect(() => {
+        if (coordinates.latitude && coordinates.longitude) {
+            //fetching the nearby vets data.
+            const fetchNearByVets = api.get("api/v1/user/nearby-vets", {user_lat: coordinates.latitude, user_lon: coordinates.longitude, radius_km: defaultNearByRadius});
+            Promise.all([fetchNearByVets]).then(([res1]) => {
+                const vetsLocal: Vet[] = [];
+                res1?.forEach((item: any) => {
+                    vetsLocal.push({
+                        id: item?.vet_id,
+                        name: item.name,
+                        experience: item.experience,
+                        rating: item.rating?.average,
+                        ratingCount: item.rating?.count,
+                        availableToday: item.availability_status === "Available",
+                        address: item.clinic?.address,
+                        tags: item.services,
+                        image: item.profile_picture,
+                    });
+                });
+                setVets(vetsLocal);
+            }).catch((error) => {
+                //TODO handle error scenarios
+            });
+        }
+    }, [coordinates]);
+
+    const handleBookAppointmentClick = (vet: Vet) => {
         return () => onVetSelection(vet);
     };
     return (
@@ -152,7 +163,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
                 {/* Header with count, search, and filter */}
                 <div className="flex flex-wrap items-center mb-8 gap-4">
                     <div className="text-gray-600 font-semibold text-sm">
-                    Showing <span className="font-bold text-gray-900">{vetsData.length}</span> Vets
+                    Showing <span className="font-bold text-gray-900">{vets.length}</span> Vets
                     </div>
                     <div className="flex items-center w-full max-w-md relative">
                     <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -173,7 +184,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
 
                 {/* Vet cards grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-20 gap-y-10 px-10">
-                    {vetsData.map((vet) => (
+                    {vets.map((vet) => (
                     <C_VetCard key={vet.id} vet={vet} onBookAppointmentClick={handleBookAppointmentClick(vet)}/>
                     ))}
                 </div>

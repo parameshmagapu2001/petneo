@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import { PageType, VetInterface } from "@/app/customer/dashboard/page";
+import { PageType, Vet } from "@/app/customer/dashboard/page";
 import { BsStarFill } from "react-icons/bs";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { LuHandHeart } from "react-icons/lu";
 import { PiClockCountdownBold } from "react-icons/pi";
 
 interface C_VetProfileProps {
-    selectedVet: VetInterface | null;
+    selectedVet: Vet | null;
     onPageTypeChange: (pageType: PageType) => void;
 }
 
@@ -44,7 +44,7 @@ export default function C_VetProfile({ selectedVet, onPageTypeChange }: C_VetPro
                 />
                 <div className="text-left pl-5 pt-2">
                     <h2 className="font-semibold text-sm">{doctor.name}</h2>
-                    <p className="text-gray-500 text-sm">{doctor.experience} years Exp</p>
+                    <p className="text-gray-500 text-sm">{doctor.experience}</p>
                     <div className="flex items-center text-xs space-x-1 mt-1 text-yellow-400">
                     <BsStarFill />
                     <span className="font-semibold text-yellow-500">{doctor.rating}</span>
