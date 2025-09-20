@@ -22,6 +22,7 @@ import C_MyAppointments from "../../../../components/customer/cMyAppointments";
 import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
+import { api, setAccessToken } from "@/utils/api";
 
 export interface VetInterface {
     id: number;
@@ -95,30 +96,6 @@ export default function CustomerDashboard()  {
 
     const [user, setUser] = useState<User | null>(null);
     const [userPets, setUserPets] = useState<Pet[]>([]);
-    useEffect(() => {
-        if (pageType === PageType.DASHBOARD) {
-            //TODO fetch data and assign it.
-            setUser({
-                id: 123,
-                name: "Charan",
-                profile_url: "/images/customer/defaultUserImage.png",
-                location: "Hyderabad, TN"
-            })
-            setUserPets([
-                {
-                    id: 1234,
-                    name: "sam",
-                    profile_url: "/images/customer/petCardDefaultImage.png"
-
-                },{
-                    id: 1235,
-                    name: "sam2",
-                    profile_url: "/images/customer/petCardDefaultImage.png"
-
-                }
-            ])
-        } 
-    }, [pageType]);
 
 
     const [isOpen, setIsOpen] = useState(false);
@@ -145,6 +122,36 @@ export default function CustomerDashboard()  {
             handlePageTypeChange(item.id);
         };
     };
+
+    const [loading, setLoading] = useState<boolean>(true);
+     useEffect(() => {
+        if (pageType === PageType.DASHBOARD) {
+            const fetchUserData = async () => {
+            try {
+                const res = await api.get("api/v1/user/home");
+                setUser({
+                    id: res?.user?.id,
+                    name: res?.user.name,
+                    profile_url: res?.user?.profile_url,
+                    location: res?.user?.location ? res.user.location : "Hyderabad, TN"
+                })
+                const pets: Pet[] = [];
+                res?.pets?.forEach((pet: Pet) => {
+                    pets.push(pet)
+                })
+                setUserPets(pets);
+
+                console.log("vijay log, data from api call ", res);
+            } catch (err: any) {
+                console.log("vijay log, error from api call ", err);
+            } finally {
+                setLoading(false);
+            }
+            };
+
+            fetchUserData();
+        } 
+    }, [pageType]);
 
   return (
      <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
