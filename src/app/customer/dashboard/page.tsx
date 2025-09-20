@@ -24,6 +24,19 @@ import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
 import { api, setAccessToken } from "@/utils/api";
 
+export interface DayStatus {
+    day: string;
+    status: string;
+}
+
+export interface Clinic {
+    address: string,
+    name: string,
+    latitude: number,
+    longitude:  number
+}
+
+
 export interface Vet {
     id: number;
     name: string;
@@ -31,9 +44,10 @@ export interface Vet {
     rating: number;
     ratingCount: number;
     availableToday: boolean;
-    address: string;
     tags: string[];
     image: string;
+    weekly_schedule: DayStatus[];
+    clinic: Clinic;
 }
 
 export interface User {

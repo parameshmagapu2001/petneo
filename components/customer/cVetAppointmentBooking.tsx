@@ -162,7 +162,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                     service: selectedService,
                     date: selectedDateTimeSlot?.date,
                     time: selectedDateTimeSlot?.time,
-                    location: selectedVisitType === VISIT_TYPE.ONLINE ? user?.location : vet?.address
+                    location: selectedVisitType === VISIT_TYPE.ONLINE ? user?.location : vet?.clinic?.address
                 }
             }/>
         );

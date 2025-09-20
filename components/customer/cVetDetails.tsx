@@ -47,7 +47,7 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
 
                 <div className="flex items-center text-gray-400 text-sm mb-4">
                 <FiMapPin className="mr-1" />
-                <span>{vet.address}</span>
+                <span>{vet?.clinic?.address}</span>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
@@ -142,9 +142,10 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
                         rating: item.rating?.average,
                         ratingCount: item.rating?.count,
                         availableToday: item.availability_status === "Available",
-                        address: item.clinic?.address,
+                        clinic: item?.clinic,
                         tags: item.services,
                         image: item.profile_picture,
+                        weekly_schedule: item.weekly_schedule
                     });
                 });
                 setVets(vetsLocal);

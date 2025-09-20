@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PageType, Vet } from "@/app/customer/dashboard/page";
+import { DayStatus, PageType, Vet } from "@/app/customer/dashboard/page";
 import { BsStarFill } from "react-icons/bs";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { LuHandHeart } from "react-icons/lu";
@@ -10,6 +10,38 @@ import { PiClockCountdownBold } from "react-icons/pi";
 interface C_VetProfileProps {
     selectedVet: Vet | null;
     onPageTypeChange: (pageType: PageType) => void;
+}
+
+// Map to short day names
+const dayShort: Record<string, string> = {
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
+  Sunday: "Sun",
+};
+
+function transformSchedule(data: DayStatus[]) {
+  // Find open days
+  const openDays = data.filter((d) => d.status !== "Closed");
+
+  if (openDays.length === 0) {
+    return { days: "Closed", hours: "" };
+  }
+
+  // Get the first and last open days
+  const firstDay = dayShort[openDays[0].day];
+  const lastDay = dayShort[openDays[openDays.length - 1].day];
+
+  // Take the working hours from first open day (assuming all same)
+  const hours = openDays[0].status;
+
+  return {
+    days: `${firstDay} - ${lastDay}`,
+    hours,
+  };
 }
 
 
@@ -21,12 +53,9 @@ export default function C_VetProfile({ selectedVet, onPageTypeChange }: C_VetPro
     ratingsCount: selectedVet?.ratingCount,
     image: selectedVet?.image,
     services: selectedVet?.tags,
-    timings: {
-        days: "Mon - Sat",
-        hours: "6:00 AM - 4:00 PM",
-    },
-    address: selectedVet?.address,
-    map: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.829553506717!2d78.38392851506132!3d17.44797868804353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb92a04c4cddf7%3A0x9e1b2a5d1c0b6eeb!2sIKEA%20Hyderabad!5e0!3m2!1sen!2sin!4v1687733812376!5m2!1sen!2sin",
+    timings: transformSchedule(selectedVet?.weekly_schedule || []),
+    address: selectedVet?.clinic?.address,
+    map: `https://maps.google.com/maps?q=${selectedVet?.clinic?.latitude},${selectedVet?.clinic?.longitude}&z=14&output=embed`,
     };
     const handleScheduleNowBtnClick = () => {
         onPageTypeChange(PageType.VET_APPOINTMENT_BOOKING);
