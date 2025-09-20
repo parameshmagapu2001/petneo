@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   FaExclamationTriangle,
   FaBars,
@@ -98,7 +98,7 @@ export default function CustomerDashboard()  {
     const [userPets, setUserPets] = useState<Pet[]>([]);
 
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState<boolean>(false);
     const menuButtonRef = useRef(null);
 
     const menuItems = [
@@ -126,30 +126,28 @@ export default function CustomerDashboard()  {
     const [loading, setLoading] = useState<boolean>(true);
      useEffect(() => {
         if (pageType === PageType.DASHBOARD) {
-            const fetchUserData = async () => {
-            try {
-                const res = await api.get("api/v1/user/home");
+            const userHomeFetch = api.get("api/v1/user/home");
+            const userAppointmentDataFetch = api.get("api/v1/appointments/user/myAppointments");
+            Promise.all([userHomeFetch, userAppointmentDataFetch]).then(([res1, res2]) => {
+                //setting the user data
                 setUser({
-                    id: res?.user?.id,
-                    name: res?.user.name,
-                    profile_url: res?.user?.profile_url,
-                    location: res?.user?.location ? res.user.location : "Hyderabad, TN"
+                    id: res1?.user?.id,
+                    name: res1?.user.name,
+                    profile_url: res1?.user?.profile_url,
+                    location: res1?.user?.location ? res1.user.location : "Hyderabad, TN"
                 })
                 const pets: Pet[] = [];
-                res?.pets?.forEach((pet: Pet) => {
+                res1?.pets?.forEach((pet: Pet) => {
                     pets.push(pet)
                 })
                 setUserPets(pets);
 
-                console.log("vijay log, data from api call ", res);
-            } catch (err: any) {
-                console.log("vijay log, error from api call ", err);
-            } finally {
-                setLoading(false);
-            }
-            };
+                //setting the user appointment data (first 3)
+               
 
-            fetchUserData();
+            }).catch((error) => {
+                //TODO handle error cases
+            })
         } 
     }, [pageType]);
 
