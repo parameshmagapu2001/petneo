@@ -27,13 +27,12 @@ enum VISIT_TYPE {
 
 // ------------------ Dummy Data ------------------
 const VISIT_TYPES = [VISIT_TYPE.CLINIC_VISIT, VISIT_TYPE.HOME_VISIT, VISIT_TYPE.ONLINE];
-const PETS = ["Dog - Sam", "Cat - Kitty"];
 
 export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTypeChange }: C_VetAppointmentBookingProps) {
     const [selectedVisitType, setSelectedVisitType] = useState<VISIT_TYPE | string>("");
+    const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
     const [selectedService, setSelectedService] = useState<string>("");
     const [selectedPet, setSelectedPet] = useState<string>("");
-    const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
 
     function handleSlotPickerValueChange(selected: { date: string; time: string; }): void {
         console.log("vijay log, selected slot data ", selected);
@@ -46,14 +45,14 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                 {/* Left Profile */}
                 <div className="flex flex-row items-center md:items-start md:w-1/4 space-y-4">
                     <img
-                    src="https://randomuser.me/api/portraits/men/32.jpg"
+                    src={user?.profile_url}
                     alt="User"
                     className="w-16 h-16 rounded-full object-cover mb-3"
                     />
                     <div className="text-left pl-5 pt-2">
-                        <h2 className="font-semibold text-lg">Me <span className="text-gray-500 text-sm">(Ram Kishore)</span></h2>
+                        <h2 className="font-semibold text-lg">Me <span className="text-gray-500 text-sm">({user?.name})</span></h2>
                         <p className="flex items-center text-red-500 mt-1 text-sm">
-                        <FaMapMarkerAlt className="mr-1" /> Kphb, Hyderabad
+                        <FaMapMarkerAlt className="mr-1" /> {user?.location}
                         </p>
                     </div>
                     
@@ -114,8 +113,8 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                         value={selectedPet}
                         onChange={(event) => setSelectedPet(event.target.value)}>
                         <option value="" disabled hidden>Select Pet</option>
-                        {PETS.map((p, i) => (
-                            <option key={i}>{p}</option>
+                        {userPets.map((p, i) => (
+                            <option key={i}>{p.name}</option>
                         ))}
                         </select>
                         <IoChevronDown className="absolute right-3 top-3 text-gray-500" />
