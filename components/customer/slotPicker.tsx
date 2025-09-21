@@ -1,46 +1,20 @@
 import React, { useEffect, useState } from "react";
 
-interface TimeSlot {
+export interface TimeSlot {
   time: string; // "10:30 AM"
   status: "available" | "booked";
 }
 
-interface DaySlots {
+export interface DaySlots {
   date: string; // "2024-07-24"
   slots: TimeSlot[];
 }
 
 interface SlotPickerProps {
+  vetAvailability: DaySlots[];
   savedAppointment?: { date: string; time: string };
   onChange: (selected: { date: string; time: string }) => void;
 }
-
-// Dummy doctor availability data (for next 7 days)
-const generateDummyAvailability = (): DaySlots[] => {
-  const availability: DaySlots[] = [];
-  const today = new Date();
-
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-
-    // Example slots
-    const slots: TimeSlot[] = [
-      { time: "9:30 AM", status: Math.random() > 0.5 ? "booked" : "available" },
-      { time: "10:30 AM", status: "available" },
-      { time: "3:30 PM", status: "booked" },
-      { time: "6:30 PM", status: Math.random() > 0.5 ? "booked" : "available" },
-      { time: "7:30 PM", status: "available" },
-      { time: "9:30 PM", status: "available" },
-    ];
-
-    availability.push({
-      date: date.toISOString().split("T")[0], // yyyy-mm-dd
-      slots,
-    });
-  }
-  return availability;
-};
 
 // Utility: convert "10:30 AM" -> Date
 const parseTime = (dateStr: string, timeStr: string): Date => {
@@ -55,17 +29,20 @@ const parseTime = (dateStr: string, timeStr: string): Date => {
   return date;
 };
 
-export default function SlotPicker({
-  savedAppointment,
-  onChange,
-}: SlotPickerProps) {
-  const [availability] = useState<DaySlots[]>(generateDummyAvailability);
+export default function SlotPicker({vetAvailability, savedAppointment, onChange,}: SlotPickerProps) {
+
   const [selectedDate, setSelectedDate] = useState<string>(
-    savedAppointment?.date || availability[0].date
+    savedAppointment?.date || vetAvailability?.[0]?.date
   );
   const [selectedTime, setSelectedTime] = useState<string | null>(
     savedAppointment?.time || null
   );
+
+  useEffect(() => {
+    if (vetAvailability && vetAvailability.length > 0) {
+      setSelectedDate(vetAvailability[0].date);
+    }
+  }, [vetAvailability]);
 
   const now = new Date();
 
@@ -89,7 +66,7 @@ export default function SlotPicker({
           </span>
         </div>
         <div className="flex gap-2 self-center overflow-x-auto">
-          {availability.map((d) => {
+          {vetAvailability.map((d) => {
             const dateObj = new Date(d.date);
             const day = dateObj.toLocaleDateString("en-US", { weekday: "short" });
             const dateNum = dateObj.getDate();
@@ -120,7 +97,7 @@ export default function SlotPicker({
       <div>
         <h2 className="font-semibold text-sm mb-3">Select Schedule Time:</h2>
         <div className="grid grid-cols-3 gap-3">
-          {availability
+          {vetAvailability
             .find((d) => d.date === selectedDate)
             ?.slots.filter((t) => {
               // Hide past times for today

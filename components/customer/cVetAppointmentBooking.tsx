@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
 import { PageType, Pet, User, Vet } from "@/app/customer/dashboard/page";
 import LocationSelector from "./locationSelector";
-import SlotPicker from "./slotPicker";
+import SlotPicker, { DaySlots, TimeSlot } from "./slotPicker";
 import AppointmentStatus from "./appointmentStatus";
+import { api } from "@/utils/api";
 
 interface C_VetAppointmentBookingProps {
     user: User | null;
@@ -34,14 +35,48 @@ enum SCREEN_TYPE {
 // ------------------ Dummy Data ------------------
 const VISIT_TYPES = [VISIT_TYPE.CLINIC_VISIT, VISIT_TYPE.HOME_VISIT, VISIT_TYPE.ONLINE];
 
+const defaultNumberOfDays = 7;
+
+function transformAvailability(data: any[]): DaySlots[] {
+  // Helper: convert "HH:mm:ss" -> "hh:mm AM/PM"
+  const formatTime = (time: string): string => {
+    const [hourStr, minuteStr] = time.split(":");
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12; // convert 0 -> 12
+    return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  // Group by date
+  const grouped: Record<string, TimeSlot[]> = {};
+
+  data.forEach((slot) => {
+    if (!grouped[slot.date]) {
+      grouped[slot.date] = [];
+    }
+    grouped[slot.date].push({
+      time: formatTime(slot.start_time),
+      status: slot.status,
+    });
+  });
+
+  // Convert to DaySlots[]
+  return Object.keys(grouped).map((date) => ({
+    date,
+    slots: grouped[date],
+  }));
+}
+
 export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTypeChange }: C_VetAppointmentBookingProps) {
     const [selectedVisitType, setSelectedVisitType] = useState<VISIT_TYPE | string>("");
     const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
     const [selectedService, setSelectedService] = useState<string>("");
     const [selectedPet, setSelectedPet] = useState<string>("");
 
+    const [vetAvailability, setVetAvailability] = useState<DaySlots[]>([]);
+
     function handleSlotPickerValueChange(selected: { date: string; time: string; }): void {
-        console.log("vijay log, selected slot data ", selected);
         setSelectedDateTimeSlot(selected);
     }
 
@@ -57,6 +92,22 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         }
         
     }
+
+    const hasFetched = useRef(false);
+
+    useEffect(() => {
+            if (vet?.id && !hasFetched.current) {
+            hasFetched.current = true;
+            const fetchVetSlots = api.get(`api/v1/availability/${vet.id}/slots`, {days: defaultNumberOfDays});
+            Promise.all([fetchVetSlots]).then(([res1]) => {
+                if (Array.isArray(res1)) {
+                    setVetAvailability(transformAvailability(res1));
+                }
+            }).catch((error) => {
+                //TODO handle error cases
+            });
+        }
+    }, [vet?.id]);
 
     function renderBookingScreen() {
         return (
@@ -106,7 +157,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
 
                         {/* Slot Picker components */}
                         <div className="mb-4">
-                            <SlotPicker onChange={handleSlotPickerValueChange}/>
+                            <SlotPicker onChange={handleSlotPickerValueChange} vetAvailability={vetAvailability}/>
                         </div>
 
                         {/* Service */}
