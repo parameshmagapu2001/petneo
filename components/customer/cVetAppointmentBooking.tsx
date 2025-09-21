@@ -260,6 +260,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
             <AppointmentStatus appointmentDetails ={
                 {
                     status: "BOOKED",
+                    pet: selectedPet,
                     doctorName: vet?.name,
                     visitType: selectedVisitType?.displayName,
                     service: selectedService,

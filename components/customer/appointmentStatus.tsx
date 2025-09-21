@@ -1,9 +1,12 @@
+import { Pet } from '@/app/customer/dashboard/page';
 import React from 'react';
 import { FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaMapMarkerAlt, FaDog, FaCut } from 'react-icons/fa';
+import { LiaPawSolid } from "react-icons/lia";
 
 export type AppointmentStatusType = 'BOOKED' | 'CANCELLED';
 export interface AppointmentDetails {
     status: AppointmentStatusType;
+    pet: Pet | undefined;
     doctorName: string | undefined;
     visitType: string | undefined;
     service: string | undefined;
@@ -17,11 +20,24 @@ interface AppointmentStatusProps {
   appointmentDetails: AppointmentDetails;
 }
 
+function formatDate(inputDate: string | undefined): string {
+  const date = new Date(inputDate || '');
+
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'short',
+  };
+
+  return date.toLocaleDateString('en-US', options);
+}
+
+
 export default function AppointmentStatus({appointmentDetails} : AppointmentStatusProps) {
 
   return (
-    <div className="flex flex-col items-center min-h-screen justify-center bg-purple-50">
-      <div className="w-full max-w-md rounded-xl bg-white shadow-lg py-8 px-4 flex flex-col items-center">
+    <div className="flex flex-col items-center min-h-screen justify-center bg-[#E8ECFC]">
+      <div className="w-full max-w-md py-8 px-4 flex flex-col items-center">
         {appointmentDetails.status === 'BOOKED' ? (
           <>
             <FaCheckCircle className="text-pink-400 text-6xl mb-4" />
@@ -36,21 +52,35 @@ export default function AppointmentStatus({appointmentDetails} : AppointmentStat
           </>
         )}
 
-        <div className="bg-gray-100 rounded-lg p-4 w-full mb-6">
-          <div className="flex items-center mb-2">
-            <FaDog className="mr-2 text-gray-500" />
+        <div className="p-4 w-full mb-6">
+          <div className="flex items-center border-2 border-[#B7B7B7] py-3 rounded-t-lg bg-white">
+            <div className="px-2">
+              <LiaPawSolid className="mr-2 text-gray-500" size={20} />
+            </div>
+            <span className="font-medium">Pet name: {appointmentDetails.pet?.name}</span>
+          </div>
+          <div className="flex items-center border-x-2 border-b-2 border-[#B7B7B7] py-3 bg-white">
+            <div className="px-2">
+              <FaDog className="mr-2 text-gray-500" size={20} />
+            </div>
             <span className="font-medium">{appointmentDetails.visitType}</span>
           </div>
-          <div className="flex items-center mb-2">
-            <FaCut className="mr-2 text-gray-500" />
-            <span>{appointmentDetails.service}</span>
+          <div className="flex items-center border-x-2 border-b-2 border-[#B7B7B7] py-3 bg-white">
+            <div className="px-2">
+              <FaCut className="mr-2 text-gray-500" size={20} />
+            </div>
+            <span className="font-medium">{appointmentDetails.service}</span>
           </div>
-          <div className="flex items-center mb-2">
-            <FaCalendarAlt className="mr-2 text-gray-500" />
-            <span>{appointmentDetails.date} and {appointmentDetails.time}</span>
+          <div className="flex items-center border-x-2 border-b-2 border-[#B7B7B7] py-3 bg-white">
+            <div className="px-2">
+              <FaCalendarAlt className="mr-2 text-gray-500" size={20} />
+            </div>
+            <span className="font-medium">{formatDate(appointmentDetails.date)} - {appointmentDetails.time}</span>
           </div>
-          <div className="flex items-center">
-            <FaMapMarkerAlt className="mr-2 text-gray-500" />
+          <div className="flex items-center border-x-2 border-b-2 border-[#B7B7B7] py-3 rounded-b-lg bg-white">
+            <div className="px-2">
+              <FaMapMarkerAlt className="mr-2 text-gray-500" size={20} />
+            </div>
             <span>{appointmentDetails.location}</span>
           </div>
         </div>
