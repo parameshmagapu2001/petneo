@@ -24,6 +24,9 @@ import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
 import { api, setAccessToken } from "@/utils/api";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
+import { TbVaccine } from "react-icons/tb";
+import C_MyPets from "../../../../components/customer/cMyPets";
+import { Menu, X } from "lucide-react";
 
 export interface DayStatus {
     day: string;
@@ -69,7 +72,13 @@ export enum PageType {
     VET_DETAILS = "vetDetails",
     VET_PROFILE = "vetProfile",
     VET_APPOINTMENT_BOOKING = "vet_appointment_booking",
+    MY_PETS = "myPets",
     PET_INFO = "petInfo",
+    MY_BIO = "myBio",
+    VACCINATION_RECORDS = "VaccinationRecords",
+    PRIVACY = "privacy",
+    HELP = "help",
+    ABOUT = "about",
     MY_APPOINTMENTS = "myAppointments"
 }
 
@@ -85,15 +94,40 @@ export default function CustomerDashboard()  {
         {id: PageType.VET_DETAILS, label: "Vet Details"},
         {id: PageType.VET_PROFILE, label: "Vet Profile"},
         {id: PageType.VET_APPOINTMENT_BOOKING, label: "Appointments"},
+        {id: PageType.MY_PETS, label: "My Pets"},
         {id: PageType.PET_INFO, label: "Pet Details"},
+        {id: PageType.MY_BIO, label: "My Bio"},
+        {id: PageType.VACCINATION_RECORDS, label: "Vaccination Records"},
+        {id: PageType.PRIVACY, label: "Privacy"},
+        {id: PageType.HELP, label: "Help"},
+        {id: PageType.ABOUT, label: "About"},
         {id: PageType.MY_APPOINTMENTS, label: "My Appointments"}
     ];
 
     const [breadCrumbs, setBreadCrumbs] = useState<BreadCrumb[]>([BreadCrumbsData[0]]);
 
     const handlePageTypeChange = (pageType: PageType) => {
-        const bcIndex = breadCrumbs.findIndex((item) => item.id === pageType);
         let breadCrumbsLocal: BreadCrumb[] = [];
+        let disabled = false;
+        if (pageType === PageType.MY_PETS) {
+            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_PETS, label: "My Pets"}];
+        } else if (pageType === PageType.MY_BIO) {
+            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_BIO, label: "My Bio"}];
+            disabled = true;
+        } else if (pageType === PageType.VACCINATION_RECORDS) {
+            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.VACCINATION_RECORDS, label: "Vaccination Records"}];
+            disabled = true;
+        } else if (pageType === PageType.PRIVACY) {
+            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.PRIVACY, label: "Privacy"}];
+            disabled = true;
+        } else if (pageType === PageType.HELP) {
+            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.HELP, label: "Help"}];
+            disabled = true;
+        } else if (pageType === PageType.ABOUT) {
+            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.ABOUT, label: "About"}];
+            disabled = true;
+        } else {
+            const bcIndex = breadCrumbs.findIndex((item) => item.id === pageType);
             if (bcIndex >= 0) {
                 breadCrumbsLocal = breadCrumbs.slice(0, bcIndex + 1);
             } else {
@@ -103,8 +137,12 @@ export default function CustomerDashboard()  {
                     breadCrumbsLocal = breadCrumbs;
                 }
             }
+        }
+        
+        if (!disabled){
             setBreadCrumbs(breadCrumbsLocal);
-        setPageType(pageType);  
+            setPageType(pageType);  
+        }  
     };
 
     const [pageType, setPageType] = useState(PageType.DASHBOARD);
@@ -117,11 +155,12 @@ export default function CustomerDashboard()  {
     const menuButtonRef = useRef(null);
 
     const menuItems = [
-        { icon: <FaUserFriends />, label: "My Pets" },
-        { icon: <FaUserCircle />, label: "My Bio" },
-        { icon: <FaLock />, label: "Privacy" },
-        { icon: <FaQuestionCircle />, label: "Help" },
-        { icon: <FaInfoCircle />, label: "About" },
+        { icon: <FaUserFriends />, label: "My Pets", id: PageType.MY_PETS },
+        { icon: <FaUserCircle />, label: "My Bio", id: PageType.MY_BIO },
+        { icon: <TbVaccine />, label: "Vaccination Records", id: PageType.VACCINATION_RECORDS},
+        { icon: <FaLock />, label: "Privacy", id: PageType.PRIVACY },
+        { icon: <FaQuestionCircle />, label: "Help", id: PageType.HELP },
+        { icon: <FaInfoCircle />, label: "About", id: PageType.ABOUT },
     ];
 
     const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
@@ -166,6 +205,11 @@ export default function CustomerDashboard()  {
         } 
     }, [pageType]);
 
+    function handleMenuClick(menuItem: { icon: React.JSX.Element; label: string; id: PageType; }): void {
+        setIsOpen(false);
+        handlePageTypeChange(menuItem.id);
+    }
+
   return (
      <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
       {/* Header */}
@@ -197,9 +241,9 @@ export default function CustomerDashboard()  {
             className="text-2xl font-bold focus:outline-none"
             type="button"
             ref={menuButtonRef}
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsOpen(!isOpen)}
          >
-            <FaBars className="w-6 h-6" />
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </nav>
         {/* user menu popup */}
@@ -213,17 +257,18 @@ export default function CustomerDashboard()  {
                         >
                             <div className="w-90 max-w-xs rounded-xl shadow-md p-4 bg-white">
                                 <div className="mb-4">
-                                    {menuItems.map(({ icon, label }) => (
+                                    {menuItems.map((menuItem) => (
                                     <div
-                                        key={label}
+                                        key={menuItem.id}
                                         className="cursor-pointer border-0 px-0 py-2"
+                                        onClick={() => handleMenuClick(menuItem)}
                                     >
                                         <div className="flex flex-row flex-nowrap items-center justify-between">
                                             <div className="flex items-center space-x-3">
                                             <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white text-lg">
-                                                {icon}
+                                                {menuItem.icon}
                                             </div>
-                                            <span className="font-semibold text-black">{label}</span>
+                                            <span className="font-semibold text-black">{menuItem.label}</span>
                                             </div>
                                             <FaChevronRight className="text-gray-400" />
                                         </div> 
@@ -264,6 +309,7 @@ export default function CustomerDashboard()  {
         {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}/>}
         {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} userPets={userPets} onPageTypeChange = {handlePageTypeChange}/>}
+        {pageType === PageType.MY_PETS && <C_MyPets onPageTypeChange={handlePageTypeChange}/>}
         {pageType === PageType.PET_INFO && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
       </main>

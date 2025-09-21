@@ -20,13 +20,13 @@ export default function SimpleOverlay({
   onHide
 }: SimpleOverlayProps) {
 
-    useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-        onHide();
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // useEffect(() => {
+    // function handleClickOutside(event: MouseEvent) {
+    //     onHide();
+    // }
+    // document.addEventListener("mousedown", handleClickOutside);
+    // return () => document.removeEventListener("mousedown", handleClickOutside);
+    // }, []);
 
   if (!show || !targetRef.current) return null;
 
