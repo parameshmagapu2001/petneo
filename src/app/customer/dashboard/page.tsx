@@ -65,6 +65,8 @@ export interface Pet {
     id: number;
     name: string;
     profile_url: string;
+    pet_profile_picture?: string; // for some reason back is send like this in seperate call
+    age?: string
 }
 
 export enum PageType {
