@@ -23,6 +23,7 @@ import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
 import { api, setAccessToken } from "@/utils/api";
+import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
 
 export interface DayStatus {
     day: string;
@@ -141,7 +142,7 @@ export default function CustomerDashboard()  {
      useEffect(() => {
         if (pageType === PageType.DASHBOARD) {
             const userHomeFetch = api.get("api/v1/user/home");
-            const userAppointmentDataFetch = api.get("api/v1/appointments/user/myAppointments");
+            const userAppointmentDataFetch = api.get("api/v1/user/appointment/myAppointments");
             Promise.all([userHomeFetch, userAppointmentDataFetch]).then(([res1, res2]) => {
                 //setting the user data
                 setUser({
@@ -158,7 +159,7 @@ export default function CustomerDashboard()  {
 
                 //setting the user appointment data (first 3)
                
-
+                setLoading(false);
             }).catch((error) => {
                 //TODO handle error cases
             })
@@ -266,6 +267,8 @@ export default function CustomerDashboard()  {
         {pageType === PageType.PET_INFO && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
       </main>
+
+      <FullScreenLoader loading={loading}/>
     </div>
   );
 };

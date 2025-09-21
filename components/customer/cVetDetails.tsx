@@ -5,6 +5,7 @@ import { FiSearch, FiMapPin, FiFilter } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
 import { Vet } from "@/app/customer/dashboard/page";
 import { api } from "@/utils/api";
+import FullScreenLoader from "./fullScreenLoader";
 
 
 interface C_VetDetailsProps {
@@ -128,6 +129,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
 
     const coordinates = useBrowserCoordinates();
     const [vets, setVets] = useState<Vet[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
     useEffect(() => {
         if (coordinates.latitude && coordinates.longitude) {
             //fetching the nearby vets data.
@@ -149,6 +151,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
                     });
                 });
                 setVets(vetsLocal);
+                setLoading(false);
             }).catch((error) => {
                 //TODO handle error scenarios
             });
@@ -190,6 +193,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
                     ))}
                 </div>
             </div>
+            <FullScreenLoader loading={loading}/>
         </>
     );
 }

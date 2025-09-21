@@ -8,6 +8,7 @@ import LocationSelector from "./locationSelector";
 import SlotPicker, { DaySlots, TimeSlot } from "./slotPicker";
 import AppointmentStatus from "./appointmentStatus";
 import { api } from "@/utils/api";
+import FullScreenLoader from "./fullScreenLoader";
 
 interface C_VetAppointmentBookingProps {
     user: User | null;
@@ -21,10 +22,15 @@ interface DateTimeSlot {
     time: string;
 }
 
-enum VISIT_TYPE {
-    CLINIC_VISIT = "Clinic Visit",
-    HOME_VISIT = "Home Visit",
-    ONLINE = "Online"
+enum VISIT_ID {
+    CLINIC_VISIT = "In-clinic",
+    HOME_VISIT = "In-home",
+    ONLINE = "Tele"
+}
+
+type VISIT_TYPE = {
+    id: string;
+    displayName: string;
 }
 
 enum SCREEN_TYPE {
@@ -33,9 +39,10 @@ enum SCREEN_TYPE {
 }
 
 // ------------------ Dummy Data ------------------
-const VISIT_TYPES = [VISIT_TYPE.CLINIC_VISIT, VISIT_TYPE.HOME_VISIT, VISIT_TYPE.ONLINE];
+const VISIT_TYPES:VISIT_TYPE[] = [{id: VISIT_ID.CLINIC_VISIT, displayName: "Clinic Visit"}, {id: VISIT_ID.HOME_VISIT, displayName: "Home Visit"}, {id: VISIT_ID.ONLINE, displayName: "Online"}];
 
 const defaultNumberOfDays = 7;
+const defaultTimeSlotInMin: number = 30;
 
 function transformAvailability(data: any[]): DaySlots[] {
   // Helper: convert "HH:mm:ss" -> "hh:mm AM/PM"
@@ -68,11 +75,35 @@ function transformAvailability(data: any[]): DaySlots[] {
   }));
 }
 
+function convert12hTo24hPlusMinutes(time12h: string, addMinutes?: number): string {
+  const [time, meridian] = time12h.split(' ');
+  let [hoursStr, minutesStr] = time.split(':');
+
+  let hours = parseInt(hoursStr, 10);
+  let minutes = parseInt(minutesStr, 10);
+
+  if (meridian.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  }
+  if (meridian.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  const date = new Date();
+  date.setHours(hours, addMinutes ? minutes + addMinutes : minutes, 0, 0);
+
+  const hours24 = date.getHours().toString().padStart(2, '0');
+  const mins = date.getMinutes().toString().padStart(2, '0');
+
+  return `${hours24}:${mins}:00.000`;
+}
+
+
 export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTypeChange }: C_VetAppointmentBookingProps) {
-    const [selectedVisitType, setSelectedVisitType] = useState<VISIT_TYPE | string>("");
+    const [selectedVisitType, setSelectedVisitType] = useState<VISIT_TYPE>();
     const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
     const [selectedService, setSelectedService] = useState<string>("");
-    const [selectedPet, setSelectedPet] = useState<string>("");
+    const [selectedPet, setSelectedPet] = useState<Pet>();
 
     const [vetAvailability, setVetAvailability] = useState<DaySlots[]>([]);
 
@@ -82,10 +113,29 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
 
     const [screenType, setScreenType] = useState<SCREEN_TYPE>(SCREEN_TYPE.BOOKING);
 
-    function handleConfirmBtnClick(): void {
+    async function handleConfirmBtnClick (): Promise<void> {
         if (selectedVisitType && selectedDateTimeSlot && selectedDateTimeSlot.date && 
             selectedDateTimeSlot.time && selectedService && selectedPet
         ) {
+            setLoading(true);
+            //fetching services
+            const servicesRes = await api.get("api/v1/services");
+            const serviceObj = servicesRes?.find((item: any) => item.name === selectedService);
+            //building the payload
+            const payload = {
+                    vet_id: vet?.id,
+                    appointment_date: selectedDateTimeSlot.date,
+                    start_time: convert12hTo24hPlusMinutes(selectedDateTimeSlot.time),
+                    end_time: convert12hTo24hPlusMinutes(selectedDateTimeSlot.time, defaultTimeSlotInMin),
+                    visit_type: selectedVisitType?.id,
+                    service_id: serviceObj?.id,
+                    pet_id: selectedPet?.id
+                };
+
+            //sending the appointment details
+            const createAppointmentRes = await api.post("api/v1/user/appointment/add", payload);
+
+            setLoading(false);
             setScreenType(SCREEN_TYPE.CONFIRMATION);
         } else {
             alert("Please provide the information");
@@ -94,6 +144,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
     }
 
     const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
             if (vet?.id && !hasFetched.current) {
@@ -102,6 +153,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
             Promise.all([fetchVetSlots]).then(([res1]) => {
                 if (Array.isArray(res1)) {
                     setVetAvailability(transformAvailability(res1));
+                    setLoading(false);
                 }
             }).catch((error) => {
                 //TODO handle error cases
@@ -136,11 +188,11 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                         <label className="block text-sm font-semibold mb-1">Visit Type</label>
                         <div className="relative">
                             <select className= "font-semibold w-full bg-white border rounded px-3 py-2 appearance-none"
-                            value={selectedVisitType}
-                            onChange={(event) => setSelectedVisitType(event.target.value)}>
+                            value={selectedVisitType?.id || ""}
+                            onChange={(event) => setSelectedVisitType(VISIT_TYPES.find((item) => item.id === event.target.value))}>
                             <option value="" disabled hidden>Select Visit Type</option>
                             {VISIT_TYPES.map((v, i) => (
-                                <option key={i}>{v}</option>
+                                <option key={i} value={v.id}>{v.displayName}</option>
                             ))}
                             </select>
                             <IoChevronDown className="absolute right-3 top-3 text-gray-500" />
@@ -148,7 +200,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                         </div>
 
                         {/* Pick Location */}
-                        {selectedVisitType === VISIT_TYPE.HOME_VISIT && 
+                        {selectedVisitType?.id === VISIT_ID.HOME_VISIT && 
                             <div className="mb-4">
                             <label className="block text-sm font-semibold mb-2">Pick Location</label>
                             <LocationSelector/>
@@ -181,11 +233,11 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                         <label className="block text-sm font-semibold mb-1">Select Pet</label>
                         <div className="relative">
                             <select className="font-semibold bg-white w-full border rounded px-3 py-2 appearance-none"
-                            value={selectedPet}
-                            onChange={(event) => setSelectedPet(event.target.value)}>
+                            value={selectedPet?.id || ""}
+                            onChange={(event) => (setSelectedPet(userPets.find((item) => item.id === parseInt(event.target.value))))}>
                             <option value="" disabled hidden>Select Pet</option>
                             {userPets.map((p, i) => (
-                                <option key={i}>{p.name}</option>
+                                <option key={i} value={p.id}>{p.name}</option>
                             ))}
                             </select>
                             <IoChevronDown className="absolute right-3 top-3 text-gray-500" />
@@ -209,11 +261,11 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                 {
                     status: "BOOKED",
                     doctorName: vet?.name,
-                    visitType: selectedVisitType,
+                    visitType: selectedVisitType?.displayName,
                     service: selectedService,
                     date: selectedDateTimeSlot?.date,
                     time: selectedDateTimeSlot?.time,
-                    location: selectedVisitType === VISIT_TYPE.ONLINE ? user?.location : vet?.clinic?.address
+                    location: selectedVisitType?.id === VISIT_ID.ONLINE ? user?.location : vet?.clinic?.address 
                 }
             }/>
         );
@@ -223,6 +275,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         <>
             {screenType === SCREEN_TYPE.BOOKING && renderBookingScreen()}
             {screenType === SCREEN_TYPE.CONFIRMATION && renderConfirmationScreen()}
+            <FullScreenLoader loading={loading}/>
         </>
     );
 }
