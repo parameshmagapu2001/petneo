@@ -113,6 +113,8 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
 
     const [screenType, setScreenType] = useState<SCREEN_TYPE>(SCREEN_TYPE.BOOKING);
 
+    const [appointmentId, setAppointmentId] = useState<number>();
+
     async function handleConfirmBtnClick (): Promise<void> {
         if (selectedVisitType && selectedDateTimeSlot && selectedDateTimeSlot.date && 
             selectedDateTimeSlot.time && selectedService && selectedPet
@@ -134,6 +136,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
 
             //sending the appointment details
             const createAppointmentRes = await api.post("api/v1/user/appointment/add", payload);
+            setAppointmentId(createAppointmentRes?.appointment);
 
             setLoading(false);
             setScreenType(SCREEN_TYPE.CONFIRMATION);
@@ -257,18 +260,17 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
 
     function renderConfirmationScreen() {
         return (
-            <AppointmentStatus appointmentDetails ={
-                {
-                    status: "BOOKED",
-                    pet: selectedPet,
-                    doctorName: vet?.name,
-                    visitType: selectedVisitType?.displayName,
-                    service: selectedService,
-                    date: selectedDateTimeSlot?.date,
-                    time: selectedDateTimeSlot?.time,
-                    location: selectedVisitType?.id === VISIT_ID.ONLINE ? user?.location : vet?.clinic?.address 
-                }
-            }/>
+            <AppointmentStatus appointmentDetails={{
+                id: appointmentId,
+                status: "booked",
+                pet: selectedPet,
+                doctorName: vet?.name,
+                visitType: selectedVisitType?.displayName,
+                service: selectedService,
+                date: selectedDateTimeSlot?.date,
+                time: selectedDateTimeSlot?.time,
+                location: selectedVisitType?.id === VISIT_ID.ONLINE ? user?.location : vet?.clinic?.address
+            }} onPageTypeChange={onPageTypeChange}/>
         );
     }
 

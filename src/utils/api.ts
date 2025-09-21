@@ -57,8 +57,8 @@ export const api = {
     request(endpoint, { method: "POST", body: JSON.stringify(body) }),
   put: (endpoint: string, body: any) =>
     request(endpoint, { method: "PUT", body: JSON.stringify(body) }),
-  patch: (endpoint: string, body: any) =>
-    request(endpoint, { method: "PATCH", body: JSON.stringify(body) }),
+  patch: (endpoint: string, body?: any, queryParams?: Record<string, any>) =>
+    request(endpoint, { method: "PATCH", body: JSON.stringify(body) }, queryParams),
   delete: (endpoint: string) =>
     request(endpoint, { method: "DELETE" }),
 };
