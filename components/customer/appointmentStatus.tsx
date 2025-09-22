@@ -11,18 +11,23 @@ export interface AppointmentDetails {
     id: number | undefined;
     status: AppointmentStatusType;
     pet: Pet | undefined;
-    doctorName: string | undefined;
+    vetName: string | undefined;
+    vetSpecialization?: string | undefined;
+    vetProfileUrl?: string | undefined;
+    vetId?: number;
+    visit_purpose?:  "General Visit" | "Emergency";
     visitType: string | undefined;
-    service: string | undefined;
+    service?: string | undefined;
     date: string | undefined;
     time: string | undefined;
-    location: string | undefined;
+    location?: string | undefined;
     cancellationReason?: string | undefined;
 }
 
 interface AppointmentStatusProps {
   appointmentDetails: AppointmentDetails;
    onPageTypeChange: (pageType: PageType) => void;
+   makeSelectedAppointmentEmpty?: () => void; // this param should be only form myAppointments( to handle one of the edge case)
 }
 
 function formatDate(inputDate: string | undefined): string {
@@ -38,7 +43,7 @@ function formatDate(inputDate: string | undefined): string {
 }
 
 
-export default function AppointmentStatus({appointmentDetails, onPageTypeChange} : AppointmentStatusProps) {
+export default function AppointmentStatus({appointmentDetails, onPageTypeChange, makeSelectedAppointmentEmpty} : AppointmentStatusProps) {
 
   const [appointmentStatus, setAppointmentStatus] = useState<AppointmentStatusType>(appointmentDetails.status);
 
@@ -59,20 +64,34 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange}
     onPageTypeChange(PageType.DASHBOARD);
   }
 
+  function handleViewMyAppointments(): void {
+    //navigating to the my appointments page
+    onPageTypeChange(PageType.MY_APPOINTMENTS);
+    makeSelectedAppointmentEmpty?.();
+  }
+
   return (
     <div className="flex flex-col items-center min-h-screen justify-center bg-[#E8ECFC]">
       <div className="w-full max-w-md py-8 px-4 flex flex-col items-center">
-        {appointmentStatus === 'booked' ? (
+        {appointmentStatus === 'booked' && (
           <>
             <FaCheckCircle className="text-pink-400 text-6xl mb-4" />
             <h2 className="font-semibold text-lg mb-2">Appointment Booked.</h2>
-            <span className="font-medium mb-4">{appointmentDetails.doctorName}</span>
+            <span className="font-medium mb-4">{appointmentDetails.vetName ? "Dr. " + appointmentDetails.vetName : ""}</span>
           </>
-        ) : (
+        )}
+        { appointmentStatus === "cancelled" && (
           <>
             <FcCancel className="mb-4" size={100} />
             <h2 className="font-semibold text-lg mb-2">Appointment Cancelled</h2>
             {appointmentDetails.cancellationReason && <span className="mb-4 text-sm text-gray-700">Reason: {appointmentDetails.cancellationReason}</span>}
+          </>
+        )}
+        {appointmentStatus === 'completed' && (
+          <>
+            <FaCheckCircle className="text-pink-400 text-6xl mb-4" />
+            <h2 className="font-semibold text-lg mb-2">Appointment Completed.</h2>
+            <span className="font-medium mb-4">{appointmentDetails.vetName ? "Dr. " + appointmentDetails.vetName : ""}</span>
           </>
         )}
 
@@ -109,7 +128,7 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange}
           </div>
         </div>
 
-        {appointmentStatus === 'booked' ? (
+        {appointmentStatus === 'booked' && (
           <>
             <div className="w-full mb-6">
               <h3 className="font-semibold text-sm mb-1">Cancellation Policy</h3>
@@ -124,11 +143,13 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange}
             onClick={handleCancelAppointment}>
               Cancel Appointment
             </button>
-            <button className="w-full text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600">
+            <button className="w-full text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600"
+            onClick={handleViewMyAppointments}>
               View My Appointments
             </button>
           </>
-        ) : (
+        )}
+        {(appointmentStatus === "cancelled" || appointmentStatus === "completed") && (
           <button className="w-full text-white bg-pink-500 rounded-lg py-3 font-semibold transition hover:bg-pink-600"
           onClick={handleGoHome}>
             Go Home
@@ -139,3 +160,4 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange}
     </div>
   );
 };
+

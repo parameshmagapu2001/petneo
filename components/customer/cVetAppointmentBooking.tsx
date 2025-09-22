@@ -39,7 +39,7 @@ enum SCREEN_TYPE {
 }
 
 // ------------------ Dummy Data ------------------
-const VISIT_TYPES:VISIT_TYPE[] = [{id: VISIT_ID.CLINIC_VISIT, displayName: "Clinic Visit"}, {id: VISIT_ID.HOME_VISIT, displayName: "Home Visit"}, {id: VISIT_ID.ONLINE, displayName: "Online"}];
+export const VISIT_TYPES:VISIT_TYPE[] = [{id: VISIT_ID.CLINIC_VISIT, displayName: "Clinic Visit"}, {id: VISIT_ID.HOME_VISIT, displayName: "Home Visit"}, {id: VISIT_ID.ONLINE, displayName: "Online"}];
 
 const defaultNumberOfDays = 7;
 const defaultTimeSlotInMin: number = 30;
@@ -264,7 +264,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                 id: appointmentId,
                 status: "booked",
                 pet: selectedPet,
-                doctorName: vet?.name,
+                vetName: vet?.name,
                 visitType: selectedVisitType?.displayName,
                 service: selectedService,
                 date: selectedDateTimeSlot?.date,
