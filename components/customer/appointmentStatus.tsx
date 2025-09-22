@@ -6,7 +6,7 @@ import { FcCancel } from 'react-icons/fc';
 import { LiaPawSolid } from "react-icons/lia";
 import FullScreenLoader from './fullScreenLoader';
 
-export type AppointmentStatusType = 'booked' | 'cancelled';
+export type AppointmentStatusType = 'booked' | 'cancelled' | 'completed';
 export interface AppointmentDetails {
     id: number | undefined;
     status: AppointmentStatusType;
