@@ -111,7 +111,9 @@ export default function CustomerDashboard()  {
     const handlePageTypeChange = (pageType: PageType) => {
         let breadCrumbsLocal: BreadCrumb[] = [];
         let disabled = false;
-        if (pageType === PageType.MY_PETS) {
+        if (pageType === PageType.MY_APPOINTMENTS) {
+             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_APPOINTMENTS, label: "My Appointments"}];
+        } else if (pageType === PageType.MY_PETS) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_PETS, label: "My Pets"}];
         } else if (pageType === PageType.MY_BIO) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_BIO, label: "My Bio"}];

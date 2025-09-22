@@ -137,8 +137,9 @@ export default function C_VetProfile({ selectedVet, onPageTypeChange }: C_VetPro
                 </div>
 
                 {/* Schedule now button */}
-                <button className="bg-pink-600 hover:bg-pink-700 transition text-white rounded-xl py-3 px-8 max-w-xl w-full font-semibold"
-                onClick={handleScheduleNowBtnClick}>
+            <button className={`bg-pink-600 text-white rounded-xl py-3 px-8 max-w-xl w-full font-semibold ${!selectedVet?.availableToday ? "cursor-not-allowed" : "hover:bg-pink-700 transition"}`}
+                onClick={handleScheduleNowBtnClick}
+                disabled={!selectedVet?.availableToday}>
                     Schedule now
                 </button>
                 </div>
