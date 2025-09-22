@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   FaExclamationTriangle,
-  FaBars,
   FaMapMarkerAlt
 } from "react-icons/fa";
 import {
@@ -185,8 +184,7 @@ export default function CustomerDashboard()  {
      useEffect(() => {
         if (pageType === PageType.DASHBOARD) {
             const userHomeFetch = api.get("api/v1/user/home");
-            const userAppointmentDataFetch = api.get("api/v1/user/appointment/myAppointments");
-            Promise.all([userHomeFetch, userAppointmentDataFetch]).then(([res1, res2]) => {
+            Promise.all([userHomeFetch]).then(([res1]) => {
                 //setting the user data
                 setUser({
                     id: res1?.user?.id,
@@ -199,8 +197,6 @@ export default function CustomerDashboard()  {
                     pets.push(pet)
                 })
                 setUserPets(pets);
-
-                //setting the user appointment data (first 3)
                
                 setLoading(false);
             }).catch((error) => {

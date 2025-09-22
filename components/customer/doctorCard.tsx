@@ -1,9 +1,10 @@
-import { FaVideo } from "react-icons/fa";
+"use client";
+
 import { AppointmentDetails, AppointmentStatusType } from "./appointmentStatus";
 
 interface DoctorCardProps {
   appointmentDetails: AppointmentDetails;
-  onViewDetailsClick: () => void;
+  onViewDetailsClick?: () => void;
 }
 
 export default function DoctorCard({ appointmentDetails, onViewDetailsClick }: DoctorCardProps) {
@@ -28,10 +29,12 @@ export default function DoctorCard({ appointmentDetails, onViewDetailsClick }: D
                 </span>
             </div>
         </div>
-        <button className="block mx-auto mt-4 bg-pink-400 hover:bg-pink-500 text-white rounded-lg px-8 py-2 font-medium text-sm transition cursor-pointer"
-        onClick={onViewDetailsClick}>
-            View Details
-        </button>
+        {onViewDetailsClick && 
+            <button className="block mx-auto mt-4 bg-pink-400 hover:bg-pink-500 text-white rounded-lg px-8 py-2 font-medium text-sm transition cursor-pointer"
+            onClick={onViewDetailsClick}>
+                View Details
+            </button>
+        }
   </div>
   );
 };

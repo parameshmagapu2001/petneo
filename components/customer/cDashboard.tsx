@@ -1,13 +1,13 @@
 "use client";
 
 import { FaCirclePlus } from "react-icons/fa6";
-import { RxDividerVertical } from "react-icons/rx";
-import React, { useState } from "react";
-import {
-  FaVideo,
-  FaStar
-} from "react-icons/fa";
+import React, { useEffect, useRef, useState } from "react";
 import { PageType, Pet, User } from "@/app/customer/dashboard/page";
+import { api } from "@/utils/api";
+import { transformAppointments } from "./cMyAppointments";
+import { AppointmentDetails } from "./appointmentStatus";
+import FullScreenLoader from "./fullScreenLoader";
+import DoctorCard from "./doctorCard";
 
 interface C_DashboardMainProps {
     user: User | null;
@@ -56,61 +56,49 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
     },
     ];
 
-    const appointments = [
-    {
-        name: "Dr. Charan",
-        title: "General Veterinarian",
-        exp: "15 years Exp",
-        distance: "350m away",
-        rating: 5.0,
-        ratingCount: 150,
-        video: true,
-        imgUrl:"../images/customer/defaultUserImage.png",
-    },
-    {
-        name: "Dr. Vijay",
-        title: "General Veterinarian",
-        exp: "4 years Exp",
-        distance: "500m away",
-        rating: 5.0,
-        ratingCount: 150,
-        video: true,
-        imgUrl: "../images/customer/defaultUserImage.png"
-    },
-    {
-        name: "Dr. Mohan",
-        title: "General Veterinarian",
-        exp: "7 years Exp",
-        distance: "700m away",
-        rating: 5.0,
-        ratingCount: 150,
-        video: true,
-        imgUrl: "../images/customer/defaultUserImage.png"
-    },
-    ];
-
     // Handler for clicking on a pet image
-      const handlePetClick = (petName: string) => {
-        onPageTypeChange(PageType.PET_INFO);
-      };
-    
-      // Handler for clicking the add button
-      const handleAddPet = () => {
-        alert("Add new pet clicked");
-        // You can open a modal or navigate to add pet form
-      };
-    
-        // Handler for clicking on services
-      const HandleClickOnServices = (id: string) => {
-        if (id === "clinicVisit") {
-            onPageTypeChange(PageType.VET_DETAILS);
+    const handlePetClick = (petName: string) => {
+    onPageTypeChange(PageType.PET_INFO);
+    };
+
+    // Handler for clicking the add button
+    const handleAddPet = () => {
+    alert("Add new pet clicked");
+    // You can open a modal or navigate to add pet form
+    };
+
+    // Handler for clicking on services
+    const HandleClickOnServices = (id: string) => {
+    if (id === "clinicVisit") {
+        onPageTypeChange(PageType.VET_DETAILS);
+    }
+    };
+
+    // Handler for clicking on view all appointments
+    const HandleViewAllAppointments = () => {
+    onPageTypeChange(PageType.MY_APPOINTMENTS);
+    };
+
+    const [myAppointments, setMyAppointments] = useState<AppointmentDetails[]>([]);
+    const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    useEffect(() => {
+        if (!hasFetched.current) {
+            hasFetched.current = true;
+            const userAppointmentDataFetch = api.get("api/v1/user/appointment/myAppointments");
+            Promise.all([userAppointmentDataFetch]).then(([res1]) => {
+                if (Array.isArray(res1?.appointments)) {
+                    //transforming the api response into UI usable data
+                    const transformedAppointments = transformAppointments(res1.appointments.slice(0,3));
+                    setMyAppointments(transformedAppointments);
+                    setLoading(false);
+                }
+            }).catch((error) => {
+                //TODO handle error cases
+            });
         }
-      };
-    
-      // Handler for clicking on view all appointments
-      const HandleViewAllAppointments = () => {
-        onPageTypeChange(PageType.MY_APPOINTMENTS);
-      };
+    }, []);
 
     return (
         <div>
@@ -202,55 +190,10 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                 <section className="space-y-4 w-full">
                 <h3 className="font-semibold text-gray-700">My Appointments</h3>
                 <div className="rounded-lg shadow border border-gray-300">
-                    <div className="flex flex-wrap gap-6 mt-6 justify-self-center">
-                        {appointments.map(
-                        ({
-                            name,
-                            title,
-                            exp,
-                            distance,
-                            rating,
-                            ratingCount,
-                            video,
-                            imgUrl,
-                        }) => (
-                            <div
-                            key={`${name}-${exp}-${distance}`}
-                            className="flex items-center bg-white rounded-lg shadow px-4 py-3 w-full sm:w-[370px]"
-                            >
-                            <img
-                                src={imgUrl}
-                                alt={name}
-                                className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                            />
-                            <div className="flex-1 ml-4">
-                                <div className="font-semibold text-gray-900">{name}</div>
-                                <div className="text-xs text-gray-600">{title}</div>
-                                <div className="text-xs text-gray-600">{exp}</div>
-                                <div className="flex items-center text-xs text-gray-600 gap-2 mt-1">
-                                <span>{distance}</span>
-                                <RxDividerVertical color="#898989" />
-                                <span className="flex items-center gap-1 text-yellow-400">
-                                    <FaStar />
-                                    <span>{rating}</span>
-                                </span>
-                                <span className="text-gray-400">
-                                    ({ratingCount} Ratings)
-                                </span>
-                                </div>
-                            </div>
-                            {video && (
-                                <button
-                                aria-label="Video Call"
-                                className="ml-4 p-2 bg-pink-500 rounded-lg text-white hover:bg-pink-600 transition"
-                                type="button"
-                                >
-                                <FaVideo className="w-6 h-6" />
-                                </button>
-                            )}
-                            </div>
-                        )
-                        )}
+                    <div className="grid grid-cols-3 gap-x-6 gap-y-8 mt-6 mx-3">
+                        {myAppointments.map(app => (
+                        <DoctorCard key={app.id} appointmentDetails={app} />
+                        ))}
                     </div>
                     <div className="flex justify-center mt-6 mb-3">
                         <button
@@ -264,6 +207,8 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                 </div>
                 </section>
             </div>
+
+            <FullScreenLoader loading={loading}/>
       </div>
     );
 }

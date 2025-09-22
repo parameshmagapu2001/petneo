@@ -13,6 +13,29 @@ interface C_MyAppointmentsProps {
     onPageTypeChange: (pageType: PageType) => void;
 }
 
+export function transformAppointments(responseArray: []): AppointmentDetails[] {
+    return responseArray.map((item: any) => {
+                        return {
+                            id: item?.appointment_id as number,
+                            status: item?.status as AppointmentStatusType,
+                            pet: {
+                                    id: item?.pet?.id,
+                                    name: item?.pet?.name,
+                                    profile_url: item?.pet?.profile_picture
+                                } as Pet,
+                            vetName: item?.vet?.name as string,
+                            vetSpecialization: item?.vet?.specialization as string,
+                            vetProfileUrl: item?.vet?.profile as string,
+                            vetId: item?.vet?.id as number,
+                            visit_purpose: item?.visit_purpose === "General visit" ? "General Visit" : "Emergency",
+                            visitType: VISIT_TYPES.find((x) => x.id === item?.visit_type)?.displayName,
+                            date: item?.date,
+                            time: item?.time,
+                            cancellationReason: item?.reason
+                        } as AppointmentDetails;
+                    });
+}
+
 
 export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsProps) {
     const [selectedTab, setSelectedTab] = useState<"active" | "cancelled" | "completed">("active");
@@ -33,26 +56,7 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
             Promise.all([userAppointmentDataFetch]).then(([res1]) => {
                 if (Array.isArray(res1?.appointments)) {
                     //transforming the api response into UI usable data
-                    const transformedAppointments = res1.appointments.map((item: any) => {
-                        return {
-                            id: item?.appointment_id as number,
-                            status: item?.status as AppointmentStatusType,
-                            pet: {
-                                    id: item?.pet?.id,
-                                    name: item?.pet?.name,
-                                    profile_url: item?.pet?.profile_picture
-                                } as Pet,
-                            vetName: item?.vet?.name as string,
-                            vetSpecialization: item?.vet?.specialization as string,
-                            vetProfileUrl: item?.vet?.profile as string,
-                            vetId: item?.vet?.id as number,
-                            visit_purpose: item?.visit_purpose === "General visit" ? "General Visit" : "Emergency",
-                            visitType: VISIT_TYPES.find((x) => x.id === item?.visit_type)?.displayName,
-                            date: item?.date,
-                            time: item?.time,
-                            cancellationReason: item?.reason
-                        } as AppointmentDetails;
-                    })
+                    const transformedAppointments = transformAppointments(res1.appointments);
 
                     setActiveAppointments(transformedAppointments.filter((item: AppointmentDetails) => item.status === 'booked'));
                     setCompletedAppointments(transformedAppointments.filter((item: AppointmentDetails) => item.status === 'completed'));
