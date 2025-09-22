@@ -17,13 +17,12 @@ const Navbar = () => {
 
   const handleLoginSelect = (userType: string) => {
     setIsLoginDropdownOpen(false);
-
     switch (userType) {
       case 'customer':
         router.push('/customer');
         break;
-      case 'doctor':
-        router.push('/doctor');
+      case 'vet':
+        router.push('/vet/login');
         break;
       default:
         break;
@@ -32,25 +31,23 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100">
-      <div className="max-w-7xl mx-auto flex justify-between items-center px-0 lg:px-7 py-0">
+      <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-5 lg:px-7 py-2 sm:py-3">
         {/* Logo */}
-<div className="flex items-center space-x-2">
-  <img
-    src="/images/logo.svg"
-    alt="Petneo Logo"
-    className="w-50 h-50 sm:w-28 sm:h-28" // bigger sizes
-  />
-</div>
-
-
+        <div className="flex items-center">
+          <img
+            src="/images/logo.svg"
+            alt="Petneo Logo"
+            className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28" // smaller on mobile
+          />
+        </div>
 
         {/* Desktop Links */}
-        <div className="hidden lg:flex items-center space-x-8">
+        <div className="hidden lg:flex items-center space-x-6">
           {['Dogs', 'Cats', 'Pharmacy', 'Consult', 'Shop'].map((link, idx) => (
             <a
               key={idx}
               href="#"
-              className="relative text-gray-700 hover:text-blue-600 font-medium py-2 group transition-colors duration-200"
+              className="relative text-gray-700 hover:text-blue-600 font-medium py-2 group transition-colors duration-200 text-sm lg:text-base"
             >
               {link}
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></div>
@@ -59,11 +56,11 @@ const Navbar = () => {
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           {/* Search (hidden on small screens) */}
-          <div className="hidden md:flex items-center bg-gray-50 rounded-full px-4 py-2 min-w-[200px] lg:min-w-[260px] border border-gray-200 focus-within:ring-2 focus-within:ring-blue-100">
+          <div className="hidden md:flex items-center bg-gray-50 rounded-full px-3 py-1.5 min-w-[160px] lg:min-w-[220px] border border-gray-200 focus-within:ring-2 focus-within:ring-blue-100">
             <svg
-              className="w-4 h-4 text-gray-400 mr-3"
+              className="w-4 h-4 text-gray-400 mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -72,8 +69,8 @@ const Navbar = () => {
             </svg>
             <input
               type="text"
-              placeholder="Search For Anything..."
-              className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder-gray-500"
+              placeholder="Search..."
+              className="bg-transparent outline-none text-xs lg:text-sm w-full text-gray-700 placeholder-gray-500"
             />
           </div>
 
@@ -81,11 +78,11 @@ const Navbar = () => {
           <div className="relative">
             <button
               onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 sm:px-5 py-2.5 rounded-full text-sm font-medium flex items-center shadow-sm transition-all duration-200"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium flex items-center shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
             >
               Login
               <svg
-                className={`w-4 h-4 ml-2 transition-transform duration-200 ${isLoginDropdownOpen ? 'rotate-180' : ''}`}
+                className={`w-4 h-4 ml-1 transition-transform duration-200 ${isLoginDropdownOpen ? 'rotate-180' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -95,17 +92,17 @@ const Navbar = () => {
             </button>
 
             {isLoginDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+              <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
                 {[
                   { type: 'customer', label: 'User' },
-                  { type: 'doctor', label: 'Agent' }
+                  { type: 'vet', label: 'Agent' }
                 ].map(({ type, label }, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleLoginSelect(type)}
-                    className="flex items-center px-4 py-3 text-m text-black hover:bg-blue-50 hover:text-blue-700 w-full text-left transition-colors duration-150"
+                    className="flex items-center px-3 py-2 text-sm text-black hover:bg-blue-50 hover:text-blue-700 w-full text-left transition-colors duration-150"
                   >
-                    <span className="w-4 h-4 mr-3">🔹</span>
+                    <span className="mr-2">🔹</span>
                     {label}
                   </button>
                 ))}
@@ -114,7 +111,7 @@ const Navbar = () => {
           </div>
 
           {/* Cart */}
-          <button className="relative p-2.5 rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200 shadow-sm">
+          <button className="relative p-2 rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200 shadow-sm">
             <ShoppingCart className="w-5 h-5" strokeWidth={2} />
           </button>
 
@@ -137,11 +134,11 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden mt-2 px-4 pb-4 border-t border-gray-100">
+        <div className="lg:hidden mt-2 px-3 pb-4 border-t border-gray-100">
           {/* Mobile search */}
-          <div className="flex items-center bg-gray-50 rounded-full px-4 py-2 mb-4 border border-gray-200">
+          <div className="flex items-center bg-gray-50 rounded-full px-3 py-1.5 mb-3 border border-gray-200">
             <svg
-              className="w-4 h-4 text-gray-400 mr-3"
+              className="w-4 h-4 text-gray-400 mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -150,18 +147,18 @@ const Navbar = () => {
             </svg>
             <input
               type="text"
-              placeholder="Search For Anything..."
-              className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder-gray-500"
+              placeholder="Search..."
+              className="bg-transparent outline-none text-xs w-full text-gray-700 placeholder-gray-500"
             />
           </div>
 
           {/* Mobile links */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {['Dogs', 'Cats', 'Pharmacy', 'Consult', 'Shop'].map((link, idx) => (
               <a
                 key={idx}
                 href="#"
-                className="text-gray-700 hover:text-blue-600 font-medium block py-3 px-4 text-center bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors duration-200"
+                className="text-gray-700 hover:text-blue-600 font-medium block py-2 px-3 text-center text-sm bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors duration-200"
               >
                 {link}
               </a>

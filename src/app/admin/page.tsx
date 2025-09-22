@@ -1,6 +1,6 @@
 'use client';
 
-import Dlogin from '../../../components/doctor/dlogin';
+import Dlogin from '../../../components/vet/dlogin';
 
 
 const Page = () => {
