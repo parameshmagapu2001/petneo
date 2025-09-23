@@ -1,20 +1,20 @@
 "use client";
 
 // utils/api.ts
-const API_BASE_URL = "https://unbiased-dane-new.ngrok-free.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE;
 const ACCESS_TOKEN_KEY = "accessToken";
 
 // --- Token helpers ---
 export function setAccessToken(token: string) {
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
 }
 
 export function getAccessToken(): string | null {
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function clearAccessToken() {
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 // --- Wrapper for fetch with auth ---

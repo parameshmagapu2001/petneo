@@ -53,7 +53,7 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange,
     if (appointmentDetails.id) {
       setLoading(true);
       //making patch call to update the status of the appointment
-      const res = api.patch(`api/v1/user/appointment/${appointmentDetails.id}/status`, {}, {status: "cancelled"});
+      const res = api.patch(`/user/appointment/${appointmentDetails.id}/status`, {}, {status: "cancelled"});
       setAppointmentStatus("cancelled");
       setLoading(false);
     } 

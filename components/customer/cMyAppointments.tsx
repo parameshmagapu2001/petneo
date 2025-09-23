@@ -52,7 +52,7 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
     useEffect(() => {
             if (!hasFetched.current) {
             hasFetched.current = true;
-            const userAppointmentDataFetch = api.get("api/v1/user/appointment/myAppointments");
+            const userAppointmentDataFetch = api.get("/user/appointment/myAppointments");
             Promise.all([userAppointmentDataFetch]).then(([res1]) => {
                 if (Array.isArray(res1?.appointments)) {
                     //transforming the api response into UI usable data
@@ -75,7 +75,7 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
         setLoading(true);
         //fetching appointment details
         // fetching this only for service and clinic details
-        const userAppointmentRes = await api.get(`api/v1/user/appointment/${app.id}`);
+        const userAppointmentRes = await api.get(`/user/appointment/${app.id}`);
         app.service = userAppointmentRes?.service;
         app.location = userAppointmentRes?.clinic_location;
         setSelectedAppointment(app);

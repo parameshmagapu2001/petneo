@@ -120,7 +120,7 @@ export default function LoginPage() {
 
       startCooldown();
 
-      const url = `${API_BASE.replace(/\/$/, "")}/auth/login/sendOtp?mobile_number=${encodeURIComponent(mobile)}`;
+      const url = `${API_BASE.replace(/\/$/, "")}/${agentTab ? "auth" : "user"}/login/sendOtp?mobile_number=${encodeURIComponent(mobile)}`;
       const res = await fetch(url, { method: "POST" });
       const data = await res.json();
 
@@ -150,7 +150,8 @@ export default function LoginPage() {
       if (!API_BASE) throw new Error("API_BASE not configured.");
       if (!/^\d{6}$/.test(otp)) throw new Error("Please enter a valid 6-digit OTP.");
 
-      const url = `${API_BASE.replace(/\/$/, "")}/auth/login/verifyOtp?mobile_number=${encodeURIComponent(mobile)}&otp=${encodeURIComponent(otp)}`;
+      const url = `${API_BASE.replace(/\/$/, "")}/${agentTab ? "auth" : "user"}/login/verifyOtp?mobile_number=${encodeURIComponent(mobile)}&otp=${encodeURIComponent(otp)}`;
+
       const res = await fetch(url, { method: "POST" });
       const json = await res.json();
 
@@ -162,7 +163,7 @@ export default function LoginPage() {
       setTimeout(() => {
         const userType = json?.user_type ?? agentTab ? "vet" : "user";
         if (String(userType).toLowerCase() === "vet") router.push("/vet/dashboard");
-        else router.push("/user/dashboard");
+        else router.push("/customer/dashboard");
       }, 900);
     } catch (err: any) {
       setMessage(`❌ ${err.message || "Failed to verify OTP"}`);

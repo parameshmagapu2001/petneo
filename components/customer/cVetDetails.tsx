@@ -133,7 +133,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
     useEffect(() => {
         if (coordinates.latitude && coordinates.longitude) {
             //fetching the nearby vets data.
-            const fetchNearByVets = api.get("api/v1/user/nearby-vets", {user_lat: coordinates.latitude, user_lon: coordinates.longitude, radius_km: defaultNearByRadius});
+            const fetchNearByVets = api.get("/user/nearby-vets", {user_lat: coordinates.latitude, user_lon: coordinates.longitude, radius_km: defaultNearByRadius});
             Promise.all([fetchNearByVets]).then(([res1]) => {
                 const vetsLocal: Vet[] = [];
                 res1?.forEach((item: any) => {

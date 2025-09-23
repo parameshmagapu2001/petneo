@@ -86,7 +86,7 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
-            const userAppointmentDataFetch = api.get("api/v1/user/appointment/myAppointments");
+            const userAppointmentDataFetch = api.get("/user/appointment/myAppointments");
             Promise.all([userAppointmentDataFetch]).then(([res1]) => {
                 if (Array.isArray(res1?.appointments)) {
                     //transforming the api response into UI usable data

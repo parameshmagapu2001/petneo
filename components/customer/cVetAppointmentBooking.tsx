@@ -121,7 +121,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         ) {
             setLoading(true);
             //fetching services
-            const servicesRes = await api.get("api/v1/services");
+            const servicesRes = await api.get("/services");
             const serviceObj = servicesRes?.find((item: any) => item.name === selectedService);
             //building the payload
             const payload = {
@@ -135,7 +135,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                 };
 
             //sending the appointment details
-            const createAppointmentRes = await api.post("api/v1/user/appointment/add", payload);
+            const createAppointmentRes = await api.post("/user/appointment/add", payload);
             setAppointmentId(createAppointmentRes?.appointment);
 
             setLoading(false);
@@ -152,7 +152,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
     useEffect(() => {
             if (vet?.id && !hasFetched.current) {
             hasFetched.current = true;
-            const fetchVetSlots = api.get(`api/v1/availability/${vet.id}/slots`, {days: defaultNumberOfDays});
+            const fetchVetSlots = api.get(`/availability/${vet.id}/slots`, {days: defaultNumberOfDays});
             Promise.all([fetchVetSlots]).then(([res1]) => {
                 if (Array.isArray(res1)) {
                     setVetAvailability(transformAvailability(res1));

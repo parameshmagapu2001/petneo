@@ -183,7 +183,7 @@ export default function CustomerDashboard()  {
     const [loading, setLoading] = useState<boolean>(true);
      useEffect(() => {
         if (pageType === PageType.DASHBOARD) {
-            const userHomeFetch = api.get("api/v1/user/home");
+            const userHomeFetch = api.get("/user/home");
             Promise.all([userHomeFetch]).then(([res1]) => {
                 //setting the user data
                 setUser({

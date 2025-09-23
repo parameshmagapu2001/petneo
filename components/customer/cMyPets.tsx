@@ -17,7 +17,7 @@ export default function C_MyPets({ onPageTypeChange }: C_MyPetsProps) {
         if (!hasFetched.current) {
             hasFetched.current = true;
             //fetching my pets
-            const fetchMyPets = api.get("api/v1/pets/myPets");
+            const fetchMyPets = api.get("/pets/myPets");
             Promise.all([fetchMyPets]).then(([res1]) => {
                 setMyPets(Array.isArray(res1) ? res1 : []);
             }).catch((error) => {
