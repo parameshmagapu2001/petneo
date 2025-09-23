@@ -225,7 +225,7 @@ export default function LoginPage() {
           <div className="mb-6 flex justify-between items-center">
             <h2 className="font-bold text-lg">Log In</h2>
             <button
-              onClick={() => router.push("/signup")}
+              onClick={() => router.push(`/${agentTab ? "vet" : "customer"}/signup`)}
               className="px-3 py-1 rounded-full text-sm bg-pink-100 text-pink-800 border border-pink-200 hover:bg-pink-200 transition"
               type="button"
             >

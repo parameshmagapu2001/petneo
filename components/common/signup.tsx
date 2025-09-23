@@ -11,9 +11,16 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
 });
 
+type SIGNUP_TYPE = "vet" | "user";
+
+interface SignupProps {
+  signupType: SIGNUP_TYPE;
+}
+
 type Service = { id: number; name: string };
 
-export default function SignupPage() {
+export default function SignupPage({signupType}: SignupProps) {
+
   const [step, setStep] = useState(1);
   const router = useRouter();
 
