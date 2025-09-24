@@ -18,7 +18,7 @@ type LoginResponse = {
 };
 
 interface LoginPageProps {
-  pageType: "vet" | "customer"
+  pageType: "vet" | "customer" | "admin"
 }
 
 export default function LoginPage({pageType}: LoginPageProps) {

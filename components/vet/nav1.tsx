@@ -130,7 +130,7 @@ export default function Nav1(): React.JSX.Element {
           if (!summaryRes.ok) {
             setTodayCount(null);
           } else {
-            let s = summaryRes.data;
+            const s = summaryRes.data;
             const possible = s?.total ?? s?.count ?? s?.appointments_count ?? s?.total_requests ?? s?.data?.total ?? null;
             setTodayCount(typeof possible === "number" ? possible : null);
           }

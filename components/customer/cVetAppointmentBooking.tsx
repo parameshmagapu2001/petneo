@@ -3,7 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
-import { PageType, Pet, User, Vet } from "@/app/customer/dashboard/page";
+import { Pet, User, Vet } from "@/app/customer/dashboard/page";
+import { PageType } from "@/app/customer/dashboard/constants";
 import LocationSelector from "./locationSelector";
 import SlotPicker, { DaySlots, TimeSlot } from "./slotPicker";
 import AppointmentStatus from "./appointmentStatus";
@@ -77,10 +78,10 @@ function transformAvailability(data: any[]): DaySlots[] {
 
 function convert12hTo24hPlusMinutes(time12h: string, addMinutes?: number): string {
   const [time, meridian] = time12h.split(' ');
-  let [hoursStr, minutesStr] = time.split(':');
+  const [hoursStr, minutesStr] = time.split(':');
 
   let hours = parseInt(hoursStr, 10);
-  let minutes = parseInt(minutesStr, 10);
+  const minutes = parseInt(minutesStr, 10);
 
   if (meridian.toUpperCase() === 'PM' && hours !== 12) {
     hours += 12;

@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { DayStatus, PageType, Vet } from "@/app/customer/dashboard/page";
+import { DayStatus, Vet } from "@/app/customer/dashboard/page";
+import { PageType } from "@/app/customer/dashboard/constants";
 import { BsStarFill } from "react-icons/bs";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { LuHandHeart } from "react-icons/lu";
