@@ -425,9 +425,6 @@ export default function SignupPageVet() {
       if (!personal.firstName || !personal.lastName || !personal.email || !personal.password) {
         throw new Error("Please fill all required personal information fields");
       }
-      if (!emailVerified) {
-        throw new Error("Please verify your email before submitting registration");
-      }
       if (!professional.qualification || !professional.licenseNo || !professional.clinicName) {
         throw new Error("Please fill all required professional information fields");
       }
