@@ -17,6 +17,21 @@ export function clearAccessToken() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
+// Clear all auth
+export function clearAuth()  {
+    [
+    "petneo_token",
+    "accessToken",
+    "access_token",
+    "token",
+    "auth_token",
+    "vetToken",
+    "refreshToken",
+    "refresh_token",
+    "vet_id",
+    ].forEach((k) => localStorage.removeItem(k));
+};
+
 // --- Wrapper for fetch with auth ---
 async function request(endpoint: string, options: RequestInit = {}, queryParams?: Record<string, any>) {
   const token = getAccessToken();
@@ -43,6 +58,10 @@ async function request(endpoint: string, options: RequestInit = {}, queryParams?
   });
 
   if (!res.ok) {
+    if (res.status === 403) {
+      clearAuth();
+      throw new Error("Unauthorized (403) - session expired");
+    }
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "API request failed");
   }

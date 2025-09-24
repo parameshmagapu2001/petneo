@@ -3,11 +3,12 @@
 import { FaCirclePlus } from "react-icons/fa6";
 import React, { useEffect, useRef, useState } from "react";
 import { PageType, Pet, User } from "@/app/customer/dashboard/page";
-import { api } from "@/utils/api";
+import { api, clearAuth } from "@/utils/api";
 import { transformAppointments } from "./cMyAppointments";
 import { AppointmentDetails } from "./appointmentStatus";
 import FullScreenLoader from "./fullScreenLoader";
 import DoctorCard from "./doctorCard";
+import router from "next/router";
 
 interface C_DashboardMainProps {
     user: User | null;
@@ -95,7 +96,13 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                     setLoading(false);
                 }
             }).catch((error) => {
+                setLoading(false);
                 //TODO handle error cases
+                if (error?.message.includes("403")) {
+                    clearAuth();
+                    if (typeof window !== "undefined") window.location.href = "/customer/login";
+                    else router.push("/customer/login")
+                 }
             });
         }
     }, []);

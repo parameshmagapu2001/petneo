@@ -17,9 +17,13 @@ type LoginResponse = {
   [k: string]: any;
 };
 
-export default function LoginPage() {
+interface LoginPageProps {
+  pageType: "vet" | "customer"
+}
+
+export default function LoginPage({pageType}: LoginPageProps) {
   const router = useRouter();
-  const [agentTab, setAgentTab] = useState(true);
+  const [agentTab, setAgentTab] = useState(pageType === "vet");
   const [mobile, setMobile] = useState(""); // raw digits only
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"mobile" | "otp">("mobile");
@@ -124,8 +128,14 @@ export default function LoginPage() {
       const res = await fetch(url, { method: "POST" });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data?.message || data?.detail || "Failed to send OTP");
-
+      if (!res.ok) {
+        throw new Error(data?.message || data?.detail || "Failed to send OTP");
+      } else if (!data.status) {
+         if (data?.message && typeof data.message === "string" && data.message.toLowerCase().includes("mobile number not registered.")) {
+          throw new Error(data.message);
+        }
+      }
+        
       setMessage("✅ OTP sent successfully. Please enter the 6-digit OTP.");
       setStep("otp");
     } catch (err: any) {
@@ -225,7 +235,7 @@ export default function LoginPage() {
           <div className="mb-6 flex justify-between items-center">
             <h2 className="font-bold text-lg">Log In</h2>
             <button
-              onClick={() => router.push("/signup")}
+              onClick={() => router.push(`/${agentTab ? "vet" : "customer"}/signup`)}
               className="px-3 py-1 rounded-full text-sm bg-pink-100 text-pink-800 border border-pink-200 hover:bg-pink-200 transition"
               type="button"
             >

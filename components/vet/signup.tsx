@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Poppins } from "next/font/google";
+import { FaCamera, FaPen } from "react-icons/fa";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -13,7 +14,8 @@ const poppins = Poppins({
 
 type Service = { id: number; name: string };
 
-export default function SignupPage() {
+export default function SignupPageVet() {
+
   const [step, setStep] = useState(1);
   const router = useRouter();
 
@@ -33,6 +35,7 @@ export default function SignupPage() {
     lastName: "",
     email: "",
     password: "",
+    profile_picture: null as File | null,
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -52,7 +55,6 @@ export default function SignupPage() {
     landmark: "",
     clinicName: "",
     location: "",
-    profilePicture: null as File | null,
     certificate: null as File | null,
   });
 
@@ -423,9 +425,6 @@ export default function SignupPage() {
       if (!personal.firstName || !personal.lastName || !personal.email || !personal.password) {
         throw new Error("Please fill all required personal information fields");
       }
-      if (!emailVerified) {
-        throw new Error("Please verify your email before submitting registration");
-      }
       if (!professional.qualification || !professional.licenseNo || !professional.clinicName) {
         throw new Error("Please fill all required professional information fields");
       }
@@ -451,6 +450,9 @@ export default function SignupPage() {
       formData.append("password", personal.password);
       formData.append("first_name", personal.firstName);
       formData.append("last_name", personal.lastName);
+      if (personal.profile_picture) {
+        formData.append("profile_picture", personal.profile_picture);
+      }
       formData.append("qualification", professional.qualification);
       formData.append("specialization", professional.specialization);
       formData.append("license_number", professional.licenseNo);
@@ -464,9 +466,6 @@ export default function SignupPage() {
       // important: send validated service ids as comma separated string
       formData.append("service_ids", finalIds.join(","));
 
-      if (professional.profilePicture) {
-        formData.append("profile_picture", professional.profilePicture);
-      }
       if (professional.certificate) {
         formData.append("certification_document", professional.certificate);
       }
@@ -520,6 +519,10 @@ export default function SignupPage() {
         const serverMsg = data?.message || data?.detail || res.statusText || "Registration failed with server error";
         console.error("Registration error response:", data);
         throw new Error(serverMsg);
+      } else if (!data.status) {
+         if (data?.message && typeof data.message === "string" && data.message.toLowerCase().includes("user already registered")) {
+          throw new Error(data.message);
+        }
       }
 
       if (data?.token) {
@@ -545,6 +548,23 @@ export default function SignupPage() {
     </label>
   );
 
+  const [profileImage, setProfileImage] = useState<string>();
+  const profileImageInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleProfileImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPersonal({ ...personal, profile_picture: file })
+
+    // Preview image
+    const previewUrl = URL.createObjectURL(file);
+    setProfileImage(previewUrl);
+  };
+
+  const handleEditPhotoClick = () => {
+    profileImageInputRef.current?.click();
+  };
   return (
     <div className={`flex flex-col md:flex-row min-h-screen ${poppins.className}`}>
       {/* Left Section */}
@@ -643,33 +663,62 @@ export default function SignupPage() {
           {/* Step 2 */}
           {step === 2 && (
             <section>
-              <h2 className="text-xl font-semibold mb-1">Personal Details</h2>
-              <p className="text-sm text-gray-600 mb-4">Enter your personal information</p>
+                <div className="flex flex-row items-center justify-center">
+                    <div className="flex-1 flex-col">
+                        <h2 className="text-xl font-semibold mb-1">Personal Details</h2>
+                        <p className="text-sm text-gray-600 mb-4">Enter your personal information</p>
+                    </div>
+                    <div className="flex flex-col items-center justify-center">
+                        {/* Circle container */}
+                        <div className="relative w-25 h-25 rounded-full border border-gray-300 flex items-center justify-center overflow-hidden">
+                            {profileImage ? (
+                            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                            <FaCamera className="text-gray-400 text-3xl" />
+                            )}
 
-              <div className="md:flex md:gap-4">
-                <div className="md:flex-1 mb-3">
-                  <FieldLabel required>First Name</FieldLabel>
-                  <input
-                    type="text"
-                    placeholder="First name"
-                    className="w-full border rounded-md px-3 py-2"
-                    value={personal.firstName}
-                    onChange={(e) => setPersonal({ ...personal, firstName: e.target.value })}
-                  />
+                            {/* Edit (pencil) icon */}
+                            <button
+                            onClick={handleEditPhotoClick}
+                            className="absolute bottom-2 right-2 bg-pink-500 text-white p-2 rounded-full shadow-md hover:bg-pink-600"
+                            >
+                            <FaPen size={12} />
+                            </button>
+
+                            <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={profileImageInputRef}
+                            onChange={handleProfileImageFileChange}
+                            />
+                        </div>
+                    </div>
+
                 </div>
-                <div className="md:flex-1 mb-3">
-                  <FieldLabel required>Last Name</FieldLabel>
-                  <input
-                    type="text"
-                    placeholder="Last name"
-                    className="w-full border rounded-md px-3 py-2"
-                    value={personal.lastName}
-                    onChange={(e) => setPersonal({ ...personal, lastName: e.target.value })}
-                  />
-                </div>
+              
+
+              <div className="mb-4">
+                <FieldLabel required>First Name</FieldLabel>
+                <input
+                type="text"
+                placeholder="First name"
+                className="w-full border rounded-md px-3 py-2"
+                value={personal.firstName}
+                onChange={(e) => setPersonal({ ...personal, firstName: e.target.value })}
+                />
               </div>
-
-              <div className="mb-3">
+              <div className="mb-4">
+                <FieldLabel required>Last Name</FieldLabel>
+                <input
+                type="text"
+                placeholder="Last name"
+                className="w-full border rounded-md px-3 py-2"
+                value={personal.lastName}
+                onChange={(e) => setPersonal({ ...personal, lastName: e.target.value })}
+                />
+              </div>
+              <div className="mb-4">
                 <FieldLabel required>Email</FieldLabel>
                 <div className="flex items-center gap-2">
                   <input
@@ -683,13 +732,6 @@ export default function SignupPage() {
                       setEmailOtp("");
                     }}
                   />
-                  <button
-                    onClick={handleSendEmailOtp}
-                    disabled={!personal.email || loading}
-                    className="px-3 py-2 rounded-md bg-indigo-500 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    {loading ? "Sending..." : "Send Email OTP"}
-                  </button>
                 </div>
               </div>
 
@@ -708,54 +750,16 @@ export default function SignupPage() {
                   </button>
                 </div>
               </div>
-
-              <div className="mb-4">
-                <FieldLabel required>Email OTP</FieldLabel>
-                <div className="relative">
-                  <input
-                    type={showEmailOtp ? "text" : "password"}
-                    placeholder="Enter email OTP"
-                    className="w-full border rounded-md px-3 py-2 placeholder-gray-400"
-                    value={emailOtp}
-                    onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ""))}
-                    disabled={emailVerified}
-                  />
-                  <div className="absolute right-2 top-2 flex items-center gap-2">
-                    <button type="button" onClick={() => setShowEmailOtp(!showEmailOtp)} className="text-gray-500">
-                      {showEmailOtp ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleVerifyEmailOtp}
-                      disabled={!emailOtp || emailVerified || loading}
-                      className="px-2 py-1 rounded text-white bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-xs"
-                    >
-                      Verify
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {emailVerified && (
-                <div className="flex items-center text-green-600 mb-4">
-                  <CheckCircle2 className="mr-2" /> Email Verified
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button onClick={() => setStep(1)} className="py-2 px-4 border rounded-md">
-                  Back
-                </button>
+              <div className="flex gap-3 mb-4">
                 <button
                   onClick={() => setStep(3)}
                   disabled={
                     !personal.firstName ||
                     !personal.lastName ||
                     !personal.email ||
-                    !personal.password ||
-                    !emailVerified
+                    !personal.password
                   }
-                  className="ml-auto py-2 px-4 bg-blue-500 text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="w-full ml-auto py-2 px-4 bg-blue-500 text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -912,16 +916,6 @@ export default function SignupPage() {
                 <div className="text-xs text-gray-500 mt-1">
                   Selected: {selectedServiceIds.length} {selectedServiceIds.length === 0 ? " (none)" : ""}
                 </div>
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>Profile Picture</FieldLabel>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="w-full border rounded-md px-3 py-2"
-                  onChange={(e) => setProfessional({ ...professional, profilePicture: e.target.files ? e.target.files[0] : null })}
-                />
               </div>
 
               <div className="mb-4">
