@@ -1,6 +1,7 @@
 "use client";
 
-import { PageType, Pet } from "@/app/customer/dashboard/page";
+import { Pet } from "@/app/customer/dashboard/page";
+import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { FaFilter } from "react-icons/fa";

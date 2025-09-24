@@ -1,4 +1,5 @@
-import { PageType, Pet } from '@/app/customer/dashboard/page';
+import { Pet } from '@/app/customer/dashboard/page';
+import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from '@/utils/api';
 import React, { useState } from 'react';
 import { FaCheckCircle, FaCalendarAlt, FaMapMarkerAlt, FaDog, FaCut } from 'react-icons/fa';

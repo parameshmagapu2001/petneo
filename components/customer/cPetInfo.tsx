@@ -1,6 +1,6 @@
 "use client";
 
-import { PageType } from "@/app/customer/dashboard/page";
+import { PageType } from "@/app/customer/dashboard/constants";
 
 interface C_PetInfoProps {
     onPageTypeChange: (pageType: PageType) => void;

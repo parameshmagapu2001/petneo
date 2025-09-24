@@ -2,7 +2,8 @@
 
 import { FaCirclePlus } from "react-icons/fa6";
 import React, { useEffect, useRef, useState } from "react";
-import { PageType, Pet, User } from "@/app/customer/dashboard/page";
+import { Pet, User } from "@/app/customer/dashboard/page";
+import { PageType } from "@/app/customer/dashboard/constants";
 import { api, clearAuth } from "@/utils/api";
 import { transformAppointments } from "./cMyAppointments";
 import { AppointmentDetails } from "./appointmentStatus";
@@ -117,6 +118,7 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                 <div className="flex items-center space-x-4">
                     <img
                     src="../images/customer/paws.png"
+                    alt="paws"
                     />            
                     <div>
                     <h2 className="text-lg font-semibold">Hello, {user?.name}</h2>

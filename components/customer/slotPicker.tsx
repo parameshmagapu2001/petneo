@@ -19,7 +19,9 @@ interface SlotPickerProps {
 // Utility: convert "10:30 AM" -> Date
 const parseTime = (dateStr: string, timeStr: string): Date => {
   const [time, modifier] = timeStr.split(" ");
-  let [hours, minutes] = time.split(":").map(Number);
+  const timeArr = time.split(":").map(Number);
+  let hours = timeArr[0]
+  const minutes = timeArr[1];
 
   if (modifier === "PM" && hours < 12) hours += 12;
   if (modifier === "AM" && hours === 12) hours = 0;

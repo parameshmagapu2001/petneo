@@ -27,6 +27,7 @@ import { TbVaccine } from "react-icons/tb";
 import C_MyPets from "../../../../components/customer/cMyPets";
 import { Menu, X } from "lucide-react";
 import router from "next/router";
+import { PageType } from "./constants";
 
 export interface DayStatus {
     day: string;
@@ -67,21 +68,6 @@ export interface Pet {
     profile_url: string;
     pet_profile_picture?: string; // for some reason back is send like this in seperate call
     age?: string
-}
-
-export enum PageType {
-    DASHBOARD = "dashboard",
-    VET_DETAILS = "vetDetails",
-    VET_PROFILE = "vetProfile",
-    VET_APPOINTMENT_BOOKING = "vet_appointment_booking",
-    MY_PETS = "myPets",
-    PET_INFO = "petInfo",
-    MY_BIO = "myBio",
-    VACCINATION_RECORDS = "VaccinationRecords",
-    PRIVACY = "privacy",
-    HELP = "help",
-    ABOUT = "about",
-    MY_APPOINTMENTS = "myAppointments"
 }
 
 export default function CustomerDashboard()  {
