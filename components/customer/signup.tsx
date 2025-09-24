@@ -12,15 +12,9 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
 });
 
-type SIGNUP_TYPE = "vet" | "user";
-
-interface SignupProps {
-  signupType: SIGNUP_TYPE;
-}
-
 type Service = { id: number; name: string };
 
-export default function SignupPage({signupType}: SignupProps) {
+export default function SignupPageUser() {
 
   const [step, setStep] = useState(1);
   const router = useRouter();
@@ -180,9 +174,7 @@ export default function SignupPage({signupType}: SignupProps) {
       }
     };
 
-    if(signupType === "vet") {
-        fetchServices();
-    }
+    fetchServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE]);
 
@@ -202,7 +194,7 @@ export default function SignupPage({signupType}: SignupProps) {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/${signupType}/sendMobileOtp`, {
+      const res = await fetch(`${API_BASE}/sendMobileOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile_number: phone }),
@@ -241,7 +233,7 @@ export default function SignupPage({signupType}: SignupProps) {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/${signupType}/verifyMobileOtp`, {
+      const res = await fetch(`${API_BASE}/verifyMobileOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile_number: phone, otp }),
@@ -283,7 +275,7 @@ export default function SignupPage({signupType}: SignupProps) {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/${signupType}/sendEmailOtp`, {
+      const res = await fetch(`${API_BASE}/sendEmailOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: personal.email }),
@@ -320,7 +312,7 @@ export default function SignupPage({signupType}: SignupProps) {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/${signupType}/verifyEmailOtp`, {
+      const res = await fetch(`${API_BASE}/verifyEmailOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: personal.email, otp: emailOtp }),

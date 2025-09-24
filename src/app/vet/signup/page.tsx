@@ -1,11 +1,11 @@
 'use client';
 
-import SignupPage from '../../../../components/common/signup';
+import SignupPageVet from '../../../../components/vet/signup';
 
 const Page = () => {
 
   return (
-    <SignupPage signupType={'vet'}/>
+    <SignupPageVet/>
   );
 };
 

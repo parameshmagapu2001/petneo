@@ -1,11 +1,11 @@
 'use client';
 
-import SignupPage from '../../../../components/common/signup';
+import SignupPageUser from '../../../../components/customer/signup';
 
 const Page = () => {
 
   return (
-    <SignupPage signupType={'user'}/>
+    <SignupPageUser/>
   );
 };
 
