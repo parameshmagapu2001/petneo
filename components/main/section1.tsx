@@ -19,7 +19,7 @@ const Navbar = () => {
     setIsLoginDropdownOpen(false);
     switch (userType) {
       case 'customer':
-        router.push('/customer');
+        router.push('/customer/login');
         break;
       case 'vet':
         router.push('/vet/login');

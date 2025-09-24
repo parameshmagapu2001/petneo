@@ -21,11 +21,12 @@ import C_MyAppointments from "../../../../components/customer/cMyAppointments";
 import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
-import { api, setAccessToken } from "@/utils/api";
+import { api, clearAuth, setAccessToken } from "@/utils/api";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
 import { TbVaccine } from "react-icons/tb";
 import C_MyPets from "../../../../components/customer/cMyPets";
 import { Menu, X } from "lucide-react";
+import router from "next/router";
 
 export interface DayStatus {
     day: string;
@@ -200,7 +201,11 @@ export default function CustomerDashboard()  {
                
                 setLoading(false);
             }).catch((error) => {
+                setLoading(false);
                 //TODO handle error cases
+                if (error?.message.includes("403")) {
+                    handleLogOut();
+                 }
             })
         } 
     }, [pageType]);
@@ -208,6 +213,13 @@ export default function CustomerDashboard()  {
     function handleMenuClick(menuItem: { icon: React.JSX.Element; label: string; id: PageType; }): void {
         setIsOpen(false);
         handlePageTypeChange(menuItem.id);
+    }
+
+    function handleLogOut(): void {
+        setIsOpen(false);
+        clearAuth();
+        if (typeof window !== "undefined") window.location.href = "/customer/login";
+        else router.push("/customer/login")
     }
 
   return (
@@ -277,7 +289,7 @@ export default function CustomerDashboard()  {
                                 </div>
                                 <button
                                     className="w-full h-10 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-lg"
-                                    onClick={() => setIsOpen(false)}>
+                                    onClick={handleLogOut}>
                                     Logout
                                 </button>
                             </div>

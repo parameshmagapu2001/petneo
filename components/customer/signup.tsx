@@ -35,7 +35,7 @@ export default function SignupPageUser() {
     lastName: "",
     email: "",
     password: "",
-    profile_picture: ""
+    profile_picture: null as File | null,
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -44,35 +44,7 @@ export default function SignupPageUser() {
   const [showEmailOtp, setShowEmailOtp] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
 
-  // Step 3: Professional Info
-  const [professional, setProfessional] = useState({
-    qualification: "",
-    specialization: "",
-    licenseNo: "",
-    licenseAuth: "",
-    experience: "",
-    address: "",
-    landmark: "",
-    clinicName: "",
-    location: "",
-    profilePicture: null as File | null,
-    certificate: null as File | null,
-  });
-
-  // Services
-  const [services, setServices] = useState<Service[]>([]);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
-  const [otherServiceIds, setOtherServiceIds] = useState(""); // manual comma-separated IDs
-  const [newServiceName, setNewServiceName] = useState("");
-
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
-
-  // Default (fallback) services — used when API not available or to ensure at least 3 exist
-  const defaultServices: Service[] = [
-    { id: 1, name: "General Checkup" },
-    { id: 2, name: "Vaccination" },
-    { id: 3, name: "Minor Surgery" },
-  ];
 
   // Utility: read cookie
   const getCookie = (name: string) => {
@@ -115,69 +87,6 @@ export default function SignupPageUser() {
     return extras;
   };
 
-  // Helper: deduplicate services by id
-  const dedupeServices = (list: Service[]) => {
-    const map = new Map<number, Service>();
-    list.forEach((s) => {
-      if (Number.isInteger(s.id) && s.id > 0 && s.name?.trim()) {
-        if (!map.has(s.id)) map.set(s.id, { id: s.id, name: s.name.trim() });
-      }
-    });
-    return Array.from(map.values()).sort((a, b) => a.id - b.id);
-  };
-
-  // Fetch services on mount — fallback to defaultServices if API missing or error
-  useEffect(() => {
-    const fetchServices = async () => {
-      // If API not configured, fallback to defaults
-      if (!API_BASE) {
-        setServices(dedupeServices(defaultServices));
-        return;
-      }
-      try {
-        const res = await fetch(`${API_BASE}/services/`);
-        if (!res.ok) {
-          console.warn("Failed to fetch services list:", res.status);
-          // still set defaults so UI isn't empty
-          setServices(dedupeServices(defaultServices));
-          return;
-        }
-        // safe json parse
-        let data: any = null;
-        try {
-          data = await res.json();
-        } catch (err) {
-          console.warn("Failed to parse services JSON:", err);
-          setServices(dedupeServices(defaultServices));
-          return;
-        }
-
-        if (Array.isArray(data)) {
-          const parsed: Service[] = data
-            .map((s: any) => {
-              const idCandidate = Number(s.id ?? s.service_id ?? s.serviceId ?? s.id_str);
-              const nameCandidate = String(s.name ?? s.title ?? s.service_name ?? "").trim();
-              return { id: Number.isInteger(idCandidate) ? idCandidate : NaN, name: nameCandidate };
-            })
-            .filter((s: any) => Number.isInteger(s.id) && s.name);
-
-          // merge with default services (defaults may contain commonly expected service IDs)
-          const merged = dedupeServices([...defaultServices, ...parsed]);
-          setServices(merged);
-        } else {
-          console.warn("Unexpected services response shape:", data);
-          setServices(dedupeServices(defaultServices));
-        }
-      } catch (err) {
-        console.warn("Error fetching services:", err);
-        setServices(dedupeServices(defaultServices));
-      }
-    };
-
-    fetchServices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [API_BASE]);
-
   // --------------------------
   // Phone OTP: send & verify
   // --------------------------
@@ -194,7 +103,7 @@ export default function SignupPageUser() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/sendMobileOtp`, {
+      const res = await fetch(`${API_BASE}/user/sendMobileOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile_number: phone }),
@@ -233,7 +142,7 @@ export default function SignupPageUser() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/verifyMobileOtp`, {
+      const res = await fetch(`${API_BASE}/user/verifyMobileOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile_number: phone, otp }),
@@ -275,7 +184,7 @@ export default function SignupPageUser() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/sendEmailOtp`, {
+      const res = await fetch(`${API_BASE}/user/sendEmailOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: personal.email }),
@@ -312,7 +221,7 @@ export default function SignupPageUser() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/verifyEmailOtp`, {
+      const res = await fetch(`${API_BASE}/user/verifyEmailOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: personal.email, otp: emailOtp }),
@@ -338,83 +247,6 @@ export default function SignupPageUser() {
     }
   };
 
-  // Create a new service (POST /services/)
-  const handleCreateService = async () => {
-    if (!newServiceName?.trim()) {
-      setMessage("❌ Enter a name to create a service.");
-      return;
-    }
-    setLoading(true);
-    setMessage("");
-    try {
-      const name = newServiceName.trim();
-
-      if (!API_BASE) {
-        // Local fallback creation (dev mode) - choose next available id
-        const highestId = services.reduce((acc, s) => Math.max(acc, s.id), 0);
-        const newId = highestId + 1 || Date.now();
-        const localService: Service = { id: newId, name };
-        setServices((s) => dedupeServices([...s, localService]));
-        setSelectedServiceIds((s) => [...s, localService.id]);
-        setNewServiceName("");
-        setMessage(`✅ Service "${localService.name}" created locally and selected.`);
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/services/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.detail?.[0]?.msg || data?.message || "Failed to create service");
-      }
-
-      // API returns the created service with id
-      const created: Service | null =
-        data && (Number.isInteger(Number(data.id)) || Number.isInteger(data.id))
-          ? { id: Number(data.id), name: String(data.name ?? name) }
-          : null;
-
-      if (created) {
-        setServices((s) => dedupeServices([...s, created]));
-        setSelectedServiceIds((s) => [...s, created.id]);
-        setNewServiceName("");
-        setMessage(`✅ Service "${created.name}" created and selected.`);
-      } else {
-        // If response shape differs, refresh list
-        setMessage("✅ Service created — refreshing list.");
-        const refresh = await fetch(`${API_BASE}/services/`);
-        if (refresh.ok) {
-          const list = await refresh.json();
-          if (Array.isArray(list)) {
-            const parsed: Service[] = list
-              .map((s: any) => ({ id: Number(s.id ?? s.service_id ?? s.serviceId), name: String(s.name ?? s.title ?? "") }))
-              .filter((s) => Number.isInteger(s.id));
-            setServices(dedupeServices([...defaultServices, ...parsed]));
-          }
-        }
-      }
-    } catch (err: any) {
-      setMessage(`❌ ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Toggle service checkbox
-  const toggleService = (id: number) => {
-    setSelectedServiceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
   // --------------------------
   // Final submit (register)
   // --------------------------
@@ -426,27 +258,6 @@ export default function SignupPageUser() {
       if (!personal.firstName || !personal.lastName || !personal.email || !personal.password) {
         throw new Error("Please fill all required personal information fields");
       }
-      if (!emailVerified) {
-        throw new Error("Please verify your email before submitting registration");
-      }
-      if (!professional.qualification || !professional.licenseNo || !professional.clinicName) {
-        throw new Error("Please fill all required professional information fields");
-      }
-
-      // build final service IDs list
-      // parse otherServiceIds
-      const manual = (otherServiceIds || "")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((s) => Number(s))
-        .filter((n) => Number.isInteger(n)) as number[];
-
-      const finalIds = Array.from(new Set([...selectedServiceIds, ...manual])); // unique
-
-      if (finalIds.length === 0) {
-        throw new Error("Please select at least one valid service or add service IDs.");
-      }
 
       const formData = new FormData();
       formData.append("mobile_number", phone);
@@ -454,25 +265,10 @@ export default function SignupPageUser() {
       formData.append("password", personal.password);
       formData.append("first_name", personal.firstName);
       formData.append("last_name", personal.lastName);
-      formData.append("qualification", professional.qualification);
-      formData.append("specialization", professional.specialization);
-      formData.append("license_number", professional.licenseNo);
-      formData.append("license_issuing_authority", professional.licenseAuth);
-      formData.append("years_of_experience", String(professional.experience));
-      formData.append("address", professional.address);
-      formData.append("landmark", professional.landmark);
-      formData.append("clinic_name", professional.clinicName);
-      formData.append("location", professional.location);
-
-      // important: send validated service ids as comma separated string
-      formData.append("service_ids", finalIds.join(","));
-
-      if (professional.profilePicture) {
-        formData.append("profile_picture", professional.profilePicture);
+      if (personal.profile_picture) {
+        formData.append("profile_picture", personal.profile_picture);
       }
-      if (professional.certificate) {
-        formData.append("certification_document", professional.certificate);
-      }
+      
 
       // extras
       const extras = collectExtraClientData();
@@ -493,11 +289,11 @@ export default function SignupPageUser() {
         // dev fallback: simulate successful registration
         console.log("📡 (dev) FormData submitted:", Object.fromEntries(formData.entries()));
         setMessage("✅ (dev) Registration simulated successfully! Redirecting to login...");
-        setTimeout(() => router.push("/vet/login"), 1000);
+        setTimeout(() => router.push("/customer/login"), 1000);
         return;
       }
 
-      const res = await fetch(`${API_BASE}/registerVet`, {
+      const res = await fetch(`${API_BASE}/user/registerUser`, {
         method: "POST",
         body: formData,
       });
@@ -513,9 +309,6 @@ export default function SignupPageUser() {
         // helpful suggestions for common errors
         if (data?.detail && typeof data.detail === "string") {
           console.error("Server error detail:", data.detail);
-          if (data.detail.toLowerCase().includes("foreign key") || data.detail.toLowerCase().includes("foreignkeyviolation")) {
-            throw new Error("Registration failed: one or more service IDs are invalid on the server. Create the missing service(s) or remove invalid IDs.");
-          }
         }
         if (data?.message && typeof data.message === "string" && data.message.toLowerCase().includes("email is not verified")) {
           throw new Error("Please verify your email first before completing registration.");
@@ -523,6 +316,10 @@ export default function SignupPageUser() {
         const serverMsg = data?.message || data?.detail || res.statusText || "Registration failed with server error";
         console.error("Registration error response:", data);
         throw new Error(serverMsg);
+      } else if (!data.status) {
+         if (data?.message && typeof data.message === "string" && data.message.toLowerCase().includes("user already registered")) {
+          throw new Error(data.message);
+        }
       }
 
       if (data?.token) {
@@ -533,7 +330,7 @@ export default function SignupPageUser() {
       }
 
       setMessage("✅ Registration successful! Redirecting to login...");
-      setTimeout(() => router.push("/vet/login"), 1500);
+      setTimeout(() => router.push("/customer/login"), 1500);
     } catch (err: any) {
       setMessage(`❌ ${err.message}`);
     } finally {
@@ -551,44 +348,15 @@ export default function SignupPageUser() {
   const [profileImage, setProfileImage] = useState<string>();
   const profileImageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Convert file to binary string
-  const fileToBinaryString = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve(reader.result);
-        } else if (reader.result instanceof ArrayBuffer) {
-          // Convert ArrayBuffer to binary string
-          const bytes = new Uint8Array(reader.result);
-          let binary = "";
-          for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          resolve(binary);
-        }
-      };
-
-      reader.onerror = () => reject(reader.error);
-      reader.readAsBinaryString(file); // ensures binary string conversion
-    });
-  };
-
   const handleProfileImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const binaryString = await fileToBinaryString(file);
-      setPersonal({ ...personal, profile_picture: binaryString })
+    setPersonal({ ...personal, profile_picture: file })
 
-      // Preview image
-      const previewUrl = URL.createObjectURL(file);
-      setProfileImage(previewUrl);
-    } catch (err) {
-      console.error("Error converting file to binary string:", err);
-    }
+    // Preview image
+    const previewUrl = URL.createObjectURL(file);
+    setProfileImage(previewUrl);
   };
 
   const handleEditPhotoClick = () => {
@@ -606,7 +374,7 @@ export default function SignupPageUser() {
           {/* stepper */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex gap-2">
-              {[1, 2, 3].map((s) => (
+              {[1, 2].map((s) => (
                 <div key={s} className={`h-2 w-8 rounded-full ${step >= s ? "bg-pink-500" : "bg-gray-300"}`} />
               ))}
             </div>
@@ -723,7 +491,6 @@ export default function SignupPageUser() {
                             />
                         </div>
                     </div>
-
                 </div>
               
 
@@ -781,200 +548,14 @@ export default function SignupPageUser() {
               </div>
               <div className="flex gap-3 mb-4">
                 <button
-                  onClick={() => setStep(3)}
+                  onClick={handleFinalSubmit}
                   disabled={
                     !personal.firstName ||
                     !personal.lastName ||
                     !personal.email ||
-                    !personal.password
+                    !personal.password || loading
                   }
                   className="w-full ml-auto py-2 px-4 bg-blue-500 text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            </section>
-          )}
-
-          {/* Step 3 */}
-          {step === 3 && (
-            <section>
-              <h2 className="text-xl font-semibold mb-1">Professional Details</h2>
-              <p className="text-sm text-gray-600 mb-4">Enter your clinic & license details</p>
-
-              <div className="mb-3">
-                <FieldLabel required>Qualification</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.qualification}
-                  onChange={(e) => setProfessional({ ...professional, qualification: e.target.value })}
-                />
-              </div>
-
-              <div className="md:flex md:gap-4">
-                <div className="md:flex-1 mb-3">
-                  <FieldLabel>Specialization</FieldLabel>
-                  <input
-                    type="text"
-                    className="w-full border rounded-md px-3 py-2"
-                    value={professional.specialization}
-                    onChange={(e) => setProfessional({ ...professional, specialization: e.target.value })}
-                  />
-                </div>
-                <div className="md:flex-1 mb-3">
-                  <FieldLabel>Years of Experience</FieldLabel>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full border rounded-md px-3 py-2"
-                    value={professional.experience}
-                    onChange={(e) => setProfessional({ ...professional, experience: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel required>License Number</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.licenseNo}
-                  onChange={(e) => setProfessional({ ...professional, licenseNo: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>License Issuing Authority</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.licenseAuth}
-                  onChange={(e) => setProfessional({ ...professional, licenseAuth: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel required>Clinic Name</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.clinicName}
-                  onChange={(e) => setProfessional({ ...professional, clinicName: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>Location</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.location}
-                  onChange={(e) => setProfessional({ ...professional, location: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>Address</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.address}
-                  onChange={(e) => setProfessional({ ...professional, address: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>Landmark</FieldLabel>
-                <input
-                  type="text"
-                  className="w-full border rounded-md px-3 py-2"
-                  value={professional.landmark}
-                  onChange={(e) => setProfessional({ ...professional, landmark: e.target.value })}
-                />
-              </div>
-
-              {/* Services selection */}
-              <div className="mb-3">
-                <FieldLabel required>Services (select at least one)</FieldLabel>
-                <div className="text-xs text-gray-500 mb-1">Choose from existing services or create a new one.</div>
-                {services.length > 0 ? (
-                  <div className="max-h-36 overflow-auto border rounded p-2">
-                    {services.map((s) => (
-                      <label key={s.id} className="flex items-center gap-2 text-sm mb-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedServiceIds.includes(s.id)}
-                          onChange={() => toggleService(s.id)}
-                          className="w-4 h-4"
-                        />
-                        <span>{s.name} <span className="text-gray-400 text-xs">({s.id})</span></span>
-                      </label>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500 mb-2">No services loaded — you can create one or paste IDs below.</div>
-                )}
-
-                <div className="mt-2 text-xs text-gray-600">If a service is missing, create it here:</div>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="text"
-                    placeholder="New service name"
-                    className="flex-1 border rounded-md px-3 py-2"
-                    value={newServiceName}
-                    onChange={(e) => setNewServiceName(e.target.value)}
-                  />
-                  <button
-                    onClick={handleCreateService}
-                    disabled={!newServiceName.trim() || loading}
-                    className="px-3 py-2 rounded-md bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    Create
-                  </button>
-                </div>
-
-                <div className="mt-3 text-xs text-gray-600">Or add other existing service IDs (comma separated):</div>
-                <input
-                  type="text"
-                  placeholder="e.g. 1,2,3"
-                  className="w-full border rounded-md px-3 py-2 mt-1"
-                  value={otherServiceIds}
-                  onChange={(e) => setOtherServiceIds(e.target.value)}
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  Selected: {selectedServiceIds.length} {selectedServiceIds.length === 0 ? " (none)" : ""}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>Profile Picture</FieldLabel>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="w-full border rounded-md px-3 py-2"
-                  onChange={(e) => setProfessional({ ...professional, profilePicture: e.target.files ? e.target.files[0] : null })}
-                />
-              </div>
-
-              <div className="mb-4">
-                <FieldLabel>Certification Document</FieldLabel>
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="w-full border rounded-md px-3 py-2"
-                  onChange={(e) => setProfessional({ ...professional, certificate: e.target.files ? e.target.files[0] : null })}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button onClick={() => setStep(2)} className="py-2 px-4 border rounded-md">
-                  Back
-                </button>
-                <button
-                  onClick={handleFinalSubmit}
-                  disabled={loading}
-                  className="ml-auto py-2 px-4 bg-green-500 text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {loading ? "Submitting..." : "Submit"}
                 </button>

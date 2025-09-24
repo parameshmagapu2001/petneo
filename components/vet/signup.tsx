@@ -35,7 +35,7 @@ export default function SignupPageVet() {
     lastName: "",
     email: "",
     password: "",
-    profile_picture: ""
+    profile_picture: null as File | null,
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -55,7 +55,6 @@ export default function SignupPageVet() {
     landmark: "",
     clinicName: "",
     location: "",
-    profilePicture: null as File | null,
     certificate: null as File | null,
   });
 
@@ -454,6 +453,9 @@ export default function SignupPageVet() {
       formData.append("password", personal.password);
       formData.append("first_name", personal.firstName);
       formData.append("last_name", personal.lastName);
+      if (personal.profile_picture) {
+        formData.append("profile_picture", personal.profile_picture);
+      }
       formData.append("qualification", professional.qualification);
       formData.append("specialization", professional.specialization);
       formData.append("license_number", professional.licenseNo);
@@ -467,9 +469,6 @@ export default function SignupPageVet() {
       // important: send validated service ids as comma separated string
       formData.append("service_ids", finalIds.join(","));
 
-      if (professional.profilePicture) {
-        formData.append("profile_picture", professional.profilePicture);
-      }
       if (professional.certificate) {
         formData.append("certification_document", professional.certificate);
       }
@@ -523,6 +522,10 @@ export default function SignupPageVet() {
         const serverMsg = data?.message || data?.detail || res.statusText || "Registration failed with server error";
         console.error("Registration error response:", data);
         throw new Error(serverMsg);
+      } else if (!data.status) {
+         if (data?.message && typeof data.message === "string" && data.message.toLowerCase().includes("user already registered")) {
+          throw new Error(data.message);
+        }
       }
 
       if (data?.token) {
@@ -551,44 +554,15 @@ export default function SignupPageVet() {
   const [profileImage, setProfileImage] = useState<string>();
   const profileImageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Convert file to binary string
-  const fileToBinaryString = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve(reader.result);
-        } else if (reader.result instanceof ArrayBuffer) {
-          // Convert ArrayBuffer to binary string
-          const bytes = new Uint8Array(reader.result);
-          let binary = "";
-          for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          resolve(binary);
-        }
-      };
-
-      reader.onerror = () => reject(reader.error);
-      reader.readAsBinaryString(file); // ensures binary string conversion
-    });
-  };
-
   const handleProfileImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const binaryString = await fileToBinaryString(file);
-      setPersonal({ ...personal, profile_picture: binaryString })
+    setPersonal({ ...personal, profile_picture: file })
 
-      // Preview image
-      const previewUrl = URL.createObjectURL(file);
-      setProfileImage(previewUrl);
-    } catch (err) {
-      console.error("Error converting file to binary string:", err);
-    }
+    // Preview image
+    const previewUrl = URL.createObjectURL(file);
+    setProfileImage(previewUrl);
   };
 
   const handleEditPhotoClick = () => {
@@ -945,16 +919,6 @@ export default function SignupPageVet() {
                 <div className="text-xs text-gray-500 mt-1">
                   Selected: {selectedServiceIds.length} {selectedServiceIds.length === 0 ? " (none)" : ""}
                 </div>
-              </div>
-
-              <div className="mb-3">
-                <FieldLabel>Profile Picture</FieldLabel>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="w-full border rounded-md px-3 py-2"
-                  onChange={(e) => setProfessional({ ...professional, profilePicture: e.target.files ? e.target.files[0] : null })}
-                />
               </div>
 
               <div className="mb-4">
