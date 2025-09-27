@@ -5,6 +5,7 @@ import { api } from "@/utils/api";
 import { form } from "framer-motion/client";
 import { useEffect, useRef, useState } from "react";
 import FullScreenLoader from "./fullScreenLoader";
+import { FaCamera, FaPen } from "react-icons/fa";
 
 interface C_PetInfoProps {
     petId: number | undefined;
@@ -17,9 +18,11 @@ interface PetCompleteDetails {
     breeding?: string;
     gender?: string;
     age?: string;
+    dob?: string; //Extra param for creating the pet
     weight?: number;
     licence?: string;
     profile_picture?: string;
+    profile_picture_file?: File | null; //Extra param for creating the pet
 }
 
 interface Breed {
@@ -100,6 +103,21 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
            });
     };
 
+    const today = new Date();
+
+    const profileImageInputRef = useRef<HTMLInputElement | null>(null);
+    const handleEditPhotoClick = () => {
+        profileImageInputRef.current?.click();
+    };
+    const handleProfileImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Preview image
+        const previewUrl = URL.createObjectURL(file);
+        setPetCompleteDetails({...petCompleteDetails,  profile_picture: previewUrl, profile_picture_file: file});
+    };
+
     return (
         <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
             <form className="w-full max-w-sm bg-transparent rounded-lg p-4">
@@ -113,6 +131,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.name || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                        disabled={!!petId}
                     />
                 </div>
                 {/* Type */}
@@ -124,7 +143,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.species || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!(petTypes?.length > 0)}
+                        disabled={!!petId || !(petTypes?.length > 0)}
                     >
                         <option value="">Select</option>
                         {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
@@ -139,24 +158,39 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.breeding || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!(petCompleteDetails?.species) || !(breeds?.length > 0)}
+                        disabled={!!petId || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
                     >
                         <option value="">Select Breed</option>
                         {breeds.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
                     </select>
                 </div>
-                {/* Date Of Birth */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="dob">Date Of Birth</label>
-                    <input
-                        type="text"
-                        id="dob"
-                        name="age"
-                        value={petCompleteDetails?.age || ""}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                    />
-                </div>
+                {/* Date Of Birth ? AGE */}
+                {petId && 
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
+                        <input
+                            type="text"
+                            id="age"
+                            name="age"
+                            value={petCompleteDetails?.age || ""}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            disabled={!!petId}
+                        />
+                    </div>}
+                {!petId && 
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
+                        <input
+                            type="date"
+                            id="dob"
+                            name="dob"
+                            value={petCompleteDetails?.dob || ""}
+                            onChange={handleChange}
+                            max={today.toISOString().split('T')[0]}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                        />
+                    </div>}
                 {/* Gender */}
                 <div className="mb-4 relative">
                     <label className="block font-semibold mb-1" htmlFor="gender">Gender</label>
@@ -166,6 +200,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.gender || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                        disabled={!!petId}
                     >
                         <option value="">Select</option>
                         {GENDERS.map(gender => <option key={gender} value={gender}>{gender}</option>)}
@@ -182,20 +217,43 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         placeholder="Enter Pet Weight"
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                        disabled={!!petId}
                     />
                 </div>
                 {/* Pet Photo */}
                 <div className="mb-4 relative">
                     <label className="block font-semibold mb-1" htmlFor="photo">Pet Photo</label>
-                    <img
-                        src={petCompleteDetails?.profile_picture}
-                        alt="pet"
-                        className="w-full h-32 object-cover rounded-md bg-white"
-                    />
+                    {petCompleteDetails?.profile_picture ? 
+                        <img
+                            src={petCompleteDetails.profile_picture}
+                            alt="pet"
+                            className="w-full h-32 object-cover rounded-md bg-white"
+                        /> : 
+                        <FaCamera className="text-gray-400 text-3xl" />}
+                    
+                    {!petId && 
+                        <>
+                            {/* Edit (pencil) icon */}
+                            <button
+                                onClick={handleEditPhotoClick}
+                                className="absolute bottom-2 right-2 bg-pink-500 text-white p-2 rounded-full shadow-md hover:bg-pink-600"
+                                >
+                                <FaPen size={12} />
+                            </button>
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                ref={profileImageInputRef}
+                                onChange={handleProfileImageFileChange}
+                            />
+                        </>}   
                 </div>
-                <button type="submit" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300">
-                Save
-                </button>
+                {!petId && 
+                    <button type="submit" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300">
+                    Save
+                    </button>}
             </form>
 
             <FullScreenLoader loading={loading}/>
