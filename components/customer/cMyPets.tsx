@@ -5,6 +5,7 @@ import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
+import FullScreenLoader from "./fullScreenLoader";
 
 interface C_MyPetsProps {
     onViewPetDetails: (petId: number) => void;
@@ -14,13 +15,16 @@ interface C_MyPetsProps {
 export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
     const [myPets, setMyPets] = useState<Pet[]>([]);
     const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
+            setLoading(true);
             //fetching my pets
             const fetchMyPets = api.get("/pets/myPets");
             Promise.all([fetchMyPets]).then(([res1]) => {
                 setMyPets(Array.isArray(res1) ? res1 : []);
+                setLoading(false);
             }).catch((error) => {
                 //TODO handle error scenarios
             })
@@ -54,6 +58,7 @@ export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
                 <FaPlus />
                 Add Pets
             </button>
+            <FullScreenLoader loading={loading}/>
         </div>
     );
 }
