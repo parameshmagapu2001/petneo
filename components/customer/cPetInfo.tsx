@@ -6,9 +6,10 @@ import { form } from "framer-motion/client";
 import { useEffect, useRef, useState } from "react";
 import FullScreenLoader from "./fullScreenLoader";
 import { FaCamera, FaPen } from "react-icons/fa";
+import { spec } from "node:test/reporters";
 
 interface C_PetInfoProps {
-    petId: number | undefined;
+    petId: number;
     onPageTypeChange: (pageType: PageType) => void;
 }
 interface PetCompleteDetails {
@@ -53,7 +54,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
             //fetching the species
             const speciesResponse = api.get("/user/species");
             let petDetailsResponse;
-            if (petId) {
+            if (petId >= 0) {
                 //fetching the pet info
                 petDetailsResponse = api.get(`/pets/user/${petId}`);
             }
@@ -118,6 +119,55 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
         setPetCompleteDetails({...petCompleteDetails,  profile_picture: previewUrl, profile_picture_file: file});
     };
 
+    function handleSpeciesChange(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
+        //setting breeds on every species change.
+        setBreeds(speciesList.find((item) => item.type === event.target.value)?.breeds || []);
+        setPetCompleteDetails({
+             ...petCompleteDetails,
+            [event.target.name]: event.target.value,
+            breeding: "" // setting it to default value
+           });
+    }
+
+    async function onSave(): Promise<void> {
+        //constructing the payload
+        const formData = new FormData();
+        const breed_Id = breeds.find((item) => item.name === petCompleteDetails.breeding)?.id;
+        if (petCompleteDetails.name &&
+            petCompleteDetails.species &&
+            breed_Id && 
+            petCompleteDetails.gender
+        ) {
+            formData.append("name", petCompleteDetails.name);
+            formData.append("species", petCompleteDetails.species);
+            formData.append("breed_id", breed_Id.toString());
+            formData.append("gender", petCompleteDetails.gender);
+        } else {
+            alert("Provide the necessary details");
+            return;
+        }
+            
+        if (petCompleteDetails.dob ) {
+            formData.append("date_of_birth", petCompleteDetails.dob);
+        }
+        if (petCompleteDetails.weight) {
+            formData.append("weight", petCompleteDetails.weight.toString());
+        }
+        if (petCompleteDetails.profile_picture_file) {
+            formData.append("profile_picture", petCompleteDetails.profile_picture_file);
+        }
+        
+        //creating the pet
+        const createPetResponse = await api.formDatapost("/pets/addPet", formData);
+
+        if (createPetResponse?.ok) {
+            //successfull
+            //Move to home or assign the id to convert it into readonly mode.
+        } else {
+            //TODO handle error scenario
+        }
+    };
+
     return (
         <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
             <form className="w-full max-w-sm bg-transparent rounded-lg p-4">
@@ -131,7 +181,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.name || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!!petId}
+                        disabled={petId >= 0}
                     />
                 </div>
                 {/* Type */}
@@ -141,9 +191,9 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         id="type"
                         name="species"
                         value={petCompleteDetails?.species || ""}
-                        onChange={handleChange}
+                        onChange={handleSpeciesChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!!petId || !(petTypes?.length > 0)}
+                        disabled={petId >= 0 || !(petTypes?.length > 0)}
                     >
                         <option value="">Select</option>
                         {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
@@ -158,14 +208,14 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.breeding || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!!petId || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
+                        disabled={petId >= 0 || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
                     >
                         <option value="">Select Breed</option>
                         {breeds.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
                     </select>
                 </div>
                 {/* Date Of Birth ? AGE */}
-                {petId && 
+                {petId >= 0 ? 
                     <div className="mb-4 relative">
                         <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
                         <input
@@ -175,10 +225,9 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                             value={petCompleteDetails?.age || ""}
                             onChange={handleChange}
                             className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                            disabled={!!petId}
+                            disabled={petId >= 0}
                         />
-                    </div>}
-                {!petId && 
+                    </div> :  
                     <div className="mb-4 relative">
                         <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
                         <input
@@ -200,7 +249,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.gender || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!!petId}
+                        disabled={petId >= 0}
                     >
                         <option value="">Select</option>
                         {GENDERS.map(gender => <option key={gender} value={gender}>{gender}</option>)}
@@ -217,7 +266,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         placeholder="Enter Pet Weight"
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!!petId}
+                        disabled={petId >= 0}
                     />
                 </div>
                 {/* Pet Photo */}
@@ -231,10 +280,11 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         /> : 
                         <FaCamera className="text-gray-400 text-3xl" />}
                     
-                    {!petId && 
+                    {petId < 0 && 
                         <>
                             {/* Edit (pencil) icon */}
                             <button
+                                type="button"
                                 onClick={handleEditPhotoClick}
                                 className="absolute bottom-2 right-2 bg-pink-500 text-white p-2 rounded-full shadow-md hover:bg-pink-600"
                                 >
@@ -250,8 +300,9 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                             />
                         </>}   
                 </div>
-                {!petId && 
-                    <button type="submit" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300">
+                {petId < 0 && 
+                    <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300"
+                    onClick={onSave}>
                     Save
                     </button>}
             </form>

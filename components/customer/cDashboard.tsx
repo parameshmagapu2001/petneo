@@ -66,8 +66,7 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
 
     // Handler for clicking the add button
     const handleAddPet = () => {
-    alert("Add new pet clicked");
-    // You can open a modal or navigate to add pet form
+    onViewPetDetails(-1);
     };
 
     // Handler for clicking on services

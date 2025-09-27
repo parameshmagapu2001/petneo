@@ -208,7 +208,7 @@ export default function CustomerDashboard()  {
         else router.push("/customer/login")
     }
 
-    const [selectedPetId, setSelectedPetId] = useState<number>();
+    const [selectedPetId, setSelectedPetId] = useState<number>(-1);
 
     function viewPetDetails(petId: number): void {
         setSelectedPetId(petId);
