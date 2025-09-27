@@ -200,7 +200,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
                         disabled={petCompleteDetails.petId >= 0 || !(petTypes?.length > 0)}
                     >
-                        <option value="">Select</option>
+                        <option value="" disabled hidden>Select</option>
                         {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
                     </select>
                 </div>
@@ -215,7 +215,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
                         disabled={petCompleteDetails.petId >= 0 || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
                     >
-                        <option value="">Select Breed</option>
+                        <option value="" disabled hidden>Select Breed</option>
                         {breeds.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
                     </select>
                 </div>
@@ -256,7 +256,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
                         disabled={petCompleteDetails.petId >= 0}
                     >
-                        <option value="">Select</option>
+                        <option value="" disabled hidden>Select</option>
                         {GENDERS.map(gender => <option key={gender} value={gender}>{gender}</option>)}
                     </select>
                 </div>
