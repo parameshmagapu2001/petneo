@@ -130,8 +130,6 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
     }
 
     async function onSave(): Promise<void> {
-
-        setLoading(true);
         //constructing the payload
         const formData = new FormData();
         const breed_Id = breeds.find((item) => item.name === petCompleteDetails.breeding)?.id;
@@ -159,6 +157,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
             formData.append("profile_picture", petCompleteDetails.profile_picture_file);
         }
         
+        setLoading(true);
         //creating the pet
         const createPetResponse = await api.formDatapost("/pets/addPet", formData);
 
