@@ -4,6 +4,7 @@ import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from "@/utils/api";
 import { form } from "framer-motion/client";
 import { useEffect, useRef, useState } from "react";
+import FullScreenLoader from "./fullScreenLoader";
 
 interface C_PetInfoProps {
     petId: number | undefined;
@@ -85,6 +86,8 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                     }
                 }
                 setLoading(false);
+            }).catch(() => {
+                //TODO error handling.
             });
         }
         
@@ -194,6 +197,8 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                 Save
                 </button>
             </form>
+
+            <FullScreenLoader loading={loading}/>
         </div>
     );
 }
