@@ -7,11 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 
 interface C_MyPetsProps {
-    onPageTypeChange: (pageType: PageType) => void;
+    onViewPetDetails: (petId: number) => void;
 }
 
 
-export default function C_MyPets({ onPageTypeChange }: C_MyPetsProps) {
+export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
     const [myPets, setMyPets] = useState<Pet[]>([]);
     const hasFetched = useRef(false);
     useEffect(() => {
@@ -39,7 +39,8 @@ export default function C_MyPets({ onPageTypeChange }: C_MyPetsProps) {
                     className="w-full h-48 object-cover rounded-t-xl"
                     />
                     <div className="w-full flex justify-center gap-3 py-3">
-                    <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold">
+                    <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold"
+                    onClick={() => onViewPetDetails(pet.id)}>
                         View Details
                     </button>
                     <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold">

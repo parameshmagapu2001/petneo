@@ -14,11 +14,12 @@ import router from "next/router";
 interface C_DashboardMainProps {
     user: User | null;
     pets: Pet[];
+    onViewPetDetails: (petId: number) => void;
     onPageTypeChange: (pageType: PageType) => void;
 }
 
 
-export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_DashboardMainProps) {
+export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTypeChange }: C_DashboardMainProps) {
     type Service = {
     id: string;
     label: string;
@@ -59,8 +60,8 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
     ];
 
     // Handler for clicking on a pet image
-    const handlePetClick = (petName: string) => {
-    onPageTypeChange(PageType.PET_INFO);
+    const handlePetClick = (petId: number) => {
+    onViewPetDetails(petId);
     };
 
     // Handler for clicking the add button
@@ -134,7 +135,7 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                             <div key={item.id} className="flex-col items-center">
                                 {/* Pet Image card */}
                                 <button
-                                    onClick={() => handlePetClick(item.name)}
+                                    onClick={() => handlePetClick(item.id)}
                                     className="w-16 h-16 rounded-full overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-pink-400"
                                     aria-label= {item.name}
                                     type="button"
