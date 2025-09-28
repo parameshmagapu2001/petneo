@@ -14,11 +14,12 @@ import router from "next/router";
 interface C_DashboardMainProps {
     user: User | null;
     pets: Pet[];
+    onViewPetDetails: (petId: number) => void;
     onPageTypeChange: (pageType: PageType) => void;
 }
 
 
-export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_DashboardMainProps) {
+export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTypeChange }: C_DashboardMainProps) {
     type Service = {
     id: string;
     label: string;
@@ -59,14 +60,13 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
     ];
 
     // Handler for clicking on a pet image
-    const handlePetClick = (petName: string) => {
-    onPageTypeChange(PageType.PET_INFO);
+    const handlePetClick = (petId: number) => {
+    onViewPetDetails(petId);
     };
 
     // Handler for clicking the add button
     const handleAddPet = () => {
-    alert("Add new pet clicked");
-    // You can open a modal or navigate to add pet form
+    onViewPetDetails(-1);
     };
 
     // Handler for clicking on services
@@ -134,7 +134,7 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                             <div key={item.id} className="flex-col items-center">
                                 {/* Pet Image card */}
                                 <button
-                                    onClick={() => handlePetClick(item.name)}
+                                    onClick={() => handlePetClick(item.id)}
                                     className="w-16 h-16 rounded-full overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-pink-400"
                                     aria-label= {item.name}
                                     type="button"
@@ -155,7 +155,7 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                         
                     {/* Add ICON */}
                     <div className="pb-7">
-                        <FaCirclePlus color="#D64AA0" className="w-16 h-16" onClick={handleAddPet}/>
+                        <FaCirclePlus color="#D64AA0" className="w-16 h-16 cursor-pointer" onClick={handleAddPet}/>
                     </div>
                     
                     </div>
@@ -199,20 +199,26 @@ export default function C_DashboardMain({ user, pets,  onPageTypeChange }: C_Das
                 <section className="space-y-4 w-full">
                 <h3 className="font-semibold text-gray-700">My Appointments</h3>
                 <div className="rounded-lg shadow border border-gray-300">
-                    <div className="grid grid-cols-3 gap-x-6 gap-y-8 mt-6 mx-3">
-                        {myAppointments.map(app => (
-                        <DoctorCard key={app.id} appointmentDetails={app} />
-                        ))}
-                    </div>
-                    <div className="flex justify-center mt-6 mb-3">
-                        <button
-                        type="button"
-                        className="sm:w-[370px] bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg px-8 py-2 transition"
-                        onClick={() => HandleViewAllAppointments()}
-                        >
-                        View all
-                        </button>
-                    </div>
+                    {myAppointments?.length > 0 ? 
+                    <>
+                        <div className="grid grid-cols-3 gap-x-6 gap-y-8 mt-6 mx-3">
+                            {myAppointments.map(app => (
+                            <DoctorCard key={app.id} appointmentDetails={app} />
+                            ))}
+                        </div>
+                        <div className="flex justify-center mt-6 mb-3">
+                            <button
+                            type="button"
+                            className="sm:w-[370px] bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg px-8 py-2 transition"
+                            onClick={() => HandleViewAllAppointments()}
+                            >
+                            View all
+                            </button>
+                        </div>
+                    </> : 
+                    <div className="flex items-center justify-items-center grid grid-cols-1 min-h-30">
+                        <span>No Appointments to show</span>
+                    </div>}
                 </div>
                 </section>
             </div>

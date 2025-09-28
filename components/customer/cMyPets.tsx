@@ -5,22 +5,26 @@ import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
+import FullScreenLoader from "./fullScreenLoader";
 
 interface C_MyPetsProps {
-    onPageTypeChange: (pageType: PageType) => void;
+    onViewPetDetails: (petId: number) => void;
 }
 
 
-export default function C_MyPets({ onPageTypeChange }: C_MyPetsProps) {
+export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
     const [myPets, setMyPets] = useState<Pet[]>([]);
     const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
+            setLoading(true);
             //fetching my pets
             const fetchMyPets = api.get("/pets/myPets");
             Promise.all([fetchMyPets]).then(([res1]) => {
                 setMyPets(Array.isArray(res1) ? res1 : []);
+                setLoading(false);
             }).catch((error) => {
                 //TODO handle error scenarios
             })
@@ -39,7 +43,8 @@ export default function C_MyPets({ onPageTypeChange }: C_MyPetsProps) {
                     className="w-full h-48 object-cover rounded-t-xl"
                     />
                     <div className="w-full flex justify-center gap-3 py-3">
-                    <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold">
+                    <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold"
+                    onClick={() => onViewPetDetails(pet.id)}>
                         View Details
                     </button>
                     <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold">
@@ -53,6 +58,7 @@ export default function C_MyPets({ onPageTypeChange }: C_MyPetsProps) {
                 <FaPlus />
                 Add Pets
             </button>
+            <FullScreenLoader loading={loading}/>
         </div>
     );
 }

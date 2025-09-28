@@ -208,6 +208,13 @@ export default function CustomerDashboard()  {
         else router.push("/customer/login")
     }
 
+    const [selectedPetId, setSelectedPetId] = useState<number>(-1);
+
+    function viewPetDetails(petId: number): void {
+        setSelectedPetId(petId);
+        handlePageTypeChange(PageType.PET_INFO);
+    }
+
   return (
      <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
       {/* Header */}
@@ -303,12 +310,12 @@ export default function CustomerDashboard()  {
         </div>
 
       <main className={`${isOpen ? "blur-sm pointer-events-none" : ""}`}>
-        {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onPageTypeChange = {handlePageTypeChange}/>}
+        {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onViewPetDetails={viewPetDetails} onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}/>}
         {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} userPets={userPets} onPageTypeChange = {handlePageTypeChange}/>}
-        {pageType === PageType.MY_PETS && <C_MyPets onPageTypeChange={handlePageTypeChange}/>}
-        {pageType === PageType.PET_INFO && <C_PetInfo onPageTypeChange={handlePageTypeChange}/>}
+        {pageType === PageType.MY_PETS && <C_MyPets onViewPetDetails={viewPetDetails}/>}
+        {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId} onPageTypeChange={handlePageTypeChange}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
       </main>
 
