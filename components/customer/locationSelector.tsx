@@ -47,8 +47,8 @@ export default function LocationSelector() {
           >
             {/* Top Row */}
             <div className="flex justify-between items-start">
-              <h3
-                className={`text-base font-semibold ${
+              <span
+                className={`text-xs font-semibold ${
                   isSelected ? "text-white" : "text-black"
                 }`}
               >
@@ -62,7 +62,7 @@ export default function LocationSelector() {
                     {loc.subtitle}
                   </span>
                 )}
-              </h3>
+              </span>
               {isSelected ? (
                 <FaCheckSquare
                   className={`${
@@ -77,7 +77,7 @@ export default function LocationSelector() {
             {/* Bottom Row */}
             {loc.location ? (
               <p
-                className={`mt-2 text-lg font-semibold ${
+                className={`mt-2 text-sm font-semibold ${
                   isSelected ? "text-white" : "text-black"
                 }`}
               >
@@ -97,7 +97,7 @@ export default function LocationSelector() {
               <div className="flex items-center gap-2 mt-3">
                 <FaHome className={isSelected ? "text-white text-xl" : "text-pink-500 text-xl"} />
                 <span
-                  className={`text-lg font-medium ${
+                  className={`text-sm font-medium ${
                     isSelected ? "text-white" : "text-black"
                   }`}
                 >
