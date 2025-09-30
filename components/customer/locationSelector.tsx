@@ -94,13 +94,13 @@ export default function LocationSelector({} : LocationSelectorProps) {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center grid grid-cols-3 gap-4">
       {addresses.map((loc) => {
         const isSelected = selectedId === loc.id;
         return (
           <div
             key={loc.id}
-            className={`rounded-2xl p-4 w-56 relative shadow-md cursor-pointer transition 
+            className={`rounded-2xl p-4 w-34 relative shadow-md cursor-pointer transition 
             ${isSelected ? "bg-pink-500 text-white" : "bg-white text-black"}`}
             onClick={handleAddressSelection(loc)}
           >
@@ -136,7 +136,7 @@ export default function LocationSelector({} : LocationSelectorProps) {
             {/* Bottom Row */}
             {loc.location_name && (
               <p
-                className={`mt-2 text-sm font-semibold ${
+                className={`mt-2 text-xs font-semibold ${
                   isSelected ? "text-white" : "text-black"
                 }`}
               >
@@ -158,7 +158,7 @@ export default function LocationSelector({} : LocationSelectorProps) {
 
       {/* Add Button */}
       <button
-        className="bg-pink-500 rounded-full p-3 shadow-md hover:bg-pink-600 transition"
+        className="bg-pink-500 rounded-full p-3 w-10 shadow-md hover:bg-pink-600 transition cursor-pointer"
         onClick={handleAdd}
       >
         <FaPlus className="text-white text-lg" />
