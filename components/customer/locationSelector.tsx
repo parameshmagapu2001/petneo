@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import { api } from "@/utils/api";
+import React, { useEffect, useRef, useState } from "react";
 import { FaHome, FaPlus } from "react-icons/fa";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
+import FullScreenLoader from "./fullScreenLoader";
 
 interface Location {
   id: number;
@@ -9,6 +11,21 @@ interface Location {
   location?: string;
   details?: string;
 }
+
+interface Address {
+  address: string;
+  address_details?: string;
+  contact_name: string;
+  contact_number: string;
+  location_name: string;
+  latitude: number;
+  longitude: number,
+  id?: number
+}
+
+interface LocationSelectorProps {
+}
+
 
 const INITIAL_LOCATIONS: Location[] = [
   {
@@ -25,25 +42,67 @@ const INITIAL_LOCATIONS: Location[] = [
   },
 ];
 
-export default function LocationSelector() {
-  const [locations, setLocations] = useState(INITIAL_LOCATIONS);
-  const [selectedId, setSelectedId] = useState<number>(1);
+export default function LocationSelector({} : LocationSelectorProps) {
+  const [selectedId, setSelectedId] = useState<number | undefined >();
 
   // Add new location on click
   const handleAdd = () => {
     alert("clicked on add location button");
   };
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+
+
+  const hasFetched = useRef(false);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      setLoading(true);
+      const fetchUserAddresses = api.get("/user/address/myAddresses");
+      Promise.all([fetchUserAddresses]).then(([res1]) => {
+         setLoading(false);
+          if (Array.isArray(res1)) {
+            //setting the address
+            const localAddresses: Address[] = [];
+            res1.forEach((item) => {
+              localAddresses.push({
+                address: item.address,
+                address_details: item.address_details,
+                contact_name: item.contact_name,
+                contact_number: item.contact_number,
+                location_name: item.location_name,
+                latitude: item.latitude,
+                longitude: item.longitude,
+                id: item.id,
+              });
+            });
+              setAddresses(localAddresses);
+          }
+      }).catch((error) => {
+          //TODO handle error cases
+      });
+    }
+  }, []);
+
+  const handleAddressSelection = (address: Address) => {
+    return () => {
+      setSelectedId(address.id);
+    };
+
+  }
+
   return (
     <div className="flex items-center gap-4">
-      {locations.map((loc) => {
+      {addresses.map((loc) => {
         const isSelected = selectedId === loc.id;
         return (
           <div
             key={loc.id}
             className={`rounded-2xl p-4 w-56 relative shadow-md cursor-pointer transition 
             ${isSelected ? "bg-pink-500 text-white" : "bg-white text-black"}`}
-            onClick={() => setSelectedId(loc.id)}
+            onClick={handleAddressSelection(loc)}
           >
             {/* Top Row */}
             <div className="flex justify-between items-start">
@@ -52,8 +111,8 @@ export default function LocationSelector() {
                   isSelected ? "text-white" : "text-black"
                 }`}
               >
-                {loc.title}{" "}
-                {loc.subtitle && (
+                {loc.contact_name}{" "}
+                {/* {loc.subtitle && (
                   <span
                     className={`${
                       isSelected ? "text-pink-100" : "text-gray-500"
@@ -61,7 +120,7 @@ export default function LocationSelector() {
                   >
                     {loc.subtitle}
                   </span>
-                )}
+                )} */}
               </span>
               {isSelected ? (
                 <FaCheckSquare
@@ -75,14 +134,14 @@ export default function LocationSelector() {
             </div>
 
             {/* Bottom Row */}
-            {loc.location ? (
+            {loc.location_name && (
               <p
                 className={`mt-2 text-sm font-semibold ${
                   isSelected ? "text-white" : "text-black"
                 }`}
               >
-                {loc.location}
-                {loc.details && (
+                {loc.location_name}
+                {/* {loc.details && (
                   <span
                     className={`ml-1 ${
                       isSelected ? "text-pink-100" : "text-gray-500"
@@ -90,20 +149,8 @@ export default function LocationSelector() {
                   >
                     {loc.details}
                   </span>
-                )}
+                )} */}
               </p>
-            ) : (
-              // Special case for Clinic (with icon)
-              <div className="flex items-center gap-2 mt-3">
-                <FaHome className={isSelected ? "text-white text-xl" : "text-pink-500 text-xl"} />
-                <span
-                  className={`text-sm font-medium ${
-                    isSelected ? "text-white" : "text-black"
-                  }`}
-                >
-                  {loc.subtitle}
-                </span>
-              </div>
             )}
           </div>
         );
@@ -116,6 +163,7 @@ export default function LocationSelector() {
       >
         <FaPlus className="text-white text-lg" />
       </button>
+       <FullScreenLoader loading={loading}/>
     </div>
   );
 }
