@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FaHome, FaPlus } from "react-icons/fa";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
+import PopupModel from "./popupModel";
 
 interface Location {
   id: number;
@@ -47,7 +48,7 @@ export default function LocationSelector({} : LocationSelectorProps) {
 
   // Add new location on click
   const handleAdd = () => {
-    alert("clicked on add location button");
+    setIsPopupOpen(true);
   };
 
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -91,7 +92,16 @@ export default function LocationSelector({} : LocationSelectorProps) {
       setSelectedId(address.id);
     };
 
-  }
+  };
+
+  const [isPopupOpen,setIsPopupOpen] = useState<boolean>(false);
+  const handlePopupCancel = () => {
+    setIsPopupOpen(false);
+  };
+  const handlePrimaryAction = () => {
+    //TODO post call to create the address.
+    alert("primary action clicked");
+  };
 
   return (
     <div className="flex items-center grid grid-cols-3 gap-4">
@@ -164,6 +174,9 @@ export default function LocationSelector({} : LocationSelectorProps) {
         <FaPlus className="text-white text-lg" />
       </button>
        <FullScreenLoader loading={loading}/>
+       <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Add">
+        popup content
+       </PopupModel>
     </div>
   );
 }
