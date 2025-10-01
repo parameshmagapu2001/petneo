@@ -34,7 +34,7 @@ const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => voi
   );
 };
 
-interface Home_Visit_Address {
+export interface Home_Visit_Address {
   address?: string;
   address_details?: string;
   contact_name?: string;
