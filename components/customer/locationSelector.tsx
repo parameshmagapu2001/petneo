@@ -34,7 +34,7 @@ const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => voi
   );
 };
 
-interface Address {
+interface Home_Visit_Address {
   address?: string;
   address_details?: string;
   contact_name?: string;
@@ -46,18 +46,18 @@ interface Address {
 }
 
 interface LocationSelectorProps {
-  onSelectedAddressChange: (selectedAddressId: number) => void;
+  onSelectedAddressChange: (selectedAddress: Home_Visit_Address) => void;
 }
 
 export default function LocationSelector({onSelectedAddressChange} : LocationSelectorProps) {
-  const [selectedId, setSelectedId] = useState<number | undefined >();
+  const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
 
   // Add new location on click
   const handleAdd = () => {
     setIsPopupOpen(true);
   };
 
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<Home_Visit_Address[]>([]);
 
 
   const hasFetched = useRef(false);
@@ -70,7 +70,7 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
         setLoading(false);
         if (Array.isArray(res1)) {
           //setting the address
-          const localAddresses: Address[] = [];
+          const localAddresses: Home_Visit_Address[] = [];
           res1.forEach((item) => {
             localAddresses.push({
               address: item.address,
@@ -98,14 +98,14 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
   }, []);
 
   useEffect(() => {
-    if (selectedId) {
-      onSelectedAddressChange(selectedId);
+    if (selectedAddress?.id) {
+      onSelectedAddressChange(selectedAddress);
     }
-  }, [selectedId]);
+  }, [selectedAddress]);
 
-  const handleAddressSelection = (address: Address) => {
+  const handleAddressSelection = (address: Home_Visit_Address) => {
     return () => {
-      setSelectedId(address.id);
+      setSelectedAddress(address);
     };
 
   };
@@ -140,7 +140,7 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
     }
   };
 
-  const [addressFormDetails, setAddressFormDetails] = useState<Address>();
+  const [addressFormDetails, setAddressFormDetails] = useState<Home_Visit_Address>();
 
   const handleAddressDetailsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -153,7 +153,7 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
   return (
     <div className="flex items-center grid grid-cols-3 gap-4">
       {addresses.map((loc) => {
-        const isSelected = selectedId === loc.id;
+        const isSelected = selectedAddress?.id === loc.id;
         return (
           <div
             key={loc.id}

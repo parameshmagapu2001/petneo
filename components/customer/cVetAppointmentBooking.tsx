@@ -5,7 +5,7 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
 import { Pet, User, Vet } from "@/app/customer/dashboard/page";
 import { PageType } from "@/app/customer/dashboard/constants";
-import LocationSelector from "./locationSelector";
+import LocationSelector, { Home_Visit_Address } from "./locationSelector";
 import SlotPicker, { DaySlots, TimeSlot } from "./slotPicker";
 import AppointmentStatus from "./appointmentStatus";
 import { api } from "@/utils/api";
@@ -23,7 +23,18 @@ interface DateTimeSlot {
     time: string;
 }
 
-enum VISIT_ID {
+interface AppointmentBookingPayload {
+    vet_id?: number;
+    appointment_date?: string;
+    start_time?: string;
+    end_time?: string;
+    visit_type?: string;
+    service_id?: number; 
+    pet_id?: number;
+    address_id?: number;
+}
+
+export enum VISIT_ID {
     CLINIC_VISIT = "In-clinic",
     HOME_VISIT = "In-home",
     ONLINE = "Tele"
@@ -105,7 +116,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
     const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
     const [selectedService, setSelectedService] = useState<string>("");
     const [selectedPet, setSelectedPet] = useState<Pet>();
-    const [selectedAddressId, setSelectedAddressId] = useState<number>();
+    const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
 
     const [vetAvailability, setVetAvailability] = useState<DaySlots[]>([]);
 
@@ -121,12 +132,22 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         if (selectedVisitType && selectedDateTimeSlot && selectedDateTimeSlot.date && 
             selectedDateTimeSlot.time && selectedService && selectedPet
         ) {
+            let payload: AppointmentBookingPayload = {};
+            if (selectedVisitType.id === VISIT_ID.HOME_VISIT) {
+                if (selectedAddress?.id) {
+                    payload = {...payload, address_id: selectedAddress.id }
+                } else {
+                    alert("Please select an address for doctor to visit");
+                    return;
+                }
+            }
             setLoading(true);
             //fetching services
             const servicesRes = await api.get("/services");
             const serviceObj = servicesRes?.find((item: any) => item.name === selectedService);
+            setLoading(false);
             //building the payload
-            const payload = {
+            payload= { ...payload,
                     vet_id: vet?.id,
                     appointment_date: selectedDateTimeSlot.date,
                     start_time: convert12hTo24hPlusMinutes(selectedDateTimeSlot.time),
@@ -136,6 +157,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                     pet_id: selectedPet?.id
                 };
 
+             setLoading(true);
             //sending the appointment details
             const createAppointmentRes = await api.post("/user/appointment/add", payload);
             setAppointmentId(createAppointmentRes?.appointment);
@@ -166,8 +188,8 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         }
     }, [vet?.id]);
 
-    const handleSelectedAddressChange = (selectedAddressId: number) => {
-        setSelectedAddressId(selectedAddressId);
+    const handleSelectedAddressChange = (selectedAddress: Home_Visit_Address) => {
+        setSelectedAddress(selectedAddress);
     };
 
     function renderBookingScreen() {
@@ -275,7 +297,10 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                 service: selectedService,
                 date: selectedDateTimeSlot?.date,
                 time: selectedDateTimeSlot?.time,
-                location: selectedVisitType?.id === VISIT_ID.ONLINE ? user?.location : vet?.clinic?.address
+                location: selectedVisitType?.id === VISIT_ID.ONLINE 
+                ? "Online" : selectedVisitType?.id === VISIT_ID.CLINIC_VISIT 
+                ? vet?.clinic?.address : selectedVisitType?.id === VISIT_ID.HOME_VISIT 
+                ? selectedAddress?.address : ""
             }} onPageTypeChange={onPageTypeChange}/>
         );
     }

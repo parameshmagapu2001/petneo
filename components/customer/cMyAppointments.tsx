@@ -6,7 +6,7 @@ import { api } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 import { FaFilter } from "react-icons/fa";
 import AppointmentStatus, { AppointmentDetails, AppointmentStatusType } from "./appointmentStatus";
-import { VISIT_TYPES } from "./cVetAppointmentBooking";
+import { VISIT_ID, VISIT_TYPES } from "./cVetAppointmentBooking";
 import DoctorCard from "./doctorCard";
 import FullScreenLoader from "./fullScreenLoader";
 
@@ -78,7 +78,9 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
         // fetching this only for service and clinic details
         const userAppointmentRes = await api.get(`/user/appointment/${app.id}`);
         app.service = userAppointmentRes?.service;
-        app.location = userAppointmentRes?.clinic_location;
+        app.location = userAppointmentRes.visit_type === VISIT_ID.CLINIC_VISIT ? userAppointmentRes?.clinic_location :
+                       userAppointmentRes.visit_type === VISIT_ID.HOME_VISIT ? userAppointmentRes?.Visit_address?.address :
+                       userAppointmentRes.visit_type === VISIT_ID.ONLINE ? "Online" : "";
         setSelectedAppointment(app);
         setLoading(false);
     }
