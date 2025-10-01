@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiSearch, FiMapPin, FiFilter } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
 import { Vet } from "@/app/customer/dashboard/page";
@@ -83,6 +83,12 @@ type Coordinates = {
   loading: boolean;
 };
 
+// default coordinates gachibowli
+const defaultCoordinates = {
+    lat: 17.443446257146455,
+    lon: 78.33513637942715
+}
+
 export function useBrowserCoordinates() {
   const [coordinates, setCoordinates] = useState<Coordinates>({
     latitude: null,
@@ -129,10 +135,15 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
 
     const coordinates = useBrowserCoordinates();
     const [vets, setVets] = useState<Vet[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
-        if (coordinates.latitude && coordinates.longitude) {
+        coordinates.latitude = coordinates.latitude || defaultCoordinates.lat;
+        coordinates.longitude = coordinates.longitude || defaultCoordinates.lon;
+        if (coordinates.latitude && coordinates.longitude && !hasFetched.current) {
+            hasFetched.current = true;
             //fetching the nearby vets data.
+            setLoading(true);
             const fetchNearByVets = api.get("/user/nearby-vets", {user_lat: coordinates.latitude, user_lon: coordinates.longitude, radius_km: defaultNearByRadius});
             Promise.all([fetchNearByVets]).then(([res1]) => {
                 const vetsLocal: Vet[] = [];
@@ -152,6 +163,7 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
                 });
                 setVets(vetsLocal);
                 setLoading(false);
+                hasFetched.current = false;
             }).catch((error) => {
                 //TODO handle error scenarios
             });

@@ -167,33 +167,38 @@ export default function CustomerDashboard()  {
         };
     };
 
+    const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
      useEffect(() => {
         if (pageType === PageType.DASHBOARD) {
-            const userHomeFetch = api.get("/user/home");
-            Promise.all([userHomeFetch]).then(([res1]) => {
-                //setting the user data
-                setUser({
-                    id: res1?.user?.id,
-                    name: res1?.user.name,
-                    profile_url: res1?.user?.profile_url,
-                    location: res1?.user?.location ? res1.user.location : "Hyderabad, TN"
+            if (!hasFetched.current) {
+                hasFetched.current = true;
+                const userHomeFetch = api.get("/user/home");
+                Promise.all([userHomeFetch]).then(([res1]) => {
+                    //setting the user data
+                    setUser({
+                        id: res1?.user?.id,
+                        name: res1?.user.name,
+                        profile_url: res1?.user?.profile_url,
+                        location: res1?.user?.location ? res1.user.location : "Hyderabad, TN"
+                    })
+                    const pets: Pet[] = [];
+                    res1?.pets?.forEach((pet: Pet) => {
+                        pets.push(pet)
+                    })
+                    setUserPets(pets);
+                    hasFetched.current = false;
+                    setLoading(false);
+                }).catch((error) => {
+                    setLoading(false);
+                    //TODO handle error cases
+                    if (error?.message.includes("403")) {
+                        handleLogOut();
+                    }
                 })
-                const pets: Pet[] = [];
-                res1?.pets?.forEach((pet: Pet) => {
-                    pets.push(pet)
-                })
-                setUserPets(pets);
-               
-                setLoading(false);
-            }).catch((error) => {
-                setLoading(false);
-                //TODO handle error cases
-                if (error?.message.includes("403")) {
-                    handleLogOut();
-                 }
-            })
-        } 
+            }         
+        }
+         
     }, [pageType]);
 
     function handleMenuClick(menuItem: { icon: React.JSX.Element; label: string; id: PageType; }): void {
