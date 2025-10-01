@@ -4,46 +4,52 @@ import { FaHome, FaPlus } from "react-icons/fa";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
 import PopupModel from "./popupModel";
+import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 
-interface Location {
-  id: number;
-  title: string;
-  subtitle?: string;
-  location?: string;
-  details?: string;
-}
+const mapContainerStyle = { width: "100%", height: "300px" };
+const center = { lat: 17.385, lng: 78.4867 }; // Default: Hyderabad
+
+
+const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => void }) => {
+  const google_api_key = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ""
+  const [marker, setMarker] = useState(center);
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: google_api_key });
+
+  if (!isLoaded) return <div>Loading map...</div>;
+
+  return (
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={marker}
+      zoom={13}
+      onClick={e => {
+        const lat = e.latLng?.lat() ?? center.lat;
+        const lng = e.latLng?.lng() ?? center.lng;
+        setMarker({ lat, lng });
+        onChange(lat, lng);
+      }}
+    >
+      <Marker position={marker} />
+    </GoogleMap>
+  );
+};
 
 interface Address {
-  address: string;
+  address?: string;
   address_details?: string;
-  contact_name: string;
-  contact_number: string;
-  location_name: string;
-  latitude: number;
-  longitude: number,
+  contact_name?: string;
+  contact_number?: string;
+  location_name?: string;
+  latitude?: number;
+  longitude?: number,
   id?: number
 }
 
 interface LocationSelectorProps {
+  onSelectedAddressChange: (selectedAddressId: number) => void;
 }
 
-
-const INITIAL_LOCATIONS: Location[] = [
-  {
-    id: 1,
-    title: "Current Location",
-    subtitle: "Clinic",
-  },
-  {
-    id: 2,
-    title: "Brook",
-    subtitle: "(Friend)",
-    location: "Kphb",
-    details: "(near south-india)",
-  },
-];
-
-export default function LocationSelector({} : LocationSelectorProps) {
+export default function LocationSelector({onSelectedAddressChange} : LocationSelectorProps) {
   const [selectedId, setSelectedId] = useState<number | undefined >();
 
   // Add new location on click
@@ -57,35 +63,45 @@ export default function LocationSelector({} : LocationSelectorProps) {
   const hasFetched = useRef(false);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const fetchAndSetAddresses = () => {
+    setLoading(true);
+    const fetchUserAddresses = api.get("/user/address/myAddresses");
+    Promise.all([fetchUserAddresses]).then(([res1]) => {
+        setLoading(false);
+        if (Array.isArray(res1)) {
+          //setting the address
+          const localAddresses: Address[] = [];
+          res1.forEach((item) => {
+            localAddresses.push({
+              address: item.address,
+              address_details: item.address_details,
+              contact_name: item.contact_name,
+              contact_number: item.contact_number,
+              location_name: item.location_name,
+              latitude: item.latitude,
+              longitude: item.longitude,
+              id: item.id,
+            });
+          });
+            setAddresses(localAddresses);
+        }
+    }).catch((error) => {
+        //TODO handle error cases
+    });
+  };
+
   useEffect(() => {
     if (!hasFetched.current) {
       hasFetched.current = true;
-      setLoading(true);
-      const fetchUserAddresses = api.get("/user/address/myAddresses");
-      Promise.all([fetchUserAddresses]).then(([res1]) => {
-         setLoading(false);
-          if (Array.isArray(res1)) {
-            //setting the address
-            const localAddresses: Address[] = [];
-            res1.forEach((item) => {
-              localAddresses.push({
-                address: item.address,
-                address_details: item.address_details,
-                contact_name: item.contact_name,
-                contact_number: item.contact_number,
-                location_name: item.location_name,
-                latitude: item.latitude,
-                longitude: item.longitude,
-                id: item.id,
-              });
-            });
-              setAddresses(localAddresses);
-          }
-      }).catch((error) => {
-          //TODO handle error cases
-      });
+      fetchAndSetAddresses();
     }
   }, []);
+
+  useEffect(() => {
+    if (selectedId) {
+      onSelectedAddressChange(selectedId);
+    }
+  }, [selectedId]);
 
   const handleAddressSelection = (address: Address) => {
     return () => {
@@ -98,9 +114,31 @@ export default function LocationSelector({} : LocationSelectorProps) {
   const handlePopupCancel = () => {
     setIsPopupOpen(false);
   };
-  const handlePrimaryAction = () => {
-    //TODO post call to create the address.
-    alert("primary action clicked");
+  const handlePrimaryAction = async () => {
+    try{
+      setLoading(true);
+      const createAddress = await api.post("/user/address/add", addressFormDetails);
+      //closing the popup
+      setIsPopupOpen(false);
+      setLoading(false);
+
+      //TODO set the created address id as selected Id
+      //fetching and assiging the addresses again
+      fetchAndSetAddresses();
+    } catch(error) {
+       setLoading(false);
+      //TODO error handling
+    }
+  };
+
+  const [addressFormDetails, setAddressFormDetails] = useState<Address>();
+
+  const handleAddressDetailsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setAddressFormDetails((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
@@ -175,7 +213,76 @@ export default function LocationSelector({} : LocationSelectorProps) {
       </button>
        <FullScreenLoader loading={loading}/>
        <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Add">
-        popup content
+        <form className="w-full max-w-lg bg-white rounded-xl px-8 py-10 shadow-lg">
+          <h2 className="text-2xl font-bold mb-8 text-center">Enter Address Details</h2>
+          <div className="mb-3">
+            <label htmlFor="contact_name" className="block font-semibold mb-1">Contact Name *</label>
+            <input
+              type="text"
+              id="contact_name"
+              name="contact_name"
+              value={addressFormDetails?.contact_name}
+              onChange={handleAddressDetailsChange}
+              required
+              className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="contact_number" className="block font-semibold mb-1">Contact Number *</label>
+            <input
+              type="tel"
+              id="contact_number"
+              name="contact_number"
+              value={addressFormDetails?.contact_number}
+              onChange={handleAddressDetailsChange}
+              required
+              className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="address" className="block font-semibold mb-1">Address *</label>
+            <textarea
+              id="address"
+              name="address"
+              value={addressFormDetails?.address}
+              onChange={handleAddressDetailsChange}
+              required
+              className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+              rows={2}
+            />
+          </div>
+          {/* <div className="mb-5">
+            <label htmlFor="address_details" className="block font-semibold mb-1">Address Details</label>
+            <input
+              type="text"
+              id="address_details"
+              name="address_details"
+              value={addressFormDetails?.address_details}
+              onChange={handleAddressDetailsChange}
+              className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+              placeholder="Flat, Landmark, etc."
+            />
+          </div> */}
+          <div className="mb-3">
+            <label htmlFor="location_name" className="block font-semibold mb-1">Location Name *</label>
+            <input
+              type="text"
+              id="location_name"
+              name="location_name"
+              value={addressFormDetails?.location_name}
+              onChange={handleAddressDetailsChange}
+              required
+              className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+            />
+          </div>
+          <div>
+            <MapSelector onChange={(lat, lng) => setAddressFormDetails(prev => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng
+            }))} />
+          </div>
+      </form>
        </PopupModel>
     </div>
   );

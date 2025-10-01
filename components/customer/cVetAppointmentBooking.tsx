@@ -105,6 +105,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
     const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
     const [selectedService, setSelectedService] = useState<string>("");
     const [selectedPet, setSelectedPet] = useState<Pet>();
+    const [selectedAddressId, setSelectedAddressId] = useState<number>();
 
     const [vetAvailability, setVetAvailability] = useState<DaySlots[]>([]);
 
@@ -165,6 +166,10 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
         }
     }, [vet?.id]);
 
+    const handleSelectedAddressChange = (selectedAddressId: number) => {
+        setSelectedAddressId(selectedAddressId);
+    };
+
     function renderBookingScreen() {
         return (
             <div className="min-h-screen bg-[#e3e8f9] flex flex-col items-center py-10 px-6">
@@ -207,7 +212,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                         {selectedVisitType?.id === VISIT_ID.HOME_VISIT && 
                             <div className="mb-4">
                             <label className="block text-sm font-semibold mb-2">Pick Location</label>
-                            <LocationSelector/>
+                            <LocationSelector onSelectedAddressChange={handleSelectedAddressChange} />
                             </div>
                         }
 

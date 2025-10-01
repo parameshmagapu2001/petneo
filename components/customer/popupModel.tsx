@@ -18,7 +18,7 @@ export default function PopupModel({open, onCancel, onPrimary, primaryLabel, chi
                 {/* Overlay */}
                 <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50"></div>
                 {/* Modal card */}
-                <div className="relative bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6 z-10 flex flex-col">
+                <div className="relative bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6 z-10 flex flex-col max-h-[80vh]">
                     {/* Close icon top right
                     <button
                     type="button"
@@ -28,7 +28,7 @@ export default function PopupModel({open, onCancel, onPrimary, primaryLabel, chi
                     <FaTimes size={18} />
                     </button> */}
                     {/* Custom content */}
-                    <div className="mb-6">{children}</div>
+                    <div className="mb-6 overflow-y-auto">{children}</div>
                     {/* Footer */}
                     <div className="flex gap-3 justify-end">
                     <button
