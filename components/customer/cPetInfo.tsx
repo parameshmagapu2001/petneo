@@ -10,7 +10,6 @@ import { spec } from "node:test/reporters";
 
 interface C_PetInfoProps {
     petId: number;
-    onPageTypeChange: (pageType: PageType) => void;
 }
 interface PetCompleteDetails {
     petId: number;
@@ -37,7 +36,7 @@ interface Species {
 }
 
 
-export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
+export default function C_PetInfo({ petId }: C_PetInfoProps) {
     const GENDERS = ["Male", "Female"];
 
     const [speciesList, setSpeciesList] = useState<Species[]>([]);
