@@ -114,6 +114,8 @@ export const api = {
     multiPartRequest(endpoint, { method: "POST", body: body }),
   put: (endpoint: string, body: any) =>
     request(endpoint, { method: "PUT", body: JSON.stringify(body) }),
+  formDataPut: (endpoint: string, body: any) =>
+      multiPartRequest(endpoint, { method: "PUT", body: body }),
   patch: (endpoint: string, body?: any, queryParams?: Record<string, any>) =>
     request(endpoint, { method: "PATCH", body: JSON.stringify(body) }, queryParams),
   delete: (endpoint: string) =>

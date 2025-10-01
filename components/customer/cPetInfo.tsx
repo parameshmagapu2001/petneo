@@ -44,6 +44,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
     const [petTypes, setPetTypes] = useState<string[]>([]);
     const [breeds, setBreeds] = useState<Breed[]>([]);
     const [petCompleteDetails, setPetCompleteDetails] = useState<PetCompleteDetails>({petId: petId});
+    const [isEditMode, setIsEditMode] = useState<boolean>(petCompleteDetails?.petId < 0);
 
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
@@ -127,15 +128,15 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
             [event.target.name]: event.target.value,
             breeding: "" // setting it to default value
            });
-    }
+    };
 
-    async function onSave(): Promise<void> {
+    const onSave = async (): Promise<void> => {
         //constructing the payload
         const formData = new FormData();
         const breed_Id = breeds.find((item) => item.name === petCompleteDetails.breeding)?.id;
         if (petCompleteDetails.name &&
             petCompleteDetails.species &&
-            breed_Id && 
+            breed_Id &&
             petCompleteDetails.gender
         ) {
             formData.append("name", petCompleteDetails.name);
@@ -146,8 +147,8 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
             alert("Provide the necessary details");
             return;
         }
-            
-        if (petCompleteDetails.dob ) {
+
+        if (petCompleteDetails.dob) {
             formData.append("date_of_birth", petCompleteDetails.dob);
         }
         if (petCompleteDetails.weight) {
@@ -156,20 +157,56 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
         if (petCompleteDetails.profile_picture_file) {
             formData.append("profile_picture", petCompleteDetails.profile_picture_file);
         }
-        
-        setLoading(true);
-        //creating the pet
-        const createPetResponse = await api.formDatapost("/pets/addPet", formData);
 
-        if (createPetResponse?.success) {
-             setLoading(false);
-            //assigning the petId
-            setPetCompleteDetails({...petCompleteDetails, petId: createPetResponse?.pet_id});
-            //going to home
-            onPageTypeChange(PageType.DASHBOARD);
+        setLoading(true);
+        let petIdLocal;
+
+        if (petCompleteDetails.petId < 0) {
+            //creating the pet
+            const createPetResponse = await api.formDatapost("/pets/addPet", formData);
+            if (createPetResponse?.success) {
+                setLoading(false);
+                petIdLocal = createPetResponse?.pet_id;
+            } else {
+                //TODO handle error scenario
+            }
         } else {
-            //TODO handle error scenario
+            //editing an existing pet
+            const editPetResponse = await api.formDataPut(`/pets/updatePet/${petCompleteDetails.petId}`, formData);
+            if (editPetResponse?.success) {
+                setLoading(false);
+                //assigning the petId
+                petIdLocal = editPetResponse?.pet_id;
+
+            } else {
+                //TODO handle error scenario
+            }
         }
+
+        if (!!petIdLocal) {
+            //fetch the latest data and assign the required fields
+            setLoading(true);
+            const petDetailsResponse = await api.get(`/pets/user/${petIdLocal}`);
+            setLoading(false);
+            if (petDetailsResponse?.pet) {
+                //assigning the required fields
+                setPetCompleteDetails({
+                    ...petCompleteDetails,
+                    age: petDetailsResponse.pet?.age,
+                    profile_picture: petDetailsResponse.pet?.profile_picture,
+                    petId: petDetailsResponse.pet?.id
+                });
+            } else {
+                //TODO handle error scenario
+            }
+        }
+
+        //setting the editmode false
+        setIsEditMode(false);
+    };
+
+    const onEdit = (): void => {
+        setIsEditMode(true);
     };
 
     return (
@@ -185,7 +222,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.name || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={petCompleteDetails.petId >= 0}
+                        disabled={!isEditMode}
                     />
                 </div>
                 {/* Type */}
@@ -197,7 +234,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.species || ""}
                         onChange={handleSpeciesChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={petCompleteDetails.petId >= 0 || !(petTypes?.length > 0)}
+                        disabled={!isEditMode || !(petTypes?.length > 0)}
                     >
                         <option value="" disabled hidden>Select</option>
                         {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
@@ -212,14 +249,14 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.breeding || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={petCompleteDetails.petId >= 0 || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
+                        disabled={!isEditMode || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
                     >
                         <option value="" disabled hidden>Select Breed</option>
                         {breeds.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
                     </select>
                 </div>
                 {/* Date Of Birth ? AGE */}
-                {petCompleteDetails.petId >= 0 ? 
+                {!isEditMode ?
                     <div className="mb-4 relative">
                         <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
                         <input
@@ -229,7 +266,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                             value={petCompleteDetails?.age || ""}
                             onChange={handleChange}
                             className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                            disabled={petCompleteDetails.petId >= 0}
+                            disabled={!isEditMode}
                         />
                     </div> :  
                     <div className="mb-4 relative">
@@ -253,7 +290,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         value={petCompleteDetails?.gender || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={petCompleteDetails.petId >= 0}
+                        disabled={!isEditMode}
                     >
                         <option value="" disabled hidden>Select</option>
                         {GENDERS.map(gender => <option key={gender} value={gender}>{gender}</option>)}
@@ -270,7 +307,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                         placeholder="Enter Pet Weight"
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={petCompleteDetails.petId >= 0}
+                        disabled={!isEditMode}
                     />
                 </div>
                 {/* Pet Photo */}
@@ -285,7 +322,7 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                             /> : 
                             <FaCamera className="text-gray-400 text-3xl w-full h-40 object-cover rounded-md bg-white" />}
                         
-                        {petCompleteDetails.petId < 0 && 
+                        {isEditMode &&
                             <>
                                 {/* Edit (pencil) icon */}
                                 <button
@@ -306,10 +343,12 @@ export default function C_PetInfo({ petId, onPageTypeChange }: C_PetInfoProps) {
                             </>}  
                     </div> 
                 </div>
-                {petCompleteDetails.petId < 0 && 
-                    <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300"
-                    onClick={onSave}>
-                    Save
+                {isEditMode ?
+                    <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onSave}>
+                        Save
+                    </button> :
+                    <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
+                        Edit
                     </button>}
             </form>
 
