@@ -8,10 +8,11 @@ import FullScreenLoader from "./fullScreenLoader";
 
 interface C_MyPetsProps {
     onViewPetDetails: (petId: number) => void;
+    onViewPetHistory: (petId: number) => void;
 }
 
 
-export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
+export default function C_MyPets({ onViewPetDetails, onViewPetHistory }: C_MyPetsProps) {
     const [myPets, setMyPets] = useState<Pet[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -51,7 +52,8 @@ export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
                     onClick={() => onViewPetDetails(pet.id)}>
                         View Details
                     </button>
-                    <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold">
+                    <button className="bg-pink-500 text-white rounded px-4 py-1 transition hover:bg-pink-600 text-sm font-semibold"
+                            onClick={() => onViewPetHistory(pet.id)}>
                         Pet History
                     </button>
                     </div>

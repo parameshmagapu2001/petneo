@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
-  FaExclamationTriangle,
-  FaMapMarkerAlt
+    FaChevronRight,
+    FaExclamationTriangle,
+    FaInfoCircle,
+    FaLock,
+    FaMapMarkerAlt,
+    FaQuestionCircle,
+    FaUserCircle,
+    FaUserFriends
 } from "react-icons/fa";
-import {
-  FaUserFriends,
-  FaUserCircle,
-  FaLock,
-  FaQuestionCircle,
-  FaInfoCircle,
-  FaChevronRight,
-} from "react-icons/fa";
-import { IoIosArrowForward } from "react-icons/io";
+import {IoIosArrowForward} from "react-icons/io";
 import C_DashboardMain from "../../../../components/customer/cDashboard";
 import C_VetDetails from "../../../../components/customer/cVetDetails";
 import C_PetInfo from "../../../../components/customer/cPetInfo";
@@ -21,13 +19,13 @@ import C_MyAppointments from "../../../../components/customer/cMyAppointments";
 import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import C_VetProfile from "../../../../components/customer/cVetProfile";
 import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
-import { api, clearAuth, setAccessToken } from "@/utils/api";
+import {api, clearAuth} from "@/utils/api";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
-import { TbVaccine } from "react-icons/tb";
 import C_MyPets from "../../../../components/customer/cMyPets";
-import { Menu, X } from "lucide-react";
+import {Menu, X} from "lucide-react";
 import router from "next/router";
-import { PageType } from "./constants";
+import {PageType} from "./constants";
+import C_PetHistory from "../../../../components/customer/cPetHistory";
 
 export interface DayStatus {
     day: string;
@@ -84,8 +82,8 @@ export default function CustomerDashboard()  {
         {id: PageType.VET_APPOINTMENT_BOOKING, label: "Appointments"},
         {id: PageType.MY_PETS, label: "My Pets"},
         {id: PageType.PET_INFO, label: "Pet Details"},
+        {id: PageType.PET_HISTORY, label: "Pet History"},
         {id: PageType.MY_BIO, label: "My Bio"},
-        {id: PageType.VACCINATION_RECORDS, label: "Vaccination Records"},
         {id: PageType.PRIVACY, label: "Privacy"},
         {id: PageType.HELP, label: "Help"},
         {id: PageType.ABOUT, label: "About"},
@@ -103,9 +101,6 @@ export default function CustomerDashboard()  {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_PETS, label: "My Pets"}];
         } else if (pageType === PageType.MY_BIO) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_BIO, label: "My Bio"}];
-            disabled = true;
-        } else if (pageType === PageType.VACCINATION_RECORDS) {
-            breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.VACCINATION_RECORDS, label: "Vaccination Records"}];
             disabled = true;
         } else if (pageType === PageType.PRIVACY) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.PRIVACY, label: "Privacy"}];
@@ -147,7 +142,6 @@ export default function CustomerDashboard()  {
     const menuItems = [
         { icon: <FaUserFriends />, label: "My Pets", id: PageType.MY_PETS },
         { icon: <FaUserCircle />, label: "My Bio", id: PageType.MY_BIO },
-        { icon: <TbVaccine />, label: "Vaccination Records", id: PageType.VACCINATION_RECORDS},
         { icon: <FaLock />, label: "Privacy", id: PageType.PRIVACY },
         { icon: <FaQuestionCircle />, label: "Help", id: PageType.HELP },
         { icon: <FaInfoCircle />, label: "About", id: PageType.ABOUT },
@@ -219,6 +213,10 @@ export default function CustomerDashboard()  {
         setSelectedPetId(petId);
         handlePageTypeChange(PageType.PET_INFO);
     }
+    const viewPetHistory = (petId: number): void => {
+        setSelectedPetId(petId);
+        handlePageTypeChange(PageType.PET_HISTORY);
+    };
 
   return (
      <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
@@ -319,8 +317,9 @@ export default function CustomerDashboard()  {
         {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}/>}
         {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
         {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} userPets={userPets} onPageTypeChange = {handlePageTypeChange}/>}
-        {pageType === PageType.MY_PETS && <C_MyPets onViewPetDetails={viewPetDetails}/>}
+        {pageType === PageType.MY_PETS && <C_MyPets onViewPetDetails={viewPetDetails} onViewPetHistory={viewPetHistory}/>}
         {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId}/>}
+        {pageType === PageType.PET_HISTORY && <C_PetHistory petId={selectedPetId}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
       </main>
 
