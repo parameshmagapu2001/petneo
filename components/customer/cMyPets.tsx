@@ -1,7 +1,6 @@
 "use client";
 
 import {Pet} from "@/app/customer/dashboard/page";
-import {PageType} from "@/app/customer/dashboard/constants";
 import {api} from "@/utils/api";
 import {useEffect, useRef, useState} from "react";
 import {FaPlus} from "react-icons/fa";
@@ -9,11 +8,10 @@ import FullScreenLoader from "./fullScreenLoader";
 
 interface C_MyPetsProps {
     onViewPetDetails: (petId: number) => void;
-    onPageTypeChange: (pageType: PageType) => void;
 }
 
 
-export default function C_MyPets({ onViewPetDetails, onPageTypeChange }: C_MyPetsProps) {
+export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
     const [myPets, setMyPets] = useState<Pet[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -34,7 +32,7 @@ export default function C_MyPets({ onViewPetDetails, onPageTypeChange }: C_MyPet
     }, []);
 
     const handleAddButtonClick = () => {
-        onPageTypeChange(PageType.PET_INFO);
+        onViewPetDetails(-1);
     }
 
     return (
