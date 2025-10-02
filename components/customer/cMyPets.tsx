@@ -37,7 +37,7 @@ export default function C_MyPets({ onViewPetDetails, onViewPetHistory }: C_MyPet
     }
 
     return (
-        <div className="min-h-screen bg-purple-50 flex flex-col items-center py-6">
+        <div className="min-h-screen bg-[#eaeaff] flex flex-col items-center py-6">
             <h2 className="font-medium text-center mb-6 text-grey-100">My Pets</h2>
             <div className="flex flex-col gap-6 w-full max-w-xs">
                 {myPets.map((pet) => (
