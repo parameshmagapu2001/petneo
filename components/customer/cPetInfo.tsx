@@ -269,7 +269,7 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
                         />
                     </div> :  
                     <div className="mb-4 relative">
-                        <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
+                        <label className="block font-semibold mb-1" htmlFor="dob">Date of Birth</label>
                         <input
                             type="date"
                             id="dob"
