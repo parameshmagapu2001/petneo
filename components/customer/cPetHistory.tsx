@@ -126,6 +126,12 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
         });
     };
 
+    const handleViewPrescription = (prescription: Prescription) => {
+        return () => {
+            window.open(prescription.prescription_file_url);
+        };
+    };
+
     return (
         <div className="min-h-screen bg-[#eaeaff] flex flex-col items-center py-8">
             <div className="w-full max-w-md">
@@ -201,7 +207,7 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
                         </div>
                     </form>
                 </PopupModel>
-                <div className="flex items-center justify-between mt-4 mb-2">
+                <div className="flex items-center justify-between mt-15 mb-2">
                     <h2 className="text-md font-semibold">Prescriptions/ Medical Reports</h2>
                 </div>
                 <div className="bg-white rounded-2xl shadow divide-y divide-gray-200 mb-4">
@@ -214,7 +220,8 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
                                         <span className="mt-1">{prescription.created_at}</span>
                                     </div>
                                 </div>
-                                <button className="bg-pink-500 text-white py-4 rounded-xl text-md font-medium mt-8 hover:bg-pink-600">
+                                <button className="w-[8vw] bg-pink-500 text-white py-4 rounded-xl text-md font-medium hover:bg-pink-600"
+                                onClick={handleViewPrescription(prescription)}>
                                     View
                                 </button>
                             </div>
