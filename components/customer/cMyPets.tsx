@@ -1,10 +1,9 @@
 "use client";
 
-import { Pet } from "@/app/customer/dashboard/page";
-import { PageType } from "@/app/customer/dashboard/constants";
-import { api } from "@/utils/api";
-import { useEffect, useRef, useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import {Pet} from "@/app/customer/dashboard/page";
+import {api} from "@/utils/api";
+import {useEffect, useRef, useState} from "react";
+import {FaPlus} from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
 
 interface C_MyPetsProps {
@@ -31,6 +30,11 @@ export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
         }
         
     }, []);
+
+    const handleAddButtonClick = () => {
+        onViewPetDetails(-1);
+    }
+
     return (
         <div className="min-h-screen bg-purple-50 flex flex-col items-center py-6">
             <h2 className="font-medium text-center mb-6 text-grey-100">My Pets</h2>
@@ -54,7 +58,8 @@ export default function C_MyPets({ onViewPetDetails }: C_MyPetsProps) {
                 </div>
                 ))}
             </div>
-            <button className="bg-pink-500 hover:bg-pink-600 text-white font-semibold w-full max-w-xs py-3 mt-8 rounded-lg flex items-center justify-center gap-3 text-base transition">
+            <button className="bg-pink-500 hover:bg-pink-600 text-white font-semibold w-full max-w-xs py-3 mt-8 rounded-lg flex items-center justify-center gap-3 text-base transition"
+            onClick={handleAddButtonClick}>
                 <FaPlus />
                 Add Pets
             </button>
