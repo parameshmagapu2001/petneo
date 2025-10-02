@@ -23,9 +23,18 @@ interface NewVaccination {
     dose_type?: string;
 }
 
+interface Prescription {
+    id: number;
+    appointment_id: number;
+    text: string;
+    prescription_file_url: string;
+    created_at: string;
+}
+
 export default function C_PetHistory({petId} : C_PetHistoryProps) {
 
     const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
+    const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
 
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -43,6 +52,17 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
 
                     //setting the vaccinations
                     setVaccinations(vaccinationsLocal);
+
+                }
+
+                if (res1?.prescriptions && Array.isArray(res1.prescriptions)) {
+                    const prescriptionsLocal: Prescription[] = [];
+                    res1.prescriptions.forEach((item: Prescription) => {
+                        prescriptionsLocal.push(item);
+                    });
+
+                    //setting the vaccinations
+                    setPrescriptions(prescriptionsLocal);
 
                 }
                 setLoading(false);
@@ -80,7 +100,7 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
         if (newVaccinationRecord?.pet_id && newVaccinationRecord?.date_vaccinated &&
             newVaccinationRecord?.vaccination_name && newVaccinationRecord?.dose_type) {
             const formData = new FormData();
-            formData.append("pet_id", newVaccinationRecord.pet_id);
+            formData.append("pet_id", newVaccinationRecord.pet_id.toString());
             formData.append("date_vaccinated", newVaccinationRecord.date_vaccinated);
             formData.append("vaccination_name", newVaccinationRecord.vaccination_name);
             formData.append("dose_type", newVaccinationRecord.dose_type);
@@ -181,6 +201,28 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
                         </div>
                     </form>
                 </PopupModel>
+                <div className="flex items-center justify-between mt-4 mb-2">
+                    <h2 className="text-md font-semibold">Prescriptions/ Medical Reports</h2>
+                </div>
+                <div className="bg-white rounded-2xl shadow divide-y divide-gray-200 mb-4">
+                    {prescriptions.length > 0 ?
+                        prescriptions.map((prescription) => (
+                            <div key={prescription.id} className="flex items-center justify-between px-4 py-4">
+                                <div>
+                                    <div className="flex-col items-center text-xs text-gray-500 mt-1">
+                                        <img alt="prescription image" src="/images/customer/prescription.png"/>
+                                        <span className="mt-1">{prescription.created_at}</span>
+                                    </div>
+                                </div>
+                                <button className="bg-pink-500 text-white py-4 rounded-xl text-md font-medium mt-8 hover:bg-pink-600">
+                                    View
+                                </button>
+                            </div>
+                        )) :
+                        <div className="flex items-center justify-items-center grid grid-cols-1 min-h-30">
+                            <span>No Prescription Data</span>
+                        </div>}
+                </div>
             </div>
             <FullScreenLoader loading={loading}/>
         </div>
