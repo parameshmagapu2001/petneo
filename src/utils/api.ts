@@ -85,7 +85,7 @@ async function request(
     ...(options.headers || {}),
   };
 
-  const url = new URL(endpoint, API_BASE_URL);
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
 
   const safeParams = queryParams ?? {};
   Object.entries(safeParams).forEach(([key, value]) => {
@@ -160,7 +160,7 @@ async function multiPartRequest(
         ...(options.headers || {}),
     };
 
-    const url = new URL(endpoint, API_BASE_URL);
+    const url = new URL(`${API_BASE_URL}${endpoint}`);
 
     const safeParams = queryParams ?? {};
     Object.entries(safeParams).forEach(([key, value]) => {
