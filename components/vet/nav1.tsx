@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { api, getAccessToken, setAccessToken, clearAccessToken } from "@/utils/api";
 
 type VetProfile = {
   first_name?: string;
@@ -32,23 +33,7 @@ export default function Nav1(): React.JSX.Element {
   const [updatingEmergency, setUpdatingEmergency] = useState(false);
   const [menuAnimating, setMenuAnimating] = useState(false);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
-
-  // Get token from localStorage
-  const getToken = (): string | null => {
-    if (typeof window === "undefined") return null;
-    return (
-      localStorage.getItem("petneo_token") ||
-      localStorage.getItem("accessToken") ||
-      localStorage.getItem("access_token") ||
-      localStorage.getItem("token") ||
-      localStorage.getItem("auth_token") ||
-      localStorage.getItem("vetToken") ||
-      null
-    );
-  };
-
-  // Clear all auth
+  // Keep a fallback clearAuth that removes many possible keys
   const clearAuth = () => {
     [
       "petneo_token",
@@ -60,62 +45,64 @@ export default function Nav1(): React.JSX.Element {
       "refreshToken",
       "refresh_token",
       "vet_id",
-    ].forEach((k) => localStorage.removeItem(k));
-  };
-
-  // Safe fetch with token and JSON parsing
-  const safeFetch = async (url: string, opts: RequestInit = {}) => {
-    const token = getToken();
-    if (!token) throw new Error("No auth token found");
-
-    const headers = new Headers(opts.headers ?? {});
-    headers.set("Authorization", `Bearer ${token}`);
-    if (!headers.has("Content-Type") && !(opts.body instanceof FormData)) {
-      headers.set("Content-Type", "application/json");
-    }
-
-    const res = await fetch(url, { ...opts, headers });
-
-    if (res.status === 401) {
-      clearAuth();
-      throw new Error("Unauthorized (401) - session expired");
-    }
-
-    const text = await res.text();
-    if (!text) return { ok: res.ok, status: res.status, data: null, raw: "" };
-
-    if (text.trim().startsWith("<")) return { ok: res.ok, status: res.status, data: null, raw: text };
-
+    ].forEach((k) => {
+      try {
+        localStorage.removeItem(k);
+        sessionStorage.removeItem(k);
+      } catch {}
+    });
+    // Also clear the centralized helper storage
     try {
-      const data = JSON.parse(text);
-      return { ok: res.ok, status: res.status, data, raw: text };
-    } catch {
-      return { ok: res.ok, status: res.status, data: text, raw: text };
-    }
+      clearAccessToken();
+    } catch {}
   };
 
-  // Fetch vet profile and today's appointments
+  // Helper: normalize API response shapes (api.* returns parsed body or throws)
+  const unwrap = (resp: any) => {
+    if (!resp) return null;
+    if (typeof resp !== "object") return resp;
+    if (Array.isArray(resp)) return resp;
+    // common wrappers: { data: {...} } or { data: [...] }
+    if (resp.data !== undefined) return resp.data;
+    // sometimes backend nests under result or appointments
+    if (resp.result !== undefined) return resp.result;
+    if (resp.appointments !== undefined) return resp.appointments;
+    return resp;
+  };
+
+  // Fetch vet profile & today's count using api helper
   useEffect(() => {
     let mounted = true;
 
     const fetchAll = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        if (!API_BASE) throw new Error("API_BASE not configured.");
+        // Ensure token exists in centralized storage (in case login put it under a different key)
+        // If your login already sets "accessToken" via utils.setAccessToken, this is a noop.
+        try {
+          const token =
+            (typeof window !== "undefined" && (localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"))) ||
+            (typeof window !== "undefined" && localStorage.getItem("token")) ||
+            getAccessToken();
 
-        // Fetch profile
-        const profileUrl = `${API_BASE}/vet/myBio`;
-        const profileRes = await safeFetch(profileUrl, { method: "GET" });
+          if (token) {
+            // make sure the helper has it in its standard place
+            setAccessToken(token);
+          }
+        } catch (e) {
+          // ignore storage errors
+        }
+
+        // Profile endpoint (uses api.get -> API_BASE is inside utils/api)
+        const profileRaw = await api.get("/vet/myBio");
         if (!mounted) return;
-        if (!profileRes.ok) throw new Error("Failed to load profile");
 
-        let profileData: any = profileRes.data;
-        if (profileData && profileData.data && typeof profileData.data === "object") profileData = profileData.data;
-
+        const profileData = unwrap(profileRaw) ?? {};
         const normalized: VetProfile = {
-          first_name: profileData?.first_name ?? profileData?.name ?? profileData?.vet_name,
-          last_name: profileData?.last_name ?? profileData?.surname,
+          first_name: profileData?.first_name ?? profileData?.name ?? profileData?.vet_name ?? undefined,
+          last_name: profileData?.last_name ?? profileData?.surname ?? undefined,
           profile_picture: profileData?.profile_picture ?? profileData?.avatar ?? null,
           avatar: profileData?.profile_picture ?? profileData?.avatar ?? null,
           emergency: profileData?.emergency ?? profileData?.is_emergency ?? profileData?.emergency_mode ?? false,
@@ -123,22 +110,20 @@ export default function Nav1(): React.JSX.Element {
         };
         setVet(normalized);
 
-        // Fetch today's appointment summary
+        // Today's appointment summary
         try {
-          const summaryUrl = `${API_BASE}/appointments/vetTodaySummary`;
-          const summaryRes = await safeFetch(summaryUrl, { method: "GET" });
-          if (!summaryRes.ok) {
-            setTodayCount(null);
-          } else {
-            const s = summaryRes.data;
-            const possible = s?.total ?? s?.count ?? s?.appointments_count ?? s?.total_requests ?? s?.data?.total ?? null;
-            setTodayCount(typeof possible === "number" ? possible : null);
-          }
-        } catch {
+          const summaryRaw = await api.get("/appointments/vetTodaySummary");
+          const s = unwrap(summaryRaw);
+          const possible =
+            s?.total ?? s?.count ?? s?.appointments_count ?? s?.total_requests ?? s?.data?.total ?? s?.data?.count ?? null;
+          setTodayCount(typeof possible === "number" ? possible : null);
+        } catch (err) {
+          // Non-critical — don't block profile render
           setTodayCount(null);
         }
       } catch (err: any) {
-        setError(err.message || "Failed to load profile");
+        // api.* throws readable Error when server returns HTML or non-OK
+        setError(err?.message ?? "Failed to load profile");
         setVet(null);
       } finally {
         if (mounted) setLoading(false);
@@ -149,31 +134,33 @@ export default function Nav1(): React.JSX.Element {
     return () => {
       mounted = false;
     };
-  }, [API_BASE]);
+  }, []);
 
-  // Toggle emergency status
+  // Toggle emergency status using api.put
   const toggleEmergency = async () => {
     if (!vet) return;
     setUpdatingEmergency(true);
     setError(null);
     try {
       const next = !Boolean(vet.emergency);
-      const url = `${API_BASE}/vet/updateEmergency`;
-      const res = await safeFetch(url, { method: "PUT", body: JSON.stringify({ emergency: next }) });
-      if (!res.ok) throw new Error("Failed to update emergency status");
-
-      const data = res.data && typeof res.data === "object" ? res.data : null;
-      setVet((prev) => ({ ...(prev ?? {}), emergency: data?.emergency ?? next }));
+      const payload = { emergency: next };
+      // Use api.put and unwrap the response
+      const resRaw = await api.put("/vet/updateEmergency", payload);
+      const res = unwrap(resRaw);
+      // Try to read new value from response; fallback to requested next
+      const newValue = res?.emergency ?? res?.is_emergency ?? next;
+      setVet((prev) => ({ ...(prev ?? {}), emergency: newValue }));
     } catch (err: any) {
-      setError(err.message || "Failed to update emergency status");
+      setError(err?.message ?? "Failed to update emergency status");
     } finally {
       setUpdatingEmergency(false);
     }
   };
 
-  // Logout handler
+  // Logout: clear auth and redirect
   const handleLogout = () => {
     clearAuth();
+    // Push via router or location
     if (typeof window !== "undefined") window.location.href = "/vet/login";
     else router.push("/vet/login");
   };
@@ -188,17 +175,21 @@ export default function Nav1(): React.JSX.Element {
     return "Veterinarian";
   };
 
+  // Build profile image src — prefer absolute URL if provided; otherwise allow relative path via NEXT_PUBLIC_API_BASE
   const getProfileImageSrc = () => {
     const p = vet?.profile_picture ?? vet?.avatar ?? null;
     if (p) {
-      if (p.startsWith("http")) return p;
-      if (API_BASE) return `${API_BASE.replace(/\/$/, "")}/${p.replace(/^\//, "")}`;
+      if (typeof p === "string" && p.startsWith("http")) return p;
+      // fallback to env base or return as-is (relative)
+      const base = process.env.NEXT_PUBLIC_API_BASE ?? "";
+      if (base) {
+        return `${base.replace(/\/$/, "")}/${(p as string).replace(/^\//, "")}`;
+      }
       return p;
     }
-    return "/images/d.png"; // Consistent path
+    return "/images/d.png";
   };
 
-  // Menu items array
   const dropdownItems: DropdownItem[] = [
     { label: "Work Status", icon: "🔔" },
     { label: "Manage Time Slots", icon: "⏱", href: "/vet/managetimeslots" },
@@ -246,7 +237,6 @@ export default function Nav1(): React.JSX.Element {
               height={36}
               className="rounded-full object-cover border border-gray-200"
               onError={(e) => {
-                // Use the same path as getProfileImageSrc for consistency
                 const target = e.target as HTMLImageElement;
                 target.src = "/images/d.png";
               }}
@@ -284,11 +274,7 @@ export default function Nav1(): React.JSX.Element {
               >
                 <span>{item.icon}</span>
                 {item.href ? (
-                  <Link 
-                    href={item.href} 
-                    className="flex-1"
-                    onClick={() => setMenuOpen(false)}
-                  >
+                  <Link href={item.href} className="flex-1" onClick={() => setMenuOpen(false)}>
                     {item.label}
                   </Link>
                 ) : (

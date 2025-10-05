@@ -1,20 +1,47 @@
 "use client";
 
 // utils/api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE;
+// Make sure to restart Next.js after editing .env.local
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE ||
+  "https://unbiased-dane-new.ngrok-free.app/api/v1";
+
 const ACCESS_TOKEN_KEY = "accessToken";
+
+// Toggle adding the ngrok skip header (set this in .env.local during dev)
+const SKIP_NGROK_HEADER =
+  (process.env.NEXT_PUBLIC_SKIP_NGROK_HEADER || "false").toLowerCase() === "true";
 
 // --- Token helpers ---
 export function setAccessToken(token: string) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  try {
+    localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  } catch {
+    try {
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+    } catch {}
+  }
 }
 
 export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  try {
+    const fromLocal = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (fromLocal) return fromLocal;
+  } catch {}
+  try {
+    const fromSession = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    if (fromSession) return fromSession;
+  } catch {}
+  return null;
 }
 
 export function clearAccessToken() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  try {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+  } catch {}
+  try {
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  } catch {}
 }
 
 // Clear all auth
@@ -29,85 +56,170 @@ export function clearAuth()  {
     "refreshToken",
     "refresh_token",
     "vet_id",
-    ].forEach((k) => localStorage.removeItem(k));
+    ].forEach((k) => {
+        try {
+            localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+        } catch {}
+    });
 };
 
 // --- Wrapper for fetch with auth ---
-async function request(endpoint: string, options: RequestInit = {}, queryParams?: Record<string, any>) {
+async function request(
+  endpoint: string,
+  options: RequestInit = {},
+  queryParams?: Record<string, any>,
+  { expectJson = true }: { expectJson?: boolean } = {}
+) {
   const token = getAccessToken();
 
-  const headers: HeadersInit = {
+  const defaultHeaders: HeadersInit = {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `${token}` } : {}),
-    ...options.headers,
-    //TODO needs to be removed after testing
-    "ngrok-skip-browser-warning": "69420"
+    Accept: "application/json",
+    ...(SKIP_NGROK_HEADER ? { "ngrok-skip-browser-warning": "69420" } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  const mergedHeaders: HeadersInit = {
+    ...defaultHeaders,
+    ...(options.headers || {}),
+  };
+
+  const url = new URL(endpoint, API_BASE_URL);
 
   const safeParams = queryParams ?? {};
-  
   Object.entries(safeParams).forEach(([key, value]) => {
-    url.searchParams.set(key, String(value));
-  });
-
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (!res.ok) {
-    if (res.status === 403) {
-      clearAuth();
-      throw new Error("Unauthorized (403) - session expired");
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value));
     }
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "API request failed");
+  });
+
+  const res = await fetch(url.toString(), {
+    ...options,
+    headers: mergedHeaders,
+  });
+
+  if (res.status === 204 || res.status === 205) {
+    return null;
   }
 
-  return res.json();
+  const contentType = (res.headers.get("content-type") || "").toLowerCase();
+  const parseBody = async () => {
+    if (contentType.includes("application/json")) {
+      return res.json().catch(() => ({}));
+    }
+    return res.text();
+  };
+  const body = await parseBody();
+
+  if (!res.ok) {
+      if (res.status === 403) {
+          clearAuth();
+          throw new Error("Unauthorized (403) - session expired");
+      }
+    if (typeof body === "string") {
+      const snippet = body.length > 500 ? body.slice(0, 500) + "..." : body;
+      console.error("API returned non-JSON error body:", body);
+      throw new Error(`API error ${res.status}: ${snippet}`);
+    } else if (body && (body as any).message) {
+      throw new Error((body as any).message);
+    } else {
+      throw new Error(`API request failed with status ${res.status}`);
+    }
+  }
+
+  if (typeof body === "string") {
+    if (contentType.includes("application/json")) {
+      try {
+        return JSON.parse(body);
+      } catch {
+        return body;
+      }
+    }
+    return body;
+  }
+  return body;
 }
 
-// --- Wrapper for fetch with auth ---
-async function multiPartRequest(endpoint: string, options: RequestInit = {}, queryParams?: Record<string, any>) {
-  const token = getAccessToken();
+async function multiPartRequest(
+    endpoint: string,
+    options: RequestInit = {},
+    queryParams?: Record<string, any>,
+    { expectJson = true }: { expectJson?: boolean } = {}
+) {
+    const token = getAccessToken();
 
-  const headers: HeadersInit = {
-    ...(token ? { Authorization: `${token}` } : {}),
-    ...options.headers,
-    //TODO needs to be removed after testing
-    "ngrok-skip-browser-warning": "69420"
-  };
+    const defaultHeaders: HeadersInit = {
+        Accept: "application/json",
+        ...(SKIP_NGROK_HEADER ? { "ngrok-skip-browser-warning": "69420" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
 
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+    const mergedHeaders: HeadersInit = {
+        ...defaultHeaders,
+        ...(options.headers || {}),
+    };
 
-  const safeParams = queryParams ?? {};
-  
-  Object.entries(safeParams).forEach(([key, value]) => {
-    url.searchParams.set(key, String(value));
-  });
+    const url = new URL(endpoint, API_BASE_URL);
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+    const safeParams = queryParams ?? {};
+    Object.entries(safeParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+            url.searchParams.set(key, String(value));
+        }
+    });
 
-  if (!res.ok) {
-    if (res.status === 403) {
-      clearAuth();
-      throw new Error("Unauthorized (403) - session expired");
+    const res = await fetch(url.toString(), {
+        ...options,
+        headers: mergedHeaders,
+    });
+
+    if (res.status === 204 || res.status === 205) {
+        return null;
     }
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "API request failed");
-  }
 
-  return res.json();
+    const contentType = (res.headers.get("content-type") || "").toLowerCase();
+    const parseBody = async () => {
+        if (contentType.includes("application/json")) {
+            return res.json().catch(() => ({}));
+        }
+        return res.text();
+    };
+    const body = await parseBody();
+
+    if (!res.ok) {
+        if (res.status === 403) {
+            clearAuth();
+            throw new Error("Unauthorized (403) - session expired");
+        }
+        if (typeof body === "string") {
+            const snippet = body.length > 500 ? body.slice(0, 500) + "..." : body;
+            console.error("API returned non-JSON error body:", body);
+            throw new Error(`API error ${res.status}: ${snippet}`);
+        } else if (body && (body as any).message) {
+            throw new Error((body as any).message);
+        } else {
+            throw new Error(`API request failed with status ${res.status}`);
+        }
+    }
+
+    if (typeof body === "string") {
+        if (contentType.includes("application/json")) {
+            try {
+                return JSON.parse(body);
+            } catch {
+                return body;
+            }
+        }
+        return body;
+    }
+    return body;
 }
 
 // --- Public API methods ---
 export const api = {
-  get: (endpoint: string, queryParams?: Record<string, any>) => request(endpoint, {}, queryParams),
+  get: (endpoint: string, queryParams?: Record<string, any>) =>
+    request(endpoint, { method: "GET" }, queryParams),
   post: (endpoint: string, body: any) =>
     request(endpoint, { method: "POST", body: JSON.stringify(body) }),
   formDatapost: (endpoint: string, body: any) =>
@@ -117,7 +229,10 @@ export const api = {
   formDataPut: (endpoint: string, body: any) =>
       multiPartRequest(endpoint, { method: "PUT", body: body }),
   patch: (endpoint: string, body?: any, queryParams?: Record<string, any>) =>
-    request(endpoint, { method: "PATCH", body: JSON.stringify(body) }, queryParams),
-  delete: (endpoint: string) =>
-    request(endpoint, { method: "DELETE" }),
+    request(
+      endpoint,
+      { method: "PATCH", body: body !== undefined ? JSON.stringify(body) : undefined },
+      queryParams
+    ),
+  delete: (endpoint: string) => request(endpoint, { method: "DELETE" }),
 };
