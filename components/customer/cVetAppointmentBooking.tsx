@@ -276,7 +276,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                         </div>
 
                         {/* Confirm Button */}
-                        <button className="w-full py-3 rounded-md bg-pink-500 text-white font-semibold"
+                        <button className="w-full py-3 rounded-md bg-pink-600 text-white font-semibold hover:bg-pink-700 transition"
                         onClick={handleConfirmBtnClick}>
                         Confirm
                         </button>
