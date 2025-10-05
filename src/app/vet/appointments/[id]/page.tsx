@@ -100,7 +100,7 @@ export default function AppointmentDetailRoute() {
   };
 
   const normalizeAndSet = (data: any) => {
-    let normalized = data ?? {};
+    const normalized = data ?? {};
 
     if (normalized?.pet) {
       normalized.petName =
