@@ -57,7 +57,7 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
                     key={i}
                     className="text-pink-600 text-xs font-semibold bg-pink-100 rounded px-3 py-1"
                     >
-                    {tag}
+                    {tag.name}
                     </span>
                 ))}
                 </div>

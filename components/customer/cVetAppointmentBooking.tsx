@@ -252,7 +252,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, onPageTyp
                             onChange={(event) => setSelectedService(event.target.value)}>
                             <option value="" disabled hidden>Select Service</option>
                             {vet?.tags.map((s, i) => (
-                                <option key={i}>{s}</option>
+                                <option key={i}>{s.name}</option>
                             ))}
                             </select>
                             <IoChevronDown className="absolute right-3 top-3 text-gray-500" />

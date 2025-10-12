@@ -96,10 +96,10 @@ export default function C_VetProfile({ selectedVet, onPageTypeChange }: C_VetPro
                 <div className="flex gap-3 flex-wrap max-w-xl self-center">
                     {doctor.services?.map((service) => (
                     <button
-                        key={service}
+                        key={service.id}
                         className="bg-[#D64AA026] text-[#D64AA0] px-4 py-1 rounded-md text-sm font-medium"
                     >
-                        {service}
+                        {service.name}
                     </button>
                     ))}
                 </div>

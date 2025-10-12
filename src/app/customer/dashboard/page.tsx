@@ -39,6 +39,10 @@ export interface Clinic {
     longitude:  number
 }
 
+export interface VetTag {
+    id: number;
+   name: string;
+}
 
 export interface Vet {
     id: number;
@@ -47,7 +51,7 @@ export interface Vet {
     rating: number;
     ratingCount: number;
     availableToday: boolean;
-    tags: string[];
+    tags: VetTag[];
     image: string;
     weekly_schedule: DayStatus[];
     clinic: Clinic;
