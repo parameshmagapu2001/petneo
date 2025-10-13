@@ -6,9 +6,11 @@ import { AiFillStar } from "react-icons/ai";
 import { Vet } from "@/app/customer/dashboard/page";
 import { api } from "@/utils/api";
 import FullScreenLoader from "./fullScreenLoader";
+import {VISIT_ID} from "./cVetAppointmentBooking";
 
 
 interface C_VetDetailsProps {
+    selectedServiceVisitType: VISIT_ID | null;
     onVetSelection: (vet: Vet) => void;
 }
 
@@ -57,7 +59,7 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
                     key={i}
                     className="text-pink-600 text-xs font-semibold bg-pink-100 rounded px-3 py-1"
                     >
-                    {tag}
+                    {tag.name}
                     </span>
                 ))}
                 </div>
@@ -131,7 +133,7 @@ export function useBrowserCoordinates() {
   return coordinates;
 }
 
-export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
+export default function C_VetDetails({ selectedServiceVisitType, onVetSelection }: C_VetDetailsProps) {
 
     const coordinates = useBrowserCoordinates();
     const [vets, setVets] = useState<Vet[]>([]);
@@ -144,7 +146,18 @@ export default function C_VetDetails({ onVetSelection }: C_VetDetailsProps) {
             hasFetched.current = true;
             //fetching the nearby vets data.
             setLoading(true);
-            const fetchNearByVets = api.get("/user/nearby-vets", {user_lat: coordinates.latitude, user_lon: coordinates.longitude, radius_km: defaultNearByRadius});
+            const queryParams = selectedServiceVisitType ? {
+                user_lat: coordinates.latitude,
+                user_lon: coordinates.longitude,
+                radius_km: defaultNearByRadius,
+                visit_type: selectedServiceVisitType
+            } :
+                {
+                    user_lat: coordinates.latitude,
+                    user_lon: coordinates.longitude,
+                    radius_km: defaultNearByRadius
+                }
+            const fetchNearByVets = api.get("/user/nearby-vets", queryParams);
             Promise.all([fetchNearByVets]).then(([res1]) => {
                 const vetsLocal: Vet[] = [];
                 res1?.forEach((item: any) => {

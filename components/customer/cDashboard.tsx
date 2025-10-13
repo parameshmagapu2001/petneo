@@ -10,37 +10,44 @@ import { AppointmentDetails } from "./appointmentStatus";
 import FullScreenLoader from "./fullScreenLoader";
 import DoctorCard from "./doctorCard";
 import router from "next/router";
+import {VISIT_ID} from "./cVetAppointmentBooking";
+
+export type Service = {
+    id: string;
+    label: string;
+    icon: string; // icon url or base64
+    visit_type?: VISIT_ID;
+};
 
 interface C_DashboardMainProps {
     user: User | null;
     pets: Pet[];
     onViewPetDetails: (petId: number) => void;
     onPageTypeChange: (pageType: PageType) => void;
+    onServiceSelection: (service: Service) => void;
 }
 
 
-export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTypeChange }: C_DashboardMainProps) {
-    type Service = {
-    id: string;
-    label: string;
-    icon: string; // icon url or base64
-    };
+export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTypeChange, onServiceSelection }: C_DashboardMainProps) {
 
     const services: Service[] = [
     {
         id: "clinicVisit",
         label: "Clinic Visit",
         icon: "../images/customer/clinic_icon.png",
+        visit_type: VISIT_ID.CLINIC_VISIT
     },
     {
         id: "homeVisit",
         label: "Home Visit",
         icon: "../images/customer/homeVisit_icon.png",
+        visit_type: VISIT_ID.HOME_VISIT
     },
     {
         id: "online",
         label: "Online",
         icon: "../images/customer/online_icon.png",
+        visit_type: VISIT_ID.ONLINE
     },
     {
         id: 'boarding',
@@ -70,10 +77,11 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
     };
 
     // Handler for clicking on services
-    const HandleClickOnServices = (id: string) => {
-    if (id === "clinicVisit") {
-        onPageTypeChange(PageType.VET_DETAILS);
-    }
+    const HandleClickOnServices = (service: Service) => {
+        onServiceSelection(service);
+        if (service.id === "clinicVisit" || service.id === "homeVisit" || service.id === "online") {
+            onPageTypeChange(PageType.VET_DETAILS);
+        }
     };
 
     // Handler for clicking on view all appointments
@@ -176,12 +184,12 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
                 <section className="bg-[#d6dafc] rounded-lg p-6 shadow border border-gray-300 flex flex-col md:flex-row md:items-center md:justify-between space-y-6 md:space-y-0">
                     <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-6 max-w-md">
                         <h2 className="col-span-3 font-semibold mb-2 text-gray-800">Quick Services for Your Pet</h2>
-                        {services.map(({ id, icon, label }) => (
-                            <div  key={id} className="flex flex-col items-center">
+                        {services.map((service) => (
+                            <div  key={service.id} className="flex flex-col items-center">
                         <div className="w-36 h-36 bg-white rounded-xl shadow-sm cursor-pointer hover:shadow-lg transition-shadow"> 
-                            <img src={icon} alt={label} className="w-14 h-14 m-11 object-contain"  onClick={() => HandleClickOnServices(id)}/>  
+                            <img src={service.icon} alt={service.label} className="w-14 h-14 m-11 object-contain"  onClick={() => HandleClickOnServices(service)}/>
                         </div>
-                        <span className="text-black text-sm font-semibold pt-4">{label}</span>
+                        <span className="text-black text-sm font-semibold pt-4">{service.label}</span>
                         </div>
                         ))}
                     </div>
