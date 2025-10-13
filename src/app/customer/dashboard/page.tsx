@@ -12,13 +12,13 @@ import {
     FaUserFriends
 } from "react-icons/fa";
 import {IoIosArrowForward} from "react-icons/io";
-import C_DashboardMain from "../../../../components/customer/cDashboard";
+import C_DashboardMain, {Service} from "../../../../components/customer/cDashboard";
 import C_VetDetails from "../../../../components/customer/cVetDetails";
 import C_PetInfo from "../../../../components/customer/cPetInfo";
 import C_MyAppointments from "../../../../components/customer/cMyAppointments";
 import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import C_VetProfile from "../../../../components/customer/cVetProfile";
-import C_VetAppointmentBooking from "../../../../components/customer/cVetAppointmentBooking";
+import C_VetAppointmentBooking, {VISIT_ID} from "../../../../components/customer/cVetAppointmentBooking";
 import {api, clearAuth} from "@/utils/api";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
 import C_MyPets from "../../../../components/customer/cMyPets";
@@ -222,6 +222,11 @@ export default function CustomerDashboard()  {
         handlePageTypeChange(PageType.PET_HISTORY);
     };
 
+    const [selectedServiceVisitType, setSelectedServiceVisitType] = useState<VISIT_ID | null>(null);
+    const handleServiceSelection = (service: Service): void => {
+        setSelectedServiceVisitType(service.visit_type || null);
+    }
+
   return (
      <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
       {/* Header */}
@@ -317,10 +322,10 @@ export default function CustomerDashboard()  {
         </div>
 
       <main className={`${isOpen ? "blur-sm pointer-events-none" : ""}`}>
-        {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onViewPetDetails={viewPetDetails} onPageTypeChange = {handlePageTypeChange}/>}
-        {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}/>}
+        {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onViewPetDetails={viewPetDetails} onPageTypeChange = {handlePageTypeChange} onServiceSelection={handleServiceSelection}/>}
+        {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection} selectedServiceVisitType={selectedServiceVisitType}/>}
         {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
-        {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} userPets={userPets} onPageTypeChange = {handlePageTypeChange}/>}
+        {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} userPets={userPets} onPageTypeChange = {handlePageTypeChange} selectedServiceVisitType={selectedServiceVisitType}/>}
         {pageType === PageType.MY_PETS && <C_MyPets onViewPetDetails={viewPetDetails} onViewPetHistory={viewPetHistory}/>}
         {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId}/>}
         {pageType === PageType.PET_HISTORY && <C_PetHistory petId={selectedPetId}/>}
