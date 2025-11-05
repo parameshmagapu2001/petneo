@@ -16,6 +16,7 @@ interface C_VetAppointmentBookingProps {
     vet: Vet | null;
     userPets: Pet[];
     selectedServiceVisitType: VISIT_ID | null;
+    selectedServiceId: string | null;
     onPageTypeChange: (pageType: PageType) => void;
 }
 
@@ -112,10 +113,10 @@ function convert12hTo24hPlusMinutes(time12h: string, addMinutes?: number): strin
 }
 
 
-export default function C_VetAppointmentBooking({ user, vet, userPets, selectedServiceVisitType, onPageTypeChange }: C_VetAppointmentBookingProps) {
+export default function C_VetAppointmentBooking({ user, vet, userPets, selectedServiceVisitType, selectedServiceId, onPageTypeChange }: C_VetAppointmentBookingProps) {
     const [selectedVisitType, setSelectedVisitType] = useState<VISIT_TYPE | undefined>(VISIT_TYPES.find((item) => item.id === selectedServiceVisitType));
     const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
-    const [selectedService, setSelectedService] = useState<string>("");
+    const [selectedService, setSelectedService] = useState<string>(selectedServiceId || "");
     const [selectedPet, setSelectedPet] = useState<Pet>();
     const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
 
@@ -216,21 +217,21 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
                     {/* Right Content */}
                     <div className="md:w-8/20 flex flex-col p-6">
                         {/* Visit Type */}
-                        <div className="mb-4">
-                        <label className="block text-sm font-semibold mb-1">Visit Type</label>
-                        <div className="relative">
-                            <select className= "font-semibold w-full bg-white border rounded px-3 py-2 appearance-none"
-                            value={selectedVisitType?.id || ""}
-                            disabled
-                            onChange={(event) => setSelectedVisitType(VISIT_TYPES.find((item) => item.id === event.target.value))}>
-                            <option value="" disabled hidden>Select Visit Type</option>
-                            {VISIT_TYPES.map((v, i) => (
-                                <option key={i} value={v.id}>{v.displayName}</option>
-                            ))}
-                            </select>
-                            <IoChevronDown className="absolute right-3 top-3 text-gray-500" />
-                        </div>
-                        </div>
+                        {/*<div className="mb-4">*/}
+                        {/*<label className="block text-sm font-semibold mb-1">Visit Type</label>*/}
+                        {/*<div className="relative">*/}
+                        {/*    <select className= "font-semibold w-full bg-white border rounded px-3 py-2 appearance-none"*/}
+                        {/*    value={selectedVisitType?.id || ""}*/}
+                        {/*    disabled*/}
+                        {/*    onChange={(event) => setSelectedVisitType(VISIT_TYPES.find((item) => item.id === event.target.value))}>*/}
+                        {/*    <option value="" disabled hidden>Select Visit Type</option>*/}
+                        {/*    {VISIT_TYPES.map((v, i) => (*/}
+                        {/*        <option key={i} value={v.id}>{v.displayName}</option>*/}
+                        {/*    ))}*/}
+                        {/*    </select>*/}
+                        {/*    <IoChevronDown className="absolute right-3 top-3 text-gray-500" />*/}
+                        {/*</div>*/}
+                        {/*</div>*/}
 
                         {/* Pick Location */}
                         {selectedVisitType?.id === VISIT_ID.HOME_VISIT && 

@@ -11,6 +11,7 @@ import {VISIT_ID} from "./cVetAppointmentBooking";
 
 interface C_VetDetailsProps {
     selectedServiceVisitType: VISIT_ID | null;
+    selectedServiceId: string | null;
     onVetSelection: (vet: Vet) => void;
 }
 
@@ -133,7 +134,7 @@ export function useBrowserCoordinates() {
   return coordinates;
 }
 
-export default function C_VetDetails({ selectedServiceVisitType, onVetSelection }: C_VetDetailsProps) {
+export default function C_VetDetails({ selectedServiceVisitType, selectedServiceId, onVetSelection }: C_VetDetailsProps) {
 
     const coordinates = useBrowserCoordinates();
     const [vets, setVets] = useState<Vet[]>([]);
@@ -146,17 +147,38 @@ export default function C_VetDetails({ selectedServiceVisitType, onVetSelection 
             hasFetched.current = true;
             //fetching the nearby vets data.
             setLoading(true);
-            const queryParams = selectedServiceVisitType ? {
+            let queryParams: any = {
                 user_lat: coordinates.latitude,
                 user_lon: coordinates.longitude,
-                radius_km: defaultNearByRadius,
-                visit_type: selectedServiceVisitType
-            } :
-                {
-                    user_lat: coordinates.latitude,
-                    user_lon: coordinates.longitude,
-                    radius_km: defaultNearByRadius
+                radius_km: defaultNearByRadius
+            };
+            if (selectedServiceVisitType) {
+                if (selectedServiceId) {
+                    queryParams = {
+                        user_lat: coordinates.latitude,
+                        user_lon: coordinates.longitude,
+                        radius_km: defaultNearByRadius,
+                        visit_type: selectedServiceVisitType,
+                        service_ids: selectedServiceId
+                    }
+                } else {
+                    queryParams = {
+                        user_lat: coordinates.latitude,
+                        user_lon: coordinates.longitude,
+                        radius_km: defaultNearByRadius,
+                        visit_type: selectedServiceVisitType
+                    };
                 }
+            } else {
+                if (selectedServiceId) {
+                    queryParams = {
+                        user_lat: coordinates.latitude,
+                        user_lon: coordinates.longitude,
+                        radius_km: defaultNearByRadius,
+                        service_ids: selectedServiceId
+                    }
+                }
+            }
             const fetchNearByVets = api.get("/user/nearby-vets", queryParams);
             Promise.all([fetchNearByVets]).then(([res1]) => {
                 const vetsLocal: Vet[] = [];
