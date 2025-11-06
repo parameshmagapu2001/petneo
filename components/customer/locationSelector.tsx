@@ -155,6 +155,16 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
     }));
   };
 
+
+    const handleEditLocation = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        alert("Edit icon clicked");
+    }
+    const handleDeleteLocation = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        alert("Delete icon clicked");
+    }
+
   return (
     <div className="flex items-center grid grid-cols-3 gap-4">
       {addresses.map((loc) => {
@@ -162,7 +172,7 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
         return (
           <div
             key={loc.id}
-            className={`rounded-2xl p-4 w-34 relative shadow-md cursor-pointer transition 
+            className={`rounded-2xl p-4 w-34 h-full relative shadow-md cursor-pointer transition grid grid-cols-1 content-between
             ${isSelected ? "bg-pink-500 text-white" : "bg-white text-black"}`}
             onClick={handleAddressSelection(loc)}
           >
@@ -196,14 +206,14 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
             </div>
 
             {/* Bottom Row */}
-            {loc.location_name && (
-              <p
-                className={`mt-2 text-xs font-semibold ${
-                  isSelected ? "text-white" : "text-black"
-                }`}
-              >
-                {loc.location_name}
-                {/* {loc.details && (
+              {loc.location_name && (
+                  <p
+                      className={`mt-2 text-xs font-semibold ${
+                          isSelected ? "text-white" : "text-black"
+                      }`}
+                  >
+                      {loc.location_name}
+                      {/* {loc.details && (
                   <span
                     className={`ml-1 ${
                       isSelected ? "text-pink-100" : "text-gray-500"
@@ -212,8 +222,21 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
                     {loc.details}
                   </span>
                 )} */}
-              </p>
-            )}
+                  </p>
+              )}
+
+              <div
+                  key={`${loc.id}-buttons`}
+                  className="flex flex-row justify-between items-center pt-3">
+                  <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 me-2 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
+                          onClick={handleEditLocation}>
+                      Edit
+                  </button>
+                  <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
+                          onClick={handleDeleteLocation}>
+                      Delete
+                  </button>
+              </div>
           </div>
         );
       })}
