@@ -99,14 +99,18 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
   }, []);
 
   useEffect(() => {
-    if (selectedAddress?.id) {
       onSelectedAddressChange(selectedAddress);
-    }
   }, [selectedAddress]);
 
   const handleAddressSelection = (address: Home_Visit_Address) => {
     return () => {
-      setSelectedAddress(address);
+        if (selectedAddress.id === address.id) {
+            //deselecting
+            setSelectedAddress({});
+        } else {
+            setSelectedAddress(address);
+        }
+
     };
 
   };

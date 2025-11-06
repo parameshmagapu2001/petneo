@@ -213,6 +213,7 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
     };
 
     const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
+    const [localSelectedAddress, setLocalSelectedAddress] = useState<Home_Visit_Address>({});
     const handleSelectedAddressChange = (selectedAddress: Home_Visit_Address) => {
         setSelectedAddress(selectedAddress);
     };
@@ -224,9 +225,12 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
     };
 
     const handlePopupCancel = () => {
+        //reverting the selectedAddress to localSelected address
+        setSelectedAddress(localSelectedAddress);
         setIsPopupOpen(false);
     };
     const handlePrimaryAction =  () => {
+        setLocalSelectedAddress(selectedAddress);
         if (selectedAddress?.latitude) {
             setAddressCoordinates({
                 latitude: selectedAddress?.latitude || null,
