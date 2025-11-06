@@ -10,9 +10,9 @@ const mapContainerStyle = { width: "100%", height: "300px" };
 const center = { lat: 17.385, lng: 78.4867 }; // Default: Hyderabad
 
 
-const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => void }) => {
+const MapSelector = ({ lat, lng,  onChange }: { lat?:number, lng?:number, onChange: (lat: number, lng: number) => void }) => {
   const google_api_key = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ""
-  const [marker, setMarker] = useState(center);
+  const [marker, setMarker] = useState((lat && lng) ? {lat, lng} : center);
   const { isLoaded } = useLoadScript({ googleMapsApiKey: google_api_key });
 
   if (!isLoaded) return <div>Loading map...</div>;
@@ -23,8 +23,8 @@ const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => voi
       center={marker}
       zoom={13}
       onClick={e => {
-        const lat = e.latLng?.lat() ?? center.lat;
-        const lng = e.latLng?.lng() ?? center.lng;
+        const lat = e.latLng?.lat() ?? marker.lat;
+        const lng = e.latLng?.lng() ?? marker.lng;
         setMarker({ lat, lng });
         onChange(lat, lng);
       }}
@@ -128,9 +128,17 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
     ) {
       try{
         setLoading(true);
-        const createAddress = await api.post("/user/address/add", addressFormDetails);
+        if (addressFormDetails?.id) {
+            //updating
+            await api.put(`/user/address/${addressFormDetails.id}`, addressFormDetails);
+        } else {
+            //creating
+            await api.post("/user/address/add", addressFormDetails);
+        }
         //closing the popup
         setIsPopupOpen(false);
+        //resetting the address form details
+          setAddressFormDetails({});
         setLoading(false);
 
         //TODO set the created address id as selected Id
@@ -155,10 +163,12 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
     }));
   };
 
-
-    const handleEditLocation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        alert("Edit icon clicked");
+    const handleEditLocation = (address: Home_Visit_Address) => {
+        return (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setAddressFormDetails(address);
+            setIsPopupOpen(true);
+        };
     }
     const handleDeleteLocation = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -229,7 +239,7 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
                   key={`${loc.id}-buttons`}
                   className="flex flex-row justify-between items-center pt-3">
                   <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 me-2 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
-                          onClick={handleEditLocation}>
+                          onClick={handleEditLocation(loc)}>
                       Edit
                   </button>
                   <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
@@ -249,7 +259,7 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
         <FaPlus className="text-white text-lg" />
       </button>
        <FullScreenLoader loading={loading}/>
-       <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Add">
+       <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel={addressFormDetails?.id ? "Save": "Add"}>
         <form className="w-full max-w-lg bg-white rounded-xl px-8 py-10 shadow-lg">
           <h2 className="text-base font-bold mb-8 text-center">Enter Address Details</h2>
           <div className="mb-3 text-sm">
@@ -317,7 +327,7 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
             />
           </div>
           <div className="mb-3 text-sm">
-            <MapSelector onChange={(lat, lng) => setAddressFormDetails(prev => ({
+            <MapSelector lat={addressFormDetails?.latitude} lng={addressFormDetails?.longitude} onChange={(lat, lng) => setAddressFormDetails(prev => ({
               ...prev,
               latitude: lat,
               longitude: lng
