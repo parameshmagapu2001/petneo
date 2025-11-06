@@ -269,15 +269,22 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                 </div>
 
                 <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Select">
-                    <DistanceSlider
-                        min={0}
-                        max={100}
-                        initialValue={nearbyRadius}
-                        unit="km"
-                        onChange={handleNearByRadiusChange}
-                    />
-                    <LocationSelector onSelectedAddressChange={handleSelectedAddressChange}
-                                      selectedAddressProp={selectedAddress} />
+                    <div className="flex flex-col">
+                        <div className="mb-4">
+                            <DistanceSlider
+                                min={0}
+                                max={100}
+                                initialValue={nearbyRadius}
+                                unit="km"
+                                size={150}
+                                onChange={handleNearByRadiusChange}
+                            />
+                        </div>
+                        <div>
+                            <LocationSelector onSelectedAddressChange={handleSelectedAddressChange}
+                                              selectedAddressProp={selectedAddress} />
+                        </div>
+                    </div>
                 </PopupModel>
 
                 {/* Vet cards grid */}
