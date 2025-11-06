@@ -237,7 +237,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
                         {selectedVisitType?.id === VISIT_ID.HOME_VISIT && 
                             <div className="mb-4">
                             <label className="block text-sm font-semibold mb-2">Pick Location</label>
-                            <LocationSelector onSelectedAddressChange={handleSelectedAddressChange} />
+                            <LocationSelector onSelectedAddressChange={handleSelectedAddressChange} selectedAddressProp={selectedAddress} />
                             </div>
                         }
 

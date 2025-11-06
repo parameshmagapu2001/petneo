@@ -7,6 +7,8 @@ import { Vet } from "@/app/customer/dashboard/page";
 import { api } from "@/utils/api";
 import FullScreenLoader from "./fullScreenLoader";
 import {VISIT_ID} from "./cVetAppointmentBooking";
+import PopupModel from "./popupModel";
+import LocationSelector, {Home_Visit_Address} from "./locationSelector";
 
 
 interface C_VetDetailsProps {
@@ -82,8 +84,8 @@ const defaultNearByRadius = 100;
 type Coordinates = {
   latitude: number | null;
   longitude: number | null;
-  error: string | null;
-  loading: boolean;
+  error?: string | null;
+  loading?: boolean;
 };
 
 // default coordinates gachibowli
@@ -137,12 +139,13 @@ export function useBrowserCoordinates() {
 export default function C_VetDetails({ selectedServiceVisitType, selectedServiceId, onVetSelection }: C_VetDetailsProps) {
 
     const coordinates = useBrowserCoordinates();
+    const [addressCoordinates, setAddressCoordinates] = useState<Coordinates>();
     const [vets, setVets] = useState<Vet[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
-        coordinates.latitude = coordinates.latitude || defaultCoordinates.lat;
-        coordinates.longitude = coordinates.longitude || defaultCoordinates.lon;
+        coordinates.latitude = addressCoordinates?.latitude || coordinates.latitude || defaultCoordinates.lat;
+        coordinates.longitude = addressCoordinates?.longitude || coordinates.longitude || defaultCoordinates.lon;
         if (coordinates.latitude && coordinates.longitude && !hasFetched.current) {
             hasFetched.current = true;
             //fetching the nearby vets data.
@@ -203,11 +206,38 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                 //TODO handle error scenarios
             });
         }
-    }, [coordinates]);
+    }, [coordinates, addressCoordinates]);
 
     const handleBookAppointmentClick = (vet: Vet) => {
         return () => onVetSelection(vet);
     };
+
+    const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
+    const handleSelectedAddressChange = (selectedAddress: Home_Visit_Address) => {
+        setSelectedAddress(selectedAddress);
+    };
+
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+    const handleFilterButtonClick = () => {
+        setIsPopupOpen(true);
+    };
+
+    const handlePopupCancel = () => {
+        setIsPopupOpen(false);
+    };
+    const handlePrimaryAction =  () => {
+        if (selectedAddress?.latitude) {
+            setAddressCoordinates({
+                latitude: selectedAddress?.latitude || null,
+                longitude: selectedAddress?.longitude || null
+            });
+            setIsPopupOpen(false);
+        } else {
+            alert("Please select valid address");
+        }
+    };
+
     return (
         <>
             <div className="bg-gray-50 min-h-screen p-6">
@@ -227,11 +257,17 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                         type="button"
                         aria-label="Filter"
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-500 hover:bg-pink-600 text-white p-2 rounded-md transition"
+                        onClick={handleFilterButtonClick}
                     >
                         <FiFilter size={18} />
                     </button>
                     </div>
                 </div>
+
+                <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Select">
+                    <LocationSelector onSelectedAddressChange={handleSelectedAddressChange}
+                                      selectedAddressProp={selectedAddress} />
+                </PopupModel>
 
                 {/* Vet cards grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-20 gap-y-10 px-10">

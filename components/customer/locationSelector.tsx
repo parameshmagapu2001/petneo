@@ -47,10 +47,11 @@ export interface Home_Visit_Address {
 
 interface LocationSelectorProps {
   onSelectedAddressChange: (selectedAddress: Home_Visit_Address) => void;
+  selectedAddressProp: Home_Visit_Address | {};
 }
 
-export default function LocationSelector({onSelectedAddressChange} : LocationSelectorProps) {
-  const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
+export default function LocationSelector({onSelectedAddressChange, selectedAddressProp} : LocationSelectorProps) {
+  const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>(selectedAddressProp);
 
   // Add new location on click
   const handleAdd = () => {
