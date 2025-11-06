@@ -9,6 +9,7 @@ import FullScreenLoader from "./fullScreenLoader";
 import {VISIT_ID} from "./cVetAppointmentBooking";
 import PopupModel from "./popupModel";
 import LocationSelector, {Home_Visit_Address} from "./locationSelector";
+import DistanceSlider from "./DistanceSlider";
 
 
 interface C_VetDetailsProps {
@@ -79,7 +80,7 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
     );
 }
 
-const defaultNearByRadius = 100;
+const defaultNearByRadius = 10;
 
 type Coordinates = {
   latitude: number | null;
@@ -87,12 +88,6 @@ type Coordinates = {
   error?: string | null;
   loading?: boolean;
 };
-
-// default coordinates gachibowli
-const defaultCoordinates = {
-    lat: 17.443446257146455,
-    lon: 78.33513637942715
-}
 
 export function useBrowserCoordinates() {
   const [coordinates, setCoordinates] = useState<Coordinates>({
@@ -140,44 +135,47 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
 
     const coordinates = useBrowserCoordinates();
     const [addressCoordinates, setAddressCoordinates] = useState<Coordinates>();
+    const [nearbyRadius, setNearbyRadius] = useState<number>(defaultNearByRadius);
+    const [actualNearByRadius, setActualNearByRadius] = useState<number>(defaultNearByRadius);
+
     const [vets, setVets] = useState<Vet[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
-        coordinates.latitude = addressCoordinates?.latitude || coordinates.latitude || defaultCoordinates.lat;
-        coordinates.longitude = addressCoordinates?.longitude || coordinates.longitude || defaultCoordinates.lon;
+        const latitude = addressCoordinates?.latitude || coordinates.latitude;
+        const longitude = addressCoordinates?.longitude || coordinates.longitude ;
         if (coordinates.latitude && coordinates.longitude && !hasFetched.current) {
             hasFetched.current = true;
             //fetching the nearby vets data.
             setLoading(true);
             let queryParams: any = {
-                user_lat: coordinates.latitude,
-                user_lon: coordinates.longitude,
-                radius_km: defaultNearByRadius
+                user_lat: latitude,
+                user_lon: longitude,
+                radius_km: actualNearByRadius
             };
             if (selectedServiceVisitType) {
                 if (selectedServiceId) {
                     queryParams = {
-                        user_lat: coordinates.latitude,
-                        user_lon: coordinates.longitude,
-                        radius_km: defaultNearByRadius,
+                        user_lat: latitude,
+                        user_lon: longitude,
+                        radius_km: actualNearByRadius,
                         visit_type: selectedServiceVisitType,
                         service_ids: selectedServiceId
                     }
                 } else {
                     queryParams = {
-                        user_lat: coordinates.latitude,
-                        user_lon: coordinates.longitude,
-                        radius_km: defaultNearByRadius,
+                        user_lat: latitude,
+                        user_lon: longitude,
+                        radius_km: actualNearByRadius,
                         visit_type: selectedServiceVisitType
                     };
                 }
             } else {
                 if (selectedServiceId) {
                     queryParams = {
-                        user_lat: coordinates.latitude,
-                        user_lon: coordinates.longitude,
-                        radius_km: defaultNearByRadius,
+                        user_lat: latitude,
+                        user_lon: longitude,
+                        radius_km: actualNearByRadius,
                         service_ids: selectedServiceId
                     }
                 }
@@ -206,7 +204,7 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                 //TODO handle error scenarios
             });
         }
-    }, [coordinates, addressCoordinates]);
+    }, [coordinates, addressCoordinates, actualNearByRadius]);
 
     const handleBookAppointmentClick = (vet: Vet) => {
         return () => onVetSelection(vet);
@@ -218,6 +216,10 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
         setSelectedAddress(selectedAddress);
     };
 
+    const handleNearByRadiusChange = (nearbyRadius: number) => {
+        setNearbyRadius(nearbyRadius);
+    };
+
     const [isPopupOpen, setIsPopupOpen] = useState(false);
 
     const handleFilterButtonClick = () => {
@@ -227,19 +229,17 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
     const handlePopupCancel = () => {
         //reverting the selectedAddress to localSelected address
         setSelectedAddress(localSelectedAddress);
+        setNearbyRadius(actualNearByRadius);
         setIsPopupOpen(false);
     };
     const handlePrimaryAction =  () => {
         setLocalSelectedAddress(selectedAddress);
-        if (selectedAddress?.latitude) {
-            setAddressCoordinates({
-                latitude: selectedAddress?.latitude || null,
-                longitude: selectedAddress?.longitude || null
-            });
-            setIsPopupOpen(false);
-        } else {
-            alert("Please select valid address");
-        }
+        setActualNearByRadius(nearbyRadius);
+        setAddressCoordinates({
+            latitude: selectedAddress?.latitude || null,
+            longitude: selectedAddress?.longitude || null
+        });
+        setIsPopupOpen(false);
     };
 
     return (
@@ -269,6 +269,13 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                 </div>
 
                 <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Select">
+                    <DistanceSlider
+                        min={0}
+                        max={100}
+                        initialValue={nearbyRadius}
+                        unit="km"
+                        onChange={handleNearByRadiusChange}
+                    />
                     <LocationSelector onSelectedAddressChange={handleSelectedAddressChange}
                                       selectedAddressProp={selectedAddress} />
                 </PopupModel>
