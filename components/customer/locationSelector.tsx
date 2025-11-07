@@ -5,6 +5,7 @@ import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
 import PopupModel from "./popupModel";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import ConfirmationPopup from "./ConfirmationPopup";
 
 const mapContainerStyle = { width: "100%", height: "300px" };
 const center = { lat: 17.385, lng: 78.4867 }; // Default: Hyderabad
@@ -169,10 +170,49 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
             setAddressFormDetails(address);
             setIsPopupOpen(true);
         };
+    };
+    const [toBeDeletedAddressId, setToBeDeletedAddressId] = useState<number | null>();
+    const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState<boolean>(false);
+    const handleDeleteLocation = (address: Home_Visit_Address) => {
+        return (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setToBeDeletedAddressId(address.id);
+            //open the confirmation popup
+            setIsConfirmationPopupOpen(true);
+        };
+    };
+
+    const handleConfirmationPopupConfirm = async () => {
+        try {
+            //open the loader
+            setLoading(true);
+
+            //delete api call
+            await api.delete(`/user/address/${toBeDeletedAddressId}`);
+
+            //close the loader
+            setLoading(false);
+
+            //closer the confirmation popup
+            setIsConfirmationPopupOpen(false);
+
+            //setting the setToBeDeletedAddressId to empty
+            setToBeDeletedAddressId(null);
+
+            //reload the locations
+            fetchAndSetAddresses();
+        } catch(e) {
+            setLoading(false);
+            //TODO error handling
+        }
     }
-    const handleDeleteLocation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        alert("Delete icon clicked");
+
+    const handleConfirmationPopupCancel = () => {
+        //closer the confirmation popup
+        setIsConfirmationPopupOpen(false);
+
+        //setting the setToBeDeletedAddressId to empty
+        setToBeDeletedAddressId(null);
     }
 
   return (
@@ -243,7 +283,7 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
                       Edit
                   </button>
                   <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
-                          onClick={handleDeleteLocation}>
+                          onClick={handleDeleteLocation(loc)}>
                       Delete
                   </button>
               </div>
@@ -335,6 +375,16 @@ export default function LocationSelector({onSelectedAddressChange, selectedAddre
           </div>
       </form>
        </PopupModel>
+        {/* Confirmation Popup */}
+        <ConfirmationPopup
+            isOpen={isConfirmationPopupOpen}
+            message="Are you sure you want to delete this item? This action cannot be undone."
+            onConfirm={handleConfirmationPopupConfirm}
+            onCancel={handleConfirmationPopupCancel}
+            confirmText="Yes, Delete"
+            cancelText="No, Cancel"
+            confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+        />
     </div>
   );
 }
