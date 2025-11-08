@@ -1,9 +1,11 @@
 "use client";
 
-import {useEffect, useRef, useState} from "react";
-import {api} from "@/utils/api";
-import {FaCamera} from "react-icons/fa";
+import React, {useEffect, useRef, useState} from "react";
+import {api, clearAuth} from "@/utils/api";
+import {FaCamera, FaPen} from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
+import ConfirmationPopup from "./ConfirmationPopup";
+import router from "next/router";
 
 interface UserBio {
     id?: number;
@@ -98,20 +100,55 @@ export default function C_MyBio() {
         setIsEditMode(false);
     };
 
+    const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState<boolean>(false);
+    const onDelete = () => {
+        //open the confirmation popup
+        setIsConfirmationPopupOpen(true);
+    };
+
+    const handleConfirmationPopupConfirm = async () => {
+        try {
+            //open the loader
+            setLoading(true);
+
+            //delete api call
+            await api.delete(`/user/deleteAccount`);
+
+            //close the loader
+            setLoading(false);
+
+            //closer the confirmation popup
+            setIsConfirmationPopupOpen(false);
+
+            //need to clear the auth details and redirect back to login page.
+            clearAuth();
+            if (typeof window !== "undefined") window.location.href = "/customer/login";
+            else router.push("/customer/login")
+        } catch(e) {
+            setLoading(false);
+            //TODO error handling
+        }
+    }
+
+    const handleConfirmationPopupCancel = () => {
+        //closer the confirmation popup
+        setIsConfirmationPopupOpen(false);
+    }
+
     return (
         <>
             <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
                 <form className="w-full max-w-md bg-transparent rounded-lg p-4">
                     {/* User Photo */}
                     <div className="mb-4 relative flex items-center justify-center">
-                        <div id="photo" className="relative w-25 h-25 rounded-full border border-gray-300 flex items-center justify-center overflow-hidden">
+                        <div id="photo" className="relative w-25 h-25 rounded-full border bg-white border-gray-300 flex items-center justify-center overflow-hidden">
                             {userBio?.profile_picture_url ?
                                 <img
                                     src={userBio.profile_picture_url}
                                     alt="user"
                                     className="w-full h-full object-cover"
                                 /> :
-                                <FaCamera className="text-gray-400 text-3xl w-full h-40 object-cover rounded-md bg-white" />}
+                                <FaCamera className="text-gray-400 text-xl w-18 h-18 object-cover rounded-md bg-white" />}
 
                             {isEditMode &&
                                 <>
@@ -198,13 +235,29 @@ export default function C_MyBio() {
                         <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onSave}>
                             Save
                         </button> :
-                        <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
-                            Edit
-                        </button>}
+                        <div className="flex flex-row justify-between">
+                            <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
+                                Edit
+                            </button>
+                            <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onDelete}>
+                                Delete
+                            </button>
+                        </div>
+                    }
                 </form>
 
                 <FullScreenLoader loading={loading}/>
             </div>
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={isConfirmationPopupOpen}
+                message="Are you sure you want to delete the account? This action cannot be undone."
+                onConfirm={handleConfirmationPopupConfirm}
+                onCancel={handleConfirmationPopupCancel}
+                confirmText="Yes, Delete"
+                cancelText="No, Cancel"
+                confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+            />
         </>
     )
 }
