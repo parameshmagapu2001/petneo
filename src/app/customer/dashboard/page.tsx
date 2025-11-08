@@ -26,6 +26,7 @@ import {Menu, X} from "lucide-react";
 import router from "next/router";
 import {PageType} from "./constants";
 import C_PetHistory from "../../../../components/customer/cPetHistory";
+import C_MyBio from "../../../../components/customer/cMyBio";
 
 export interface DayStatus {
     day: string;
@@ -105,7 +106,6 @@ export default function CustomerDashboard()  {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_PETS, label: "My Pets"}];
         } else if (pageType === PageType.MY_BIO) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_BIO, label: "My Bio"}];
-            disabled = true;
         } else if (pageType === PageType.PRIVACY) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.PRIVACY, label: "Privacy"}];
             disabled = true;
@@ -345,6 +345,7 @@ export default function CustomerDashboard()  {
         {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId}/>}
         {pageType === PageType.PET_HISTORY && <C_PetHistory petId={selectedPetId}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
+          {pageType === PageType.MY_BIO && <C_MyBio/>}
       </main>
 
       <FullScreenLoader loading={loading}/>
