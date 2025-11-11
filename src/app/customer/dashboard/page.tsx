@@ -27,6 +27,7 @@ import router from "next/router";
 import {PageType} from "./constants";
 import C_PetHistory from "../../../../components/customer/cPetHistory";
 import C_MyBio from "../../../../components/customer/cMyBio";
+import {setupForegroundNotifications} from "@/lib/firebase/utils";
 
 export interface DayStatus {
     day: string;
@@ -203,6 +204,12 @@ export default function CustomerDashboard()  {
         }
          
     }, [pageType]);
+
+    useEffect(() => {
+        if ('serviceWorker' in navigator && 'Notification' in window) {
+            setupForegroundNotifications();
+        }
+    }, []);
 
     function handleMenuClick(menuItem: { icon: React.JSX.Element; label: string; id: PageType; }): void {
         setIsOpen(false);
