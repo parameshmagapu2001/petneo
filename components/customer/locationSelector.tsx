@@ -48,7 +48,7 @@ export interface Home_Visit_Address {
 
 interface LocationSelectorProps {
   onSelectedAddressChange: (selectedAddress: Home_Visit_Address) => void;
-  selectedAddressProp: Home_Visit_Address | {};
+  selectedAddressProp: Home_Visit_Address | object;
 }
 
 export default function LocationSelector({onSelectedAddressChange, selectedAddressProp} : LocationSelectorProps) {
