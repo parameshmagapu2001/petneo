@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import {requestNotificationPermission} from "@/lib/firebase/utils";
 
 type LoginResponse = {
   user_type?: string;
@@ -160,7 +161,11 @@ export default function LoginPage({pageType}: LoginPageProps) {
       if (!API_BASE) throw new Error("API_BASE not configured.");
       if (!/^\d{6}$/.test(otp)) throw new Error("Please enter a valid 6-digit OTP.");
 
-      const url = `${API_BASE.replace(/\/$/, "")}/${agentTab ? "auth" : "user"}/login/verifyOtp?mobile_number=${encodeURIComponent(mobile)}&otp=${encodeURIComponent(otp)}`;
+      let device_token;
+        if ('serviceWorker' in navigator && 'Notification' in window) {
+            device_token = await requestNotificationPermission();
+        }
+      const url = `${API_BASE.replace(/\/$/, "")}/${agentTab ? "auth" : "user"}/login/verifyOtp?mobile_number=${encodeURIComponent(mobile)}&otp=${encodeURIComponent(otp)}&device_token=${device_token}`;
 
       const res = await fetch(url, { method: "POST" });
       const json = await res.json();

@@ -26,6 +26,8 @@ import {Menu, X} from "lucide-react";
 import router from "next/router";
 import {PageType} from "./constants";
 import C_PetHistory from "../../../../components/customer/cPetHistory";
+import C_MyBio from "../../../../components/customer/cMyBio";
+import {setupForegroundNotifications} from "@/lib/firebase/utils";
 
 export interface DayStatus {
     day: string;
@@ -105,7 +107,6 @@ export default function CustomerDashboard()  {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_PETS, label: "My Pets"}];
         } else if (pageType === PageType.MY_BIO) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.MY_BIO, label: "My Bio"}];
-            disabled = true;
         } else if (pageType === PageType.PRIVACY) {
             breadCrumbsLocal = [{ id: PageType.DASHBOARD, label: "Home"}, {id: PageType.PRIVACY, label: "Privacy"}];
             disabled = true;
@@ -164,6 +165,7 @@ export default function CustomerDashboard()  {
             handlePageTypeChange(item.id);
         };
     };
+    const [serviceBackendData, SetServiceBackendData] = useState<any[]>([]);
 
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
@@ -172,7 +174,11 @@ export default function CustomerDashboard()  {
             if (!hasFetched.current) {
                 hasFetched.current = true;
                 const userHomeFetch = api.get("/user/home");
-                Promise.all([userHomeFetch]).then(([res1]) => {
+                const servicesDataFetch = api.get("/services");
+                Promise.all([userHomeFetch, servicesDataFetch]).then(([res1, res2]) => {
+                    if (Array.isArray(res2)) {
+                        SetServiceBackendData(res2);
+                    }
                     //setting the user data
                     setUser({
                         id: res1?.user?.id,
@@ -199,6 +205,12 @@ export default function CustomerDashboard()  {
          
     }, [pageType]);
 
+    useEffect(() => {
+        if ('serviceWorker' in navigator && 'Notification' in window) {
+            setupForegroundNotifications();
+        }
+    }, []);
+
     function handleMenuClick(menuItem: { icon: React.JSX.Element; label: string; id: PageType; }): void {
         setIsOpen(false);
         handlePageTypeChange(menuItem.id);
@@ -223,8 +235,10 @@ export default function CustomerDashboard()  {
     };
 
     const [selectedServiceVisitType, setSelectedServiceVisitType] = useState<VISIT_ID | null>(null);
+    const [selectedServiceId, SetSelectedServiceId] = useState<string | null>(null);
     const handleServiceSelection = (service: Service): void => {
         setSelectedServiceVisitType(service.visit_type || null);
+        SetSelectedServiceId(serviceBackendData?.find((item) => item.name === service.serviceName)?.id);
     }
 
   return (
@@ -325,13 +339,20 @@ export default function CustomerDashboard()  {
 
       <main className={`${isOpen ? "blur-sm pointer-events-none" : ""} overflow-auto`}>
         {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onViewPetDetails={viewPetDetails} onPageTypeChange = {handlePageTypeChange} onServiceSelection={handleServiceSelection}/>}
-        {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection} selectedServiceVisitType={selectedServiceVisitType}/>}
+        {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}
+                                                            selectedServiceVisitType={selectedServiceVisitType}
+                                                            selectedServiceId={selectedServiceId}/>}
         {pageType === PageType.VET_PROFILE && <C_VetProfile selectedVet={selectedVet} onPageTypeChange = {handlePageTypeChange}/>}
-        {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet} userPets={userPets} onPageTypeChange = {handlePageTypeChange} selectedServiceVisitType={selectedServiceVisitType}/>}
+        {pageType === PageType.VET_APPOINTMENT_BOOKING && <C_VetAppointmentBooking user={user} vet={selectedVet}
+                                                                                   userPets={userPets}
+                                                                                   onPageTypeChange={handlePageTypeChange}
+                                                                                   selectedServiceVisitType={selectedServiceVisitType}
+                                                                                   selectedServiceId={selectedServiceId}/>}
         {pageType === PageType.MY_PETS && <C_MyPets onViewPetDetails={viewPetDetails} onViewPetHistory={viewPetHistory}/>}
         {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId}/>}
         {pageType === PageType.PET_HISTORY && <C_PetHistory petId={selectedPetId}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
+          {pageType === PageType.MY_BIO && <C_MyBio/>}
       </main>
 
       <FullScreenLoader loading={loading}/>

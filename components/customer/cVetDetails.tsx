@@ -7,10 +7,14 @@ import { Vet } from "@/app/customer/dashboard/page";
 import { api } from "@/utils/api";
 import FullScreenLoader from "./fullScreenLoader";
 import {VISIT_ID} from "./cVetAppointmentBooking";
+import PopupModel from "./popupModel";
+import LocationSelector, {Home_Visit_Address} from "./locationSelector";
+import DistanceSlider from "./DistanceSlider";
 
 
 interface C_VetDetailsProps {
     selectedServiceVisitType: VISIT_ID | null;
+    selectedServiceId: string | null;
     onVetSelection: (vet: Vet) => void;
 }
 
@@ -76,20 +80,14 @@ function C_VetCard({vet, onBookAppointmentClick}: C_VetCardProp) {
     );
 }
 
-const defaultNearByRadius = 100;
+const defaultNearByRadius = 10;
 
 type Coordinates = {
   latitude: number | null;
   longitude: number | null;
-  error: string | null;
-  loading: boolean;
+  error?: string | null;
+  loading?: boolean;
 };
-
-// default coordinates gachibowli
-const defaultCoordinates = {
-    lat: 17.443446257146455,
-    lon: 78.33513637942715
-}
 
 export function useBrowserCoordinates() {
   const [coordinates, setCoordinates] = useState<Coordinates>({
@@ -133,30 +131,55 @@ export function useBrowserCoordinates() {
   return coordinates;
 }
 
-export default function C_VetDetails({ selectedServiceVisitType, onVetSelection }: C_VetDetailsProps) {
+export default function C_VetDetails({ selectedServiceVisitType, selectedServiceId, onVetSelection }: C_VetDetailsProps) {
 
     const coordinates = useBrowserCoordinates();
+    const [addressCoordinates, setAddressCoordinates] = useState<Coordinates>();
+    const [nearbyRadius, setNearbyRadius] = useState<number>(defaultNearByRadius);
+    const [actualNearByRadius, setActualNearByRadius] = useState<number>(defaultNearByRadius);
+
     const [vets, setVets] = useState<Vet[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
     useEffect(() => {
-        coordinates.latitude = coordinates.latitude || defaultCoordinates.lat;
-        coordinates.longitude = coordinates.longitude || defaultCoordinates.lon;
+        const latitude = addressCoordinates?.latitude || coordinates.latitude;
+        const longitude = addressCoordinates?.longitude || coordinates.longitude ;
         if (coordinates.latitude && coordinates.longitude && !hasFetched.current) {
             hasFetched.current = true;
             //fetching the nearby vets data.
             setLoading(true);
-            const queryParams = selectedServiceVisitType ? {
-                user_lat: coordinates.latitude,
-                user_lon: coordinates.longitude,
-                radius_km: defaultNearByRadius,
-                visit_type: selectedServiceVisitType
-            } :
-                {
-                    user_lat: coordinates.latitude,
-                    user_lon: coordinates.longitude,
-                    radius_km: defaultNearByRadius
+            let queryParams: any = {
+                user_lat: latitude,
+                user_lon: longitude,
+                radius_km: actualNearByRadius
+            };
+            if (selectedServiceVisitType) {
+                if (selectedServiceId) {
+                    queryParams = {
+                        user_lat: latitude,
+                        user_lon: longitude,
+                        radius_km: actualNearByRadius,
+                        visit_type: selectedServiceVisitType,
+                        service_ids: selectedServiceId
+                    }
+                } else {
+                    queryParams = {
+                        user_lat: latitude,
+                        user_lon: longitude,
+                        radius_km: actualNearByRadius,
+                        visit_type: selectedServiceVisitType
+                    };
                 }
+            } else {
+                if (selectedServiceId) {
+                    queryParams = {
+                        user_lat: latitude,
+                        user_lon: longitude,
+                        radius_km: actualNearByRadius,
+                        service_ids: selectedServiceId
+                    }
+                }
+            }
             const fetchNearByVets = api.get("/user/nearby-vets", queryParams);
             Promise.all([fetchNearByVets]).then(([res1]) => {
                 const vetsLocal: Vet[] = [];
@@ -181,11 +204,44 @@ export default function C_VetDetails({ selectedServiceVisitType, onVetSelection 
                 //TODO handle error scenarios
             });
         }
-    }, [coordinates]);
+    }, [coordinates, addressCoordinates, actualNearByRadius]);
 
     const handleBookAppointmentClick = (vet: Vet) => {
         return () => onVetSelection(vet);
     };
+
+    const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
+    const [localSelectedAddress, setLocalSelectedAddress] = useState<Home_Visit_Address>({});
+    const handleSelectedAddressChange = (selectedAddress: Home_Visit_Address) => {
+        setSelectedAddress(selectedAddress);
+    };
+
+    const handleNearByRadiusChange = (nearbyRadius: number) => {
+        setNearbyRadius(nearbyRadius);
+    };
+
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+    const handleFilterButtonClick = () => {
+        setIsPopupOpen(true);
+    };
+
+    const handlePopupCancel = () => {
+        //reverting the selectedAddress to localSelected address
+        setSelectedAddress(localSelectedAddress);
+        setNearbyRadius(actualNearByRadius);
+        setIsPopupOpen(false);
+    };
+    const handlePrimaryAction =  () => {
+        setLocalSelectedAddress(selectedAddress);
+        setActualNearByRadius(nearbyRadius);
+        setAddressCoordinates({
+            latitude: selectedAddress?.latitude || null,
+            longitude: selectedAddress?.longitude || null
+        });
+        setIsPopupOpen(false);
+    };
+
     return (
         <>
             <div className="bg-gray-50 min-h-screen p-6">
@@ -205,11 +261,31 @@ export default function C_VetDetails({ selectedServiceVisitType, onVetSelection 
                         type="button"
                         aria-label="Filter"
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-500 hover:bg-pink-600 text-white p-2 rounded-md transition"
+                        onClick={handleFilterButtonClick}
                     >
                         <FiFilter size={18} />
                     </button>
                     </div>
                 </div>
+
+                <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Select">
+                    <div className="flex flex-col">
+                        <div className="mb-4">
+                            <DistanceSlider
+                                min={0}
+                                max={100}
+                                initialValue={nearbyRadius}
+                                unit="km"
+                                size={150}
+                                onChange={handleNearByRadiusChange}
+                            />
+                        </div>
+                        <div>
+                            <LocationSelector onSelectedAddressChange={handleSelectedAddressChange}
+                                              selectedAddressProp={selectedAddress} />
+                        </div>
+                    </div>
+                </PopupModel>
 
                 {/* Vet cards grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-20 gap-y-10 px-10">

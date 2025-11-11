@@ -12,11 +12,19 @@ import DoctorCard from "./doctorCard";
 import router from "next/router";
 import {VISIT_ID} from "./cVetAppointmentBooking";
 
+
+export enum ServiceName {
+    VET = "Vet",
+    GROOMING = "Grooming",
+    BOARDING = "Boarding"
+}
+
 export type Service = {
     id: string;
     label: string;
     icon: string; // icon url or base64
     visit_type?: VISIT_ID;
+    serviceName?: ServiceName;
 };
 
 interface C_DashboardMainProps {
@@ -53,11 +61,13 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
         id: 'boarding',
         label: "Boarding",
         icon: "../images/customer/boarding_icon.png",
+        serviceName:ServiceName.BOARDING
     },
     {
         id: "grooming",
         label: "Grooming",
         icon: "../images/customer/grooming_icon.png",
+        serviceName:ServiceName.GROOMING
     },
     {
         id: "vaccination",
@@ -79,7 +89,8 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
     // Handler for clicking on services
     const HandleClickOnServices = (service: Service) => {
         onServiceSelection(service);
-        if (service.id === "clinicVisit" || service.id === "homeVisit" || service.id === "online") {
+        if (service.id === "clinicVisit" || service.id === "homeVisit" || service.id === "online"
+            || service.id === "grooming" || service.id === "boarding") {
             onPageTypeChange(PageType.VET_DETAILS);
         }
     };

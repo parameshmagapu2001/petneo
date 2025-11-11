@@ -17,8 +17,7 @@ interface PetCompleteDetails {
     species?: string;
     breeding?: string;
     gender?: string;
-    age?: string;
-    dob?: string; //Extra param for creating the pet
+    dob?: string;
     weight?: number;
     licence?: string;
     profile_picture?: string;
@@ -33,6 +32,43 @@ interface Breed {
 interface Species {
     type: string;
     breeds: Breed[];
+}
+
+function calculateAge(dob: string): string {
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let years = today.getFullYear() - birthDate.getFullYear();
+    let months = today.getMonth() - birthDate.getMonth();
+
+    // Adjust if the current month/day is before the birth month/day
+    if (months < 0) {
+        years--;
+        months += 12;
+    } else if (months === 0 && today.getDate() < birthDate.getDate()) {
+        years--;
+        months = 11;
+    } else if (today.getDate() < birthDate.getDate()) {
+        months--;
+        if (months < 0) {
+            years--;
+            months = 11;
+        }
+    }
+    let ageString = "NaN";
+    if (years) {
+        if (months) {
+            ageString = years + " years and " + months + " months";
+        } else {
+            ageString = years + " years";
+        }
+    } else {
+        if (months) {
+            ageString = months + " months";
+        }
+    }
+
+    return ageString;
 }
 
 
@@ -68,7 +104,7 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
                         species: res2.pet.species,
                         breeding: res2.pet.breeding,
                         gender: res2.pet.gender,
-                        age: res2.pet.age,
+                        dob: res2.pet.age,
                         weight: res2.pet.weight,
                         licence: res2.pet.licence,
                         profile_picture: res2.pet.profile_picture
@@ -191,7 +227,6 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
                 //assigning the required fields
                 setPetCompleteDetails({
                     ...petCompleteDetails,
-                    age: petDetailsResponse.pet?.age,
                     profile_picture: petDetailsResponse.pet?.profile_picture,
                     petId: petDetailsResponse.pet?.id
                 });
@@ -262,7 +297,7 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
                             type="text"
                             id="age"
                             name="age"
-                            value={petCompleteDetails?.age || ""}
+                            value={calculateAge(petCompleteDetails?.dob || "") || ""}
                             onChange={handleChange}
                             className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
                             disabled={!isEditMode}

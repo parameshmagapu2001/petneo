@@ -5,14 +5,15 @@ import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
 import PopupModel from "./popupModel";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import ConfirmationPopup from "./ConfirmationPopup";
 
 const mapContainerStyle = { width: "100%", height: "300px" };
 const center = { lat: 17.385, lng: 78.4867 }; // Default: Hyderabad
 
 
-const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => void }) => {
+const MapSelector = ({ lat, lng,  onChange }: { lat?:number, lng?:number, onChange: (lat: number, lng: number) => void }) => {
   const google_api_key = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ""
-  const [marker, setMarker] = useState(center);
+  const [marker, setMarker] = useState((lat && lng) ? {lat, lng} : center);
   const { isLoaded } = useLoadScript({ googleMapsApiKey: google_api_key });
 
   if (!isLoaded) return <div>Loading map...</div>;
@@ -23,8 +24,8 @@ const MapSelector = ({ onChange }: { onChange: (lat: number, lng: number) => voi
       center={marker}
       zoom={13}
       onClick={e => {
-        const lat = e.latLng?.lat() ?? center.lat;
-        const lng = e.latLng?.lng() ?? center.lng;
+        const lat = e.latLng?.lat() ?? marker.lat;
+        const lng = e.latLng?.lng() ?? marker.lng;
         setMarker({ lat, lng });
         onChange(lat, lng);
       }}
@@ -47,10 +48,11 @@ export interface Home_Visit_Address {
 
 interface LocationSelectorProps {
   onSelectedAddressChange: (selectedAddress: Home_Visit_Address) => void;
+  selectedAddressProp: Home_Visit_Address | object;
 }
 
-export default function LocationSelector({onSelectedAddressChange} : LocationSelectorProps) {
-  const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>({});
+export default function LocationSelector({onSelectedAddressChange, selectedAddressProp} : LocationSelectorProps) {
+  const [selectedAddress, setSelectedAddress] = useState<Home_Visit_Address>(selectedAddressProp);
 
   // Add new location on click
   const handleAdd = () => {
@@ -98,14 +100,18 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
   }, []);
 
   useEffect(() => {
-    if (selectedAddress?.id) {
       onSelectedAddressChange(selectedAddress);
-    }
   }, [selectedAddress]);
 
   const handleAddressSelection = (address: Home_Visit_Address) => {
     return () => {
-      setSelectedAddress(address);
+        if (selectedAddress.id === address.id) {
+            //deselecting
+            setSelectedAddress({});
+        } else {
+            setSelectedAddress(address);
+        }
+
     };
 
   };
@@ -123,9 +129,17 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
     ) {
       try{
         setLoading(true);
-        const createAddress = await api.post("/user/address/add", addressFormDetails);
+        if (addressFormDetails?.id) {
+            //updating
+            await api.put(`/user/address/${addressFormDetails.id}`, addressFormDetails);
+        } else {
+            //creating
+            await api.post("/user/address/add", addressFormDetails);
+        }
         //closing the popup
         setIsPopupOpen(false);
+        //resetting the address form details
+          setAddressFormDetails({});
         setLoading(false);
 
         //TODO set the created address id as selected Id
@@ -150,6 +164,57 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
     }));
   };
 
+    const handleEditLocation = (address: Home_Visit_Address) => {
+        return (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setAddressFormDetails(address);
+            setIsPopupOpen(true);
+        };
+    };
+    const [toBeDeletedAddressId, setToBeDeletedAddressId] = useState<number | null>();
+    const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState<boolean>(false);
+    const handleDeleteLocation = (address: Home_Visit_Address) => {
+        return (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setToBeDeletedAddressId(address.id);
+            //open the confirmation popup
+            setIsConfirmationPopupOpen(true);
+        };
+    };
+
+    const handleConfirmationPopupConfirm = async () => {
+        try {
+            //open the loader
+            setLoading(true);
+
+            //delete api call
+            await api.delete(`/user/address/${toBeDeletedAddressId}`);
+
+            //close the loader
+            setLoading(false);
+
+            //closer the confirmation popup
+            setIsConfirmationPopupOpen(false);
+
+            //setting the setToBeDeletedAddressId to empty
+            setToBeDeletedAddressId(null);
+
+            //reload the locations
+            fetchAndSetAddresses();
+        } catch(e) {
+            setLoading(false);
+            //TODO error handling
+        }
+    }
+
+    const handleConfirmationPopupCancel = () => {
+        //closer the confirmation popup
+        setIsConfirmationPopupOpen(false);
+
+        //setting the setToBeDeletedAddressId to empty
+        setToBeDeletedAddressId(null);
+    }
+
   return (
     <div className="flex items-center grid grid-cols-3 gap-4">
       {addresses.map((loc) => {
@@ -157,7 +222,7 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
         return (
           <div
             key={loc.id}
-            className={`rounded-2xl p-4 w-34 relative shadow-md cursor-pointer transition 
+            className={`rounded-2xl p-4 w-34 h-full relative shadow-md cursor-pointer transition grid grid-cols-1 content-between
             ${isSelected ? "bg-pink-500 text-white" : "bg-white text-black"}`}
             onClick={handleAddressSelection(loc)}
           >
@@ -191,14 +256,14 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
             </div>
 
             {/* Bottom Row */}
-            {loc.location_name && (
-              <p
-                className={`mt-2 text-xs font-semibold ${
-                  isSelected ? "text-white" : "text-black"
-                }`}
-              >
-                {loc.location_name}
-                {/* {loc.details && (
+              {loc.location_name && (
+                  <p
+                      className={`mt-2 text-xs font-semibold ${
+                          isSelected ? "text-white" : "text-black"
+                      }`}
+                  >
+                      {loc.location_name}
+                      {/* {loc.details && (
                   <span
                     className={`ml-1 ${
                       isSelected ? "text-pink-100" : "text-gray-500"
@@ -207,8 +272,21 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
                     {loc.details}
                   </span>
                 )} */}
-              </p>
-            )}
+                  </p>
+              )}
+
+              <div
+                  key={`${loc.id}-buttons`}
+                  className="flex flex-row justify-between items-center pt-3">
+                  <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 me-2 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
+                          onClick={handleEditLocation(loc)}>
+                      Edit
+                  </button>
+                  <button className="w-1/2 text-white bg-blue-500 rounded-lg py-1 cursor-pointer text-sm font-semibold transition hover:bg-blue-600"
+                          onClick={handleDeleteLocation(loc)}>
+                      Delete
+                  </button>
+              </div>
           </div>
         );
       })}
@@ -221,7 +299,7 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
         <FaPlus className="text-white text-lg" />
       </button>
        <FullScreenLoader loading={loading}/>
-       <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Add">
+       <PopupModel open={isPopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel={addressFormDetails?.id ? "Save": "Add"}>
         <form className="w-full max-w-lg bg-white rounded-xl px-8 py-10 shadow-lg">
           <h2 className="text-base font-bold mb-8 text-center">Enter Address Details</h2>
           <div className="mb-3 text-sm">
@@ -289,7 +367,7 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
             />
           </div>
           <div className="mb-3 text-sm">
-            <MapSelector onChange={(lat, lng) => setAddressFormDetails(prev => ({
+            <MapSelector lat={addressFormDetails?.latitude} lng={addressFormDetails?.longitude} onChange={(lat, lng) => setAddressFormDetails(prev => ({
               ...prev,
               latitude: lat,
               longitude: lng
@@ -297,6 +375,16 @@ export default function LocationSelector({onSelectedAddressChange} : LocationSel
           </div>
       </form>
        </PopupModel>
+        {/* Confirmation Popup */}
+        <ConfirmationPopup
+            isOpen={isConfirmationPopupOpen}
+            message="Are you sure you want to delete this item? This action cannot be undone."
+            onConfirm={handleConfirmationPopupConfirm}
+            onCancel={handleConfirmationPopupCancel}
+            confirmText="Yes, Delete"
+            cancelText="No, Cancel"
+            confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+        />
     </div>
   );
 }
