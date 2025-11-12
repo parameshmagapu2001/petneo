@@ -15,10 +15,13 @@ import FullScreenLoader from "../../../components/customer/fullScreenLoader";
 import {api, clearAuth} from "@/utils/api";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
+import {PiClockCountdownBold} from "react-icons/pi";
+import {IoMdNotifications} from "react-icons/io";
 
 export enum PartnerMenuItemType {
+    MANAGE_TIME_SLOTS = "manageTimeSlots",
+    WORK_STATUS = "workStatus",
     MY_BIO = "myBio",
-    MY_PETS = "myPets",
     PRIVACY = "privacy",
     HELP = "help",
     ABOUT = "about",
@@ -65,7 +68,8 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
     const menuButtonRef = useRef(null);
 
     const menuItems = [
-        { icon: <FaUserFriends />, label: "My Pets", id: PartnerMenuItemType.MY_PETS },
+        { icon: <IoMdNotifications />, label: "Work Status", id: PartnerMenuItemType.WORK_STATUS },
+        { icon: <PiClockCountdownBold />, label: "Manage Time Slots", id: PartnerMenuItemType.MANAGE_TIME_SLOTS },
         { icon: <FaUserCircle />, label: "My Bio", id: PartnerMenuItemType.MY_BIO },
         { icon: <FaLock />, label: "Privacy", id: PartnerMenuItemType.PRIVACY },
         { icon: <FaQuestionCircle />, label: "Help", id: PartnerMenuItemType.HELP },
@@ -77,6 +81,8 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
         // routing to different pages
         if (menuItem.id === PartnerMenuItemType.MY_BIO) {
             router.push(`/partner/myBio`);
+        } else if (menuItem.id === PartnerMenuItemType.MANAGE_TIME_SLOTS) {
+            router.push(`/partner/manageTimeSlots`);
         }
     }
 
