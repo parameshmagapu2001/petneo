@@ -30,7 +30,7 @@ type APIVet = {
     location?: string;
     profile_picture_url?: string | null;
     certification_document_url?: string | null;
-    services?: string[] | string | null;
+    services?: string[];
     emergency?: boolean;
 };
 
@@ -54,20 +54,14 @@ type FormVet = {
     emergency: boolean;
 };
 
-const SERVICE_OPTIONS = [
-    "Grooming",
-    "Boarding",
-    "Consultation",
-    "Vaccination",
-    "Surgery",
-    "Emergency",
-];
+type ServiceType = {
+    id: number;
+    name: string;
+};
 
 /* ----------------------
    Helpers
    ---------------------- */
-const normalizeApiBase = (raw: string | undefined) => (raw || "").replace(/\/+$/, "");
-
 const toFormModel = (api: APIVet | null): FormVet => {
     if (!api) {
         return {
@@ -91,11 +85,6 @@ const toFormModel = (api: APIVet | null): FormVet => {
         };
     }
 
-    const svc: string[] = Array.isArray(api.services)
-        ? api.services.filter(Boolean) as string[]
-        : typeof api.services === "string" && api.services.trim().length
-            ? api.services.split(",").map((s) => s.trim())
-            : [];
 
     const yoe =
         typeof api.years_of_experience === "number"
@@ -116,19 +105,31 @@ const toFormModel = (api: APIVet | null): FormVet => {
         landmark: api.landmark || "",
         clinic_name: api.clinic_name || "",
         location: api.location || "",
-        services: svc,
+        services: api.services || [],
         profile_picture_url: api.profile_picture_url || null,
         certification_document_url: api.certification_document_url || null,
         emergency: !!api.emergency,
     };
 };
 
-const toServiceIdsString = (services: string[]) => services.map((s) => s.trim()).filter(Boolean).join(",");
 
 /* ----------------------
    Component
    ---------------------- */
 export default function PartnerMyBioPage(): React.JSX.Element {
+
+    const [servicesAvailable, setServicesAvailable] = useState<ServiceType[]>([]);
+    const toServiceIdsString = (services: string[]) => {
+        const servicesIDs: number[] = [];
+        services.forEach(service => {
+            servicesAvailable.forEach(serviceAvailable => {
+                if (service === serviceAvailable.name) {
+                    servicesIDs.push(serviceAvailable.id);
+                }
+            })
+        })
+        return servicesIDs.join(",");
+    };
 
     const [profile, setProfile] = useState<APIVet | null>(null);
     const [form, setForm] = useState<FormVet>(toFormModel(null));
@@ -159,6 +160,9 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                     const data = (await api.get("/vet/myBio")) as APIVet;
                     setProfile(data);
                     setForm(toFormModel(data));
+
+                    const servicesData = (await api.get("/services") as ServiceType[]);
+                    setServicesAvailable(servicesData);
                 } catch (e: any) {
                     console.error("MyBio GET error:", e);
                     setError(e?.message || "Failed to fetch profile");
@@ -199,26 +203,11 @@ export default function PartnerMyBioPage(): React.JSX.Element {
 
             const res = await api.formDataPut("/vet/updateBio", fd);
 
-            const contentType = (res.headers.get("content-type") || "").toLowerCase();
+            //fetching the myBio again to refresh the data
+            const data = (await api.get("/vet/myBio")) as APIVet;
+            setProfile(data);
+            setForm(toFormModel(data));
 
-            if (!res.ok) {
-                let bodyText = "";
-                try {
-                    bodyText = contentType.includes("application/json") ? JSON.stringify(await res.json()) : await res.text();
-                } catch {
-                    bodyText = (await res.text().catch(() => "")).slice(0, 300);
-                }
-                throw new Error(`Update failed (${res.status}) — ${bodyText}`);
-            }
-
-            if (!contentType.includes("application/json")) {
-                const text = await res.text();
-                throw new Error("Update returned non-JSON response: " + text.slice(0, 400));
-            }
-
-            const updated = (await res.json()) as APIVet;
-            setProfile(updated);
-            setForm(toFormModel(updated));
             setEditing(false);
             setProfilePic(null);
             setCertificate(null);
@@ -495,22 +484,22 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Services</label>
                             <div className="flex flex-wrap gap-3">
-                                {SERVICE_OPTIONS.map((svc) => {
-                                    const checked = form.services.includes(svc);
+                                {servicesAvailable.map((svc) => {
+                                    const checked = !!form.services.find((item) => item === svc.name);
                                     return (
-                                        <label key={svc} className="inline-flex items-center space-x-2">
+                                        <label key={svc.id} className="inline-flex items-center space-x-2">
                                             <input
                                                 type="checkbox"
                                                 disabled={!editing}
                                                 checked={checked}
                                                 onChange={(e) => {
                                                     const next = new Set(form.services);
-                                                    if (e.target.checked) next.add(svc); else next.delete(svc);
+                                                    if (e.target.checked) next.add(svc.name); else next.delete(svc.name);
                                                     onChange("services", Array.from(next));
                                                 }}
                                                 className="h-4 w-4 rounded border-gray-300"
                                             />
-                                            <span className="text-sm text-gray-700">{svc}</span>
+                                            <span className="text-sm text-gray-700">{svc.name}</span>
                                         </label>
                                     );
                                 })}
