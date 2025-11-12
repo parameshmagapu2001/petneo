@@ -4,6 +4,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import Image from "next/image";
 import { Poppins } from "next/font/google";
 import { api } from "@/utils/api";
+import {FaPen} from "react-icons/fa";
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -227,6 +228,11 @@ export default function PartnerMyBioPage(): React.JSX.Element {
         return "/avatar.png";
     };
 
+    const profileImageInputRef = useRef<HTMLInputElement | null>(null);
+    const handleEditPhotoClick = () => {
+        profileImageInputRef.current?.click();
+    };
+
     if (loading) {
         return (
             <>
@@ -280,6 +286,25 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                     <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
                         <div className="relative w-28 h-28 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ring-2 ring-pink-100">
                             <Image src={getPreviewSrc()} alt="Profile" width={112} height={112} className="rounded-full object-cover" unoptimized />
+                            {editing &&
+                                <>
+                                    {/* Edit (pencil) icon */}
+                                    <button
+                                        type="button"
+                                        onClick={handleEditPhotoClick}
+                                        className="absolute bottom-2 right-2 bg-pink-500 text-white p-2 rounded-full shadow-md hover:bg-pink-600"
+                                    >
+                                        <FaPen size={12} />
+                                    </button>
+
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        ref={profileImageInputRef}
+                                        onChange={(e) => setProfilePic(e.target.files ? e.target.files[0] : null)}
+                                    />
+                                </>}
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -509,16 +534,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                         {/* File uploads */}
                         {editing && (
                             <>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => setProfilePic(e.target.files ? e.target.files[0] : null)}
-                                        className="w-full border rounded-lg px-3 py-2 bg-white"
-                                    />
-                                </div>
-
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Certification Document</label>
                                     <input
