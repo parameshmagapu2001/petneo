@@ -161,8 +161,8 @@ export default function Nav1(): React.JSX.Element {
   const handleLogout = () => {
     clearAuth();
     // Push via router or location
-    if (typeof window !== "undefined") window.location.href = "/vet/login";
-    else router.push("/vet/login");
+    if (typeof window !== "undefined") window.location.href = "/login";
+    else router.push("/login");
   };
 
   const getVetName = () => {

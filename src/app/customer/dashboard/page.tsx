@@ -219,8 +219,8 @@ export default function CustomerDashboard()  {
     function handleLogOut(): void {
         setIsOpen(false);
         clearAuth();
-        if (typeof window !== "undefined") window.location.href = "/customer/login";
-        else router.push("/customer/login")
+        if (typeof window !== "undefined") window.location.href = "/login";
+        else router.push("/login")
     }
 
     const [selectedPetId, setSelectedPetId] = useState<number>(-1);

@@ -120,8 +120,8 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
                 //TODO handle error cases
                 if (error?.message.includes("403")) {
                     clearAuth();
-                    if (typeof window !== "undefined") window.location.href = "/customer/login";
-                    else router.push("/customer/login")
+                    if (typeof window !== "undefined") window.location.href = "/login";
+                    else router.push("/login")
                  }
             });
         }

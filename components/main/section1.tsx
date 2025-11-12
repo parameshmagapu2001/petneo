@@ -6,7 +6,6 @@ import { ShoppingCart } from "lucide-react";
 
 const Navbar = () => {
   const router = useRouter();
-  const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -15,19 +14,9 @@ const Navbar = () => {
     }
   }, []);
 
-  const handleLoginSelect = (userType: string) => {
-    setIsLoginDropdownOpen(false);
-    switch (userType) {
-      case 'customer':
-        router.push('/customer/login');
-        break;
-      case 'vet':
-        router.push('/vet/login');
-        break;
-      default:
-        break;
-    }
-  };
+  const handleLogin =  () => {
+      router.push('/login');
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100">
@@ -74,40 +63,14 @@ const Navbar = () => {
             />
           </div>
 
-          {/* Login dropdown */}
+          {/* Login */}
           <div className="relative">
             <button
-              onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
+              onClick={handleLogin}
               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium flex items-center shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
             >
               Login
-              <svg
-                className={`w-4 h-4 ml-1 transition-transform duration-200 ${isLoginDropdownOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </button>
-
-            {isLoginDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
-                {[
-                  { type: 'customer', label: 'User' },
-                  { type: 'vet', label: 'Agent' }
-                ].map(({ type, label }, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleLoginSelect(type)}
-                    className="flex items-center px-3 py-2 text-sm text-black hover:bg-blue-50 hover:text-blue-700 w-full text-left transition-colors duration-150"
-                  >
-                    <span className="mr-2">🔹</span>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Cart */}

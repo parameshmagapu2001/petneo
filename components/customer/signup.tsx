@@ -289,7 +289,7 @@ export default function SignupPageUser() {
         // dev fallback: simulate successful registration
         console.log("📡 (dev) FormData submitted:", Object.fromEntries(formData.entries()));
         setMessage("✅ (dev) Registration simulated successfully! Redirecting to login...");
-        setTimeout(() => router.push("/customer/login"), 1000);
+        setTimeout(() => router.push("/login"), 1000);
         return;
       }
 
@@ -330,7 +330,7 @@ export default function SignupPageUser() {
       }
 
       setMessage("✅ Registration successful! Redirecting to login...");
-      setTimeout(() => router.push("/customer/login"), 1500);
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err: any) {
       setMessage(`❌ ${err.message}`);
     } finally {

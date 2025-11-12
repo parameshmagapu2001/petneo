@@ -122,8 +122,8 @@ export default function C_MyBio() {
 
             //need to clear the auth details and redirect back to login page.
             clearAuth();
-            if (typeof window !== "undefined") window.location.href = "/customer/login";
-            else router.push("/customer/login")
+            if (typeof window !== "undefined") window.location.href = "/login";
+            else router.push("/login")
         } catch(e) {
             setLoading(false);
             //TODO error handling

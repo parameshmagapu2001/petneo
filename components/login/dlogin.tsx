@@ -18,13 +18,9 @@ type LoginResponse = {
   [k: string]: any;
 };
 
-interface LoginPageProps {
-  pageType: "vet" | "customer" | "admin"
-}
-
-export default function LoginPage({pageType}: LoginPageProps) {
+export default function LoginPage() {
   const router = useRouter();
-  const [agentTab, setAgentTab] = useState(pageType === "vet");
+  const [agentTab, setAgentTab] = useState(true);
   const [mobile, setMobile] = useState(""); // raw digits only
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"mobile" | "otp">("mobile");

@@ -35,19 +35,19 @@ const products = [
     img: "/images/food.svg",
   },
     {
-    id: 2,
+    id: 5,
     title: "Canine Creek | 4KG",
     desc: "Life preservation formula, Grain free, Adult 4 kg Dry Dog Food",
     img: "/images/food1.svg",
   },
   {
-    id: 3,
+    id: 6,
     title: "Pedigree Biscrok | 500G",
     desc: "Crunchy biscuits with milk & chicken, source of calcium and protein",
     img: "/images/food2.svg",
   },
   {
-    id: 4,
+    id: 7,
     title: "Royal Canin | 2KG",
     desc: "Premium dry food for adult dogs, balanced nutrition",
     img: "/images/food.svg",
