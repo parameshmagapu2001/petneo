@@ -4,6 +4,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {api} from "@/utils/api";
 import {PartnerDetails} from "@/app/partner/layout";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
+import {useRouter} from "next/navigation";
 
 interface ProgressBarProps {
     percentage: number;
@@ -28,6 +29,7 @@ function ProgressBar ({ percentage }: ProgressBarProps) {
 };
 
 export default function PartnerDashboard()  {
+    const router = useRouter();
 
     const [partnerDetails, setPartnerDetails] = useState<PartnerDetails>({});
     const hasFetched = useRef(false);
@@ -69,7 +71,8 @@ export default function PartnerDashboard()  {
                     <div className="flex flex-col w-[40%]">
                         <h3 className="text-pink-600 font-semibold mb-1 select-none">My Appointments</h3>
                         <span className="text-sm font-medium mb-1 select-none">{`${partnerDetails?.completed}/${partnerDetails?.total_appointments} Appointments Completed`}</span>
-                        <div className="flex items-center gap-1 cursor-pointer group mb-4 cursor-pointer">
+                        <div className="flex items-center gap-1 cursor-pointer group mb-4"
+                        onClick={() => {router.push(`/partner/myAppointments`);}}>
                             <span className="text-gray-500 text-xs font-medium group-hover:text-gray-700 transition-colors">
                                 See All
                             </span>
