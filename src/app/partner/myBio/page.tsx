@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Poppins } from "next/font/google";
-import Navbar from "../../../../components/vet/nav1";
-import { api, getAccessToken } from "@/utils/api";
+import { api } from "@/utils/api";
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -131,14 +129,6 @@ const toServiceIdsString = (services: string[]) => services.map((s) => s.trim())
    Component
    ---------------------- */
 export default function PartnerMyBioPage(): React.JSX.Element {
-    const rawApiBase = process.env.NEXT_PUBLIC_API_BASE;
-    const SKIP_NGROK_HEADER = (process.env.NEXT_PUBLIC_SKIP_NGROK_HEADER || "false").toLowerCase() === "true";
-    const apiBase = normalizeApiBase(rawApiBase);
-    const myBioEndpoint = useMemo(() => `/vet/myBio`, []);
-    const updateBioPath = useMemo(() => `${apiBase}/vet/updateBio`, [apiBase]);
-    const updateEmergencyPath = useMemo(() => `${apiBase}/vet/updateEmergency`, [apiBase]);
-
-    const NGROK_HEADER: Record<string, string> = SKIP_NGROK_HEADER ? { "ngrok-skip-browser-warning": "69420" } : {};
 
     const [profile, setProfile] = useState<APIVet | null>(null);
     const [form, setForm] = useState<FormVet>(toFormModel(null));
@@ -156,28 +146,29 @@ export default function PartnerMyBioPage(): React.JSX.Element {
         setTimeout(() => setToast(null), ms);
     };
 
+    const hasFetched = useRef(false);
     useEffect(() => {
-        let mounted = true;
         (async () => {
-            try {
-                setLoading(true);
-                setError(null);
+            if (!hasFetched.current) {
+                try {
+                    hasFetched.current = true;
+                    setLoading(true);
+                    setError(null);
 
-                // Use api wrapper for GET so it handles Authorization + ngrok header (if configured)
-                const data = (await api.get(myBioEndpoint)) as APIVet;
-                if (!mounted) return;
-                setProfile(data);
-                setForm(toFormModel(data));
-            } catch (e: any) {
-                console.error("MyBio GET error:", e);
-                setError(e?.message || "Failed to fetch profile");
-                setProfile(null);
-                setForm(toFormModel(null));
-            } finally {
-                if (mounted) setLoading(false);
+                    // Use api wrapper for GET so it handles Authorization + ngrok header (if configured)
+                    const data = (await api.get("/vet/myBio")) as APIVet;
+                    setProfile(data);
+                    setForm(toFormModel(data));
+                } catch (e: any) {
+                    console.error("MyBio GET error:", e);
+                    setError(e?.message || "Failed to fetch profile");
+                    setProfile(null);
+                    setForm(toFormModel(null));
+                } finally {
+                    setLoading(false);
+                }
             }
         })();
-        return () => { mounted = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -206,18 +197,7 @@ export default function PartnerMyBioPage(): React.JSX.Element {
             if (profilePic) fd.append("profile_picture", profilePic);
             if (certificate) fd.append("certification_document", certificate);
 
-            // Build headers safely as Record<string,string>
-            const tokenRaw = getAccessToken();
-            const token = tokenRaw ? tokenRaw.replace(/^Bearer\s+/i, "").trim() : "";
-            const headers: Record<string, string> = { ...NGROK_HEADER }; // always string -> no undefined keys
-            if (token) headers["Authorization"] = `Bearer ${token}`;
-
-            // Call the update endpoint directly (multipart)
-            const res = await fetch(updateBioPath, {
-                method: "PUT",
-                body: fd,
-                headers: headers as HeadersInit, // explicit cast for fetch
-            });
+            const res = await api.formDataPut("/vet/updateBio", fd);
 
             const contentType = (res.headers.get("content-type") || "").toLowerCase();
 
@@ -252,35 +232,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
         }
     };
 
-    // emergency toggle using form-url-encoded
-    const handleEmergencyToggle = async (value: boolean) => {
-        onChange("emergency", value); // optimistic
-        try {
-            const tokenRaw = getAccessToken();
-            const token = tokenRaw ? tokenRaw.replace(/^Bearer\s+/i, "").trim() : "";
-            const headers: Record<string, string> = { "Content-Type": "application/x-www-form-urlencoded", ...NGROK_HEADER };
-            if (token) headers["Authorization"] = `Bearer ${token}`;
-
-            const body = new URLSearchParams();
-            body.append("emergency", String(value));
-
-            const res = await fetch(updateEmergencyPath, { method: "PUT", headers: headers as HeadersInit, body: body.toString() });
-            if (!res.ok) {
-                let bodyText = "";
-                try {
-                    bodyText = (await res.text()).slice(0, 300);
-                } catch {}
-                throw new Error(`Emergency update failed (${res.status}) — ${bodyText}`);
-            }
-
-            showToast("success", `Emergency ${value ? "enabled" : "disabled"}`);
-        } catch (e: any) {
-            console.error("Emergency update error:", e);
-            showToast("error", e?.message || "Failed to update emergency");
-            onChange("emergency", !value); // revert
-        }
-    };
-
     const getPreviewSrc = () => {
         if (profilePic) return URL.createObjectURL(profilePic);
         if (form.profile_picture_url) return form.profile_picture_url;
@@ -290,7 +241,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
     if (loading) {
         return (
             <>
-                <Navbar />
                 <div className={`min-h-screen bg-gray-50 ${poppins.className}`}>
                     <div className="max-w-4xl mx-auto px-6 py-10">
                         <div className="animate-pulse">
@@ -323,8 +273,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
 
     return (
         <>
-            <Navbar />
-
             {toast && (
                 <div
                     className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white ${
@@ -337,13 +285,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
             )}
 
             <div className={`min-h-screen bg-gray-50 p-4 md:p-6 lg:p-10 ${poppins.className}`}>
-                <div className="mb-6 text-sm text-gray-600 max-w-6xl mx-auto px-2">
-                    <Link href="/vet/dashboard" className="hover:underline text-pink-600">
-                        Home
-                    </Link>{" "}
-                    › <span className="text-gray-800">My Bio</span>
-                </div>
-
                 <div className="max-w-6xl mx-auto bg-white shadow-lg border border-gray-100 rounded-2xl p-6 md:p-8 lg:p-12">
                     {error && <p className="mb-4 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
@@ -361,19 +302,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                                     <p className="text-gray-600">{form.specialization || "Specialization N/A"}</p>
                                     <p className="text-sm text-gray-500 truncate">{form.email || "Email N/A"}</p>
                                 </div>
-
-                                <label className="inline-flex items-center cursor-pointer select-none ml-2">
-                                    <span className="mr-3 text-sm text-gray-600">Emergency</span>
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={!!form.emergency}
-                                        onChange={(e) => handleEmergencyToggle(e.target.checked)}
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-pink-400 relative transition-colors">
-                                        <div className="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow" />
-                                    </div>
-                                </label>
                             </div>
 
                             <div className="mt-3 flex flex-wrap gap-2 items-center">
