@@ -561,8 +561,7 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                         {!editing ? (
                             <button
                                 onClick={() => setEditing(true)}
-                                className="px-4 py-2 rounded-lg text-white font-medium shadow-sm transition-all"
-                                style={{ backgroundColor: "#FFC0CB" }}
+                                className="px-4 py-2 rounded-lg text-white bg-[#d14d91] hover:bg-[#bc3575] font-medium shadow-sm transition-all"
                             >
                                 Edit Profile
                             </button>
@@ -570,8 +569,7 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                             <>
                                 <button
                                     onClick={() => { setForm(toFormModel(profile)); setProfilePic(null); setCertificate(null); setEditing(false); }}
-                                    className="px-4 py-2 border rounded-lg font-medium transition-colors"
-                                    style={{ borderColor: "#FFC0CB", color: "#FF6F91" }}
+                                    className="px-4 py-2 border rounded-lg text-white bg-[#d14d91] hover:bg-[#bc3575] font-medium transition-colors"
                                 >
                                     Cancel
                                 </button>
@@ -579,8 +577,7 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className={`px-4 py-2 rounded-lg text-white font-medium shadow-sm transition-all ${saving ? "opacity-70 cursor-wait" : "hover:scale-[1.02]"}`}
-                                    style={{ backgroundColor: "#FF9EB5" }}
+                                    className={`px-4 py-2 rounded-lg text-white bg-[#d14d91] hover:bg-[#bc3575] font-medium shadow-sm transition-all ${saving ? "opacity-70 cursor-wait" : "hover:scale-[1.02]"}`}
                                 >
                                     {saving ? "Saving..." : "Save Changes"}
                                 </button>
