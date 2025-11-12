@@ -24,7 +24,7 @@ export enum PartnerMenuItemType {
     ABOUT = "about",
 }
 
-type PartnerDetails = {
+export type PartnerDetails = {
     vet_name?: string;
     clinic_location?: string;
     date?: string;
