@@ -17,6 +17,12 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {PiClockCountdownBold} from "react-icons/pi";
 import {IoMdNotifications} from "react-icons/io";
+import {Poppins} from "next/font/google";
+
+const poppins = Poppins({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+});
 
 export enum PartnerMenuItemType {
     MANAGE_TIME_SLOTS = "manageTimeSlots",
@@ -93,7 +99,7 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
         else router.push("/login")
     }
     return (
-        <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
+        <div className={`min-h-screen bg-[#e1e5f8] text-gray-900 font-sans ${poppins.className}`}>
             <div className="sticky top-0 z-50">
                 {/* Header */}
                 <header className="flex items-center justify-between px-6 py-3 bg-white shadow">
