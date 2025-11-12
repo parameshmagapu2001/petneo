@@ -173,7 +173,7 @@ export default function LoginPage() {
       setMessage("✅ Login successful! Redirecting...");
       setTimeout(() => {
         const userType = json?.user_type ?? agentTab ? "vet" : "user";
-        if (String(userType).toLowerCase() === "vet") router.push("/vet/dashboard");
+        if (String(userType).toLowerCase() === "vet") router.push("/partner/dashboard");
         else router.push("/customer/dashboard");
       }, 900);
     } catch (err: any) {
