@@ -20,7 +20,7 @@ interface C_VetAppointmentBookingProps {
     onPageTypeChange: (pageType: PageType) => void;
 }
 
-interface DateTimeSlot {
+export interface DateTimeSlot {
     date: string;
     time: string;
 }
@@ -55,10 +55,10 @@ enum SCREEN_TYPE {
 // ------------------ Dummy Data ------------------
 export const VISIT_TYPES:VISIT_TYPE[] = [{id: VISIT_ID.CLINIC_VISIT, displayName: "Clinic Visit"}, {id: VISIT_ID.HOME_VISIT, displayName: "Home Visit"}, {id: VISIT_ID.ONLINE, displayName: "Online"}];
 
-const defaultNumberOfDays = 7;
-const defaultTimeSlotInMin: number = 30;
+export const defaultNumberOfDays = 7;
+export const defaultTimeSlotInMin: number = 30;
 
-function transformAvailability(data: any[]): DaySlots[] {
+export function transformAvailability(data: any[]): DaySlots[] {
   // Helper: convert "HH:mm:ss" -> "hh:mm AM/PM"
   const formatTime = (time: string): string => {
     const [hourStr, minuteStr] = time.split(":");
@@ -89,7 +89,7 @@ function transformAvailability(data: any[]): DaySlots[] {
   }));
 }
 
-function convert12hTo24hPlusMinutes(time12h: string, addMinutes?: number): string {
+export function convert12hTo24hPlusMinutes(time12h: string, addMinutes?: number): string {
   const [time, meridian] = time12h.split(' ');
   const [hoursStr, minutesStr] = time.split(':');
 
