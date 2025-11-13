@@ -5,7 +5,6 @@ import {api} from "@/utils/api";
 import {PartnerDetails} from "@/app/partner/layout";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
 import {useRouter} from "next/navigation";
-import {appointments} from "@/utils/commonConstants";
 import PartnerAppointmentCard from "../../../../components/partner/PartnerAppointmentCard";
 
 interface ProgressBarProps {
@@ -114,9 +113,14 @@ export default function PartnerDashboard()  {
                     </div>
 
                     {/* Cards Grid */}
+                    {!(partnerDetails.upcoming && partnerDetails.upcoming.length !== 0) &&
+                        <div>
+                            <span>No upcoming appointments today</span>
+                        </div>
+                    }
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {appointments.map((appointment) => (
-                            <PartnerAppointmentCard key={appointment.id} appointment={appointment} />
+                        {partnerDetails.upcoming && partnerDetails.upcoming.map((appointment) => (
+                            <PartnerAppointmentCard key={appointment.appointment_id} appointment={appointment} />
                         ))}
                     </div>
                 </div>

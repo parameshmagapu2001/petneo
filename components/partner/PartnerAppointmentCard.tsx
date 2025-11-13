@@ -3,51 +3,51 @@
 import React from 'react';
 import Image from 'next/image';
 import { FaCalendarAlt } from 'react-icons/fa';
-import {Appointment} from "@/utils/commonTypes";
+import {PartnerAppointment} from "@/utils/commonTypes";
+import {formatDate1, getRemainingTime} from "@/utils/common";
 
-interface AppointmentCardProps {
-    appointment: Appointment;
+interface PartnerAppointmentCardProps {
+    appointment: PartnerAppointment;
 }
 
-const PartnerAppointmentCard: React.FC<AppointmentCardProps> = ({ appointment }) => (
-    <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col gap-4 w-full max-w-sm border border-gray-100">
-        {/* Header with Calendar Icon and Time */}
-        <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 -m-5 mb-2">
-            <FaCalendarAlt className="text-blue-600 text-sm" />
-            <span className="text-blue-600 text-sm font-semibold">
+export default function PartnerAppointmentCard ({ appointment }: PartnerAppointmentCardProps) {
+    return (
+        <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col gap-4 w-full max-w-sm border border-gray-100">
+            {/* Header with Calendar Icon and Time */}
+            <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 -m-5 mb-2">
+                <FaCalendarAlt className="text-blue-600 text-sm"/>
+                <span className="text-blue-600 text-sm font-semibold">
         Your next Appointment in{' '}
-                <span className="text-blue-700 underline font-bold">{appointment.timeToAppointment} Minutes</span>
+                    <span className="text-blue-700 underline font-bold">{getRemainingTime(appointment.date, appointment.time)}</span>
       </span>
+            </div>
+            {/* Main Content */}
+            <div className="flex gap-4 items-start">
+                {/* Pet Image */}
+                <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
+                    <Image
+                        src={appointment.pet.profile_picture}
+                        alt={appointment.pet.name}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                    />
+                </div>
+
+                {/* Pet Info */}
+                <div className="flex-1 flex flex-col gap-1">
+                    <h3 className="font-semibold text-base text-gray-800">{appointment.pet.name}</h3>
+                    <p className="text-sm text-gray-600">{appointment.pet.breed}</p>
+                    <p className="text-xs text-gray-500">{formatDate1(appointment.date)}</p>
+                </div>
+
+            {/*    /!* Visit Type Badge *!/*/}
+            {/*    <div className="flex-shrink-0">*/}
+            {/*<span className="bg-green-100 text-green-700 rounded-full px-3 py-1 font-medium text-xs whitespace-nowrap">*/}
+            {/*  {appointment.visitType}*/}
+            {/*</span>*/}
+            {/*    </div>*/}
+            </div>
         </div>
-
-        {/* Main Content */}
-        <div className="flex gap-4 items-start">
-            {/* Pet Image */}
-            <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
-                <Image
-                    src={appointment.imageUrl}
-                    alt={appointment.petName}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                />
-            </div>
-
-            {/* Pet Info */}
-            <div className="flex-1 flex flex-col gap-1">
-                <h3 className="font-semibold text-base text-gray-800">{appointment.petName}</h3>
-                <p className="text-sm text-gray-600">{appointment.petType}</p>
-                <p className="text-xs text-gray-500">{appointment.date}</p>
-            </div>
-
-            {/* Visit Type Badge */}
-            <div className="flex-shrink-0">
-        <span className="bg-green-100 text-green-700 rounded-full px-3 py-1 font-medium text-xs whitespace-nowrap">
-          {appointment.visitType}
-        </span>
-            </div>
-        </div>
-    </div>
-);
-
-export default PartnerAppointmentCard;
+    );
+}

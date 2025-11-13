@@ -2,7 +2,7 @@
 
 
 // appointmentHelper.ts
-function isAppointmentInFuture(
+export function isAppointmentInFuture(
     appointmentDate: string, // "2025-11-14"
     appointmentTime: string  // "09:00 AM"
 ): boolean {
@@ -41,4 +41,53 @@ function isAppointmentInFuture(
     return appointment.getTime() > now.getTime();
 }
 
-export default isAppointmentInFuture;
+export function getRemainingTime(date: string, time: string): string {
+    // Combine date and time to construct a full Date object
+    const datetimeStr = `${date} ${time}`;
+    // Parse datetime string to Date object
+    const target = new Date(datetimeStr);
+
+    // Get current date-time
+    const now = new Date();
+
+    // Calculate difference in milliseconds
+    const diffMs = target.getTime() - now.getTime();
+
+    // If time has already passed
+    if (diffMs <= 0) {
+        return "Time has already passed";
+    }
+
+    // Convert milliseconds difference into seconds
+    let diffSeconds = Math.floor(diffMs / 1000);
+
+    // Calculate days, hours, minutes, and seconds
+    const days = Math.floor(diffSeconds / (24 * 3600));
+    diffSeconds %= 24 * 3600;
+    const hours = Math.floor(diffSeconds / 3600);
+    diffSeconds %= 3600;
+    const minutes = Math.floor(diffSeconds / 60);
+    const seconds = diffSeconds % 60;
+
+    // Build result string with two largest non-zero units
+    if (days > 0) {
+        return `${days} days`;
+    } else if (hours > 0) {
+        return `${hours} hours`;
+    } else {
+        return `${minutes} minutes`;
+    }
+}
+
+export function formatDate1(dateStr: string): string {
+    const date = new Date(dateStr);
+
+    const options: Intl.DateTimeFormatOptions = {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+    };
+
+    return date.toLocaleDateString('en-US', options);
+}
+

@@ -18,6 +18,7 @@ import {useRouter} from "next/navigation";
 import {PiClockCountdownBold} from "react-icons/pi";
 import {IoMdNotifications} from "react-icons/io";
 import {Poppins} from "next/font/google";
+import {PartnerAppointment} from "@/utils/commonTypes";
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -41,6 +42,7 @@ export type PartnerDetails = {
     emergency?: boolean;
     total_appointments?: number;
     completed?: number;
+    upcoming?: PartnerAppointment[];
 };
 
 export default function PartnerLayout({ children }: { children: React.ReactNode; }) {
