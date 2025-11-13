@@ -103,18 +103,21 @@ export default function PartnerDashboard()  {
                         />
                     </div>
                 </section>
-                <div className="bg-blue-50 min-h-screen p-6 md:p-10">
+                <div className="bg-blue-50 p-6 md:p-10 flex flex-col">
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="font-bold text-2xl text-gray-800">Upcoming Appointments</h1>
-                        <a href="#" className="text-gray-600 text-sm font-medium hover:text-gray-800">
-                            See All &gt;
-                        </a>
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-lg font-bold text-gray-800">Upcoming Appointments</h1>
+                        {(partnerDetails.upcoming && partnerDetails.upcoming.length !== 0) &&
+                            <span className="text-gray-600 cursor-pointer text-sm font-medium hover:text-gray-800"
+                                  onClick={() => {router.push(`/partner/myAppointments`);}}>
+                                See All &gt;
+                            </span>
+                        }
                     </div>
 
                     {/* Cards Grid */}
                     {!(partnerDetails.upcoming && partnerDetails.upcoming.length !== 0) &&
-                        <div>
+                        <div className="self-center text-md font-light text-gray-500 mt-8">
                             <span>No upcoming appointments today</span>
                         </div>
                     }

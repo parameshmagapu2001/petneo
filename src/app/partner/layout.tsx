@@ -101,7 +101,7 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
         else router.push("/login")
     }
     return (
-        <div className={`min-h-screen bg-[#e1e5f8] text-gray-900 font-sans ${poppins.className}`}>
+        <div className={`min-h-screen bg-blue-50 text-gray-900 font-sans ${poppins.className}`}>
             <div className="sticky top-0 z-50">
                 {/* Header */}
                 <header className="flex items-center justify-between px-6 py-3 bg-white shadow">
