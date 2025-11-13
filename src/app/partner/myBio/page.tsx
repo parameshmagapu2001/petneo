@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Poppins } from "next/font/google";
 import { api } from "@/utils/api";
 import {FaPen} from "react-icons/fa";
+import {MapSelector} from "../../../../components/customer/MapSelector";
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -28,6 +29,8 @@ type APIVet = {
     address?: string;
     landmark?: string;
     clinic_name?: string;
+    clinic_latitude?: number;
+    clinic_longitude?: number;
     location?: string;
     profile_picture_url?: string | null;
     certification_document_url?: string | null;
@@ -48,6 +51,8 @@ type FormVet = {
     address: string;
     landmark: string;
     clinic_name: string;
+    clinic_latitude: number;
+    clinic_longitude: number;
     location: string;
     services: string[];
     profile_picture_url?: string | null;
@@ -78,6 +83,8 @@ const toFormModel = (api: APIVet | null): FormVet => {
             address: "",
             landmark: "",
             clinic_name: "",
+            clinic_latitude: 0,
+            clinic_longitude: 0,
             location: "",
             services: [],
             profile_picture_url: null,
@@ -105,6 +112,8 @@ const toFormModel = (api: APIVet | null): FormVet => {
         address: api.address || "",
         landmark: api.landmark || "",
         clinic_name: api.clinic_name || "",
+        clinic_latitude: api.clinic_latitude || 0,
+        clinic_longitude: api.clinic_longitude || 0,
         location: api.location || "",
         services: api.services || [],
         profile_picture_url: api.profile_picture_url || null,
@@ -196,6 +205,8 @@ export default function PartnerMyBioPage(): React.JSX.Element {
             fd.append("address", form.address);
             fd.append("landmark", form.landmark);
             fd.append("clinic_name", form.clinic_name);
+            fd.append("clinic_latitude", form.clinic_latitude.toString());
+            fd.append("clinic_longitude", form.clinic_longitude.toString());
             fd.append("location", form.location);
             fd.append("service_ids", toServiceIdsString(form.services));
 
@@ -546,7 +557,7 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                         )}
 
                         {!editing && form.certification_document_url && (
-                            <div className="md:col-span-2">
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Certification Document</label>
                                 <div>
                                     <a href={form.certification_document_url} target="_blank" rel="noreferrer" className="text-pink-600 underline">
@@ -555,6 +566,15 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                                 </div>
                             </div>
                         )}
+
+                        {/* Clinic Location */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Clinic Location</label>
+                            <MapSelector lat={form?.clinic_latitude} lng={form?.clinic_longitude} onChange={(lat, lng) => {
+                                onChange("clinic_latitude", lat);
+                                onChange("clinic_longitude", lng);
+                            }} isEditable={editing}/>
+                        </div>
                     </div>
 
                     <div className="mt-6 flex justify-end gap-3">

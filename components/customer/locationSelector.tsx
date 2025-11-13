@@ -4,36 +4,8 @@ import { FaHome, FaPlus } from "react-icons/fa";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
 import PopupModel from "./popupModel";
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import ConfirmationPopup from "./ConfirmationPopup";
-
-const mapContainerStyle = { width: "100%", height: "300px" };
-const center = { lat: 17.385, lng: 78.4867 }; // Default: Hyderabad
-
-
-const MapSelector = ({ lat, lng,  onChange }: { lat?:number, lng?:number, onChange: (lat: number, lng: number) => void }) => {
-  const google_api_key = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ""
-  const [marker, setMarker] = useState((lat && lng) ? {lat, lng} : center);
-  const { isLoaded } = useLoadScript({ googleMapsApiKey: google_api_key });
-
-  if (!isLoaded) return <div>Loading map...</div>;
-
-  return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      center={marker}
-      zoom={13}
-      onClick={e => {
-        const lat = e.latLng?.lat() ?? marker.lat;
-        const lng = e.latLng?.lng() ?? marker.lng;
-        setMarker({ lat, lng });
-        onChange(lat, lng);
-      }}
-    >
-      <Marker position={marker} />
-    </GoogleMap>
-  );
-};
+import {MapSelector} from "./MapSelector";
 
 export interface Home_Visit_Address {
   address?: string;
