@@ -1,0 +1,58 @@
+import {Appointment} from "@/utils/commonTypes";
+
+export const appointments: Appointment[] = [
+    {
+        id: '1',
+        petName: 'Rocky',
+        petType: 'German Shepard',
+        date: '16th July, 2025',
+        visitType: 'General Visit',
+        imageUrl: '/images/rocky.jpg',
+        timeToAppointment: 10,
+    },
+    {
+        id: '2',
+        petName: 'Rocky',
+        petType: 'German Shepard',
+        date: '16th July, 2025',
+        visitType: 'General Visit',
+        imageUrl: '/images/rocky.jpg',
+        timeToAppointment: 10,
+    },
+    {
+        id: '3',
+        petName: 'Rocky',
+        petType: 'German Shepard',
+        date: '16th July, 2025',
+        visitType: 'General Visit',
+        imageUrl: '/images/rocky.jpg',
+        timeToAppointment: 10,
+    },
+    {
+        id: '4',
+        petName: 'Rocky',
+        petType: 'German Shepard',
+        date: '16th July, 2025',
+        visitType: 'General Visit',
+        imageUrl: '/images/rocky.jpg',
+        timeToAppointment: 10,
+    },
+    {
+        id: '5',
+        petName: 'Rocky',
+        petType: 'German Shepard',
+        date: '16th July, 2025',
+        visitType: 'General Visit',
+        imageUrl: '/images/rocky.jpg',
+        timeToAppointment: 10,
+    },
+    {
+        id: '6',
+        petName: 'Rocky',
+        petType: 'German Shepard',
+        date: '16th July, 2025',
+        visitType: 'General Visit',
+        imageUrl: '/images/rocky.jpg',
+        timeToAppointment: 10,
+    },
+];

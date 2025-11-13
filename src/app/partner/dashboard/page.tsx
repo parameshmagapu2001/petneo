@@ -5,6 +5,8 @@ import {api} from "@/utils/api";
 import {PartnerDetails} from "@/app/partner/layout";
 import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
 import {useRouter} from "next/navigation";
+import {appointments} from "@/utils/commonConstants";
+import PartnerAppointmentCard from "../../../../components/partner/PartnerAppointmentCard";
 
 interface ProgressBarProps {
     percentage: number;
@@ -102,6 +104,22 @@ export default function PartnerDashboard()  {
                         />
                     </div>
                 </section>
+                <div className="bg-blue-50 min-h-screen p-6 md:p-10">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="font-bold text-2xl text-gray-800">Upcoming Appointments</h1>
+                        <a href="#" className="text-gray-600 text-sm font-medium hover:text-gray-800">
+                            See All &gt;
+                        </a>
+                    </div>
+
+                    {/* Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {appointments.map((appointment) => (
+                            <PartnerAppointmentCard key={appointment.id} appointment={appointment} />
+                        ))}
+                    </div>
+                </div>
             </div>
             <FullScreenLoader loading={loading}/>
         </>
