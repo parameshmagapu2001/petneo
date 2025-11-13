@@ -98,6 +98,19 @@ export default function SlotPicker({vetAvailability, savedAppointment, onChange,
       {/* Time Picker */}
       <div>
         <h2 className="font-semibold text-sm mb-3">Select Schedule Time:</h2>
+          {vetAvailability
+                  .find((d) => d.date === selectedDate)
+                  ?.slots.filter((t) => {
+                      // Hide past times for today
+                      const slotTime = parseTime(selectedDate, t.time);
+                      return selectedDate === now.toISOString().split("T")[0]
+                          ? slotTime > now
+                          : true;
+                  }).length === 0 &&
+              <div className="flex justify-center text-md text-gray-500 font-medium">
+                  <span>No slots available for today</span>
+              </div>
+          }
         <div className="grid grid-cols-3 gap-3">
           {vetAvailability
             .find((d) => d.date === selectedDate)

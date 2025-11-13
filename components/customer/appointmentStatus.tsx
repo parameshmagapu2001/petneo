@@ -14,6 +14,7 @@ import {
     defaultNumberOfDays, defaultTimeSlotInMin,
     transformAvailability, VISIT_TYPES
 } from "./cVetAppointmentBooking";
+import isAppointmentInFuture from "@/utils/common";
 
 export type AppointmentStatusType = 'booked' | 'cancelled' | 'completed';
 export interface AppointmentDetails {
@@ -223,17 +224,18 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange,
                 </li>
               </ul>
             </div>
-              <div className="w-full mb-6 flex justify-between">
-                  <button className="w-[40%] text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600"
-                          onClick={handleCancelAppointment}>
-                      Cancel
-                  </button>
-                  <button className="w-[40%] text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600"
-                          onClick={handleRescheduleAppointment}>
-                      Reschedule
-                  </button>
-              </div>
-
+              {isAppointmentInFuture(appointmentDate, appointmentTime) &&
+                  <div className="w-full flex justify-between">
+                      <button className="w-[40%] text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600"
+                              onClick={handleCancelAppointment}>
+                          Cancel
+                      </button>
+                      <button className="w-[40%] text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600"
+                              onClick={handleRescheduleAppointment}>
+                          Reschedule
+                      </button>
+                  </div>
+              }
             <button className="w-full text-white bg-pink-500 rounded-lg py-3 my-3 font-semibold transition hover:bg-pink-600"
             onClick={handleViewMyAppointments}>
               View My Appointments
@@ -248,6 +250,9 @@ export default function AppointmentStatus({appointmentDetails, onPageTypeChange,
         )}
       </div>
         <PopupModel open={isReschedulePopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Reschedule">
+            <div className="flex sticky bg-white top-0 z-50 justify-center">
+                <span className="text-md font-semibold text-pink-600">Reschedule Appointments</span>
+            </div>
             <SlotPicker vetAvailability={rescheduleAvailability} onChange={handleSlotPickerValueChange}/>
         </PopupModel>
       <FullScreenLoader loading={loading}/>
