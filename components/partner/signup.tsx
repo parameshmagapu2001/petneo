@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { FaCamera, FaPen } from "react-icons/fa";
 import {api} from "@/utils/api";
+import {MapSelector} from "../customer/MapSelector";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -55,6 +56,8 @@ export default function SignupPagePartner() {
     address: "",
     landmark: "",
     clinicName: "",
+    clinic_latitude: 0,
+    clinic_longitude: 0,
     location: "",
     certificate: null as File | null,
   });
@@ -249,22 +252,8 @@ export default function SignupPagePartner() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/sendEmailOtp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: personal.email }),
-      });
+      const resData = await api.post(`/sendEmailOtp`, { email: personal.email });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.detail?.[0]?.msg || data?.message || "Failed to send email OTP");
-      }
       setShowEmailOtp(true);
       setMessage("✅ Email OTP sent — check your inbox (or spam).");
     } catch (err: any) {
@@ -280,28 +269,7 @@ export default function SignupPagePartner() {
     try {
       if (!emailOtp) throw new Error("Please enter the email OTP");
 
-      if (!API_BASE) {
-        setEmailVerified(true);
-        setMessage("✅ (dev) Email verified!");
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/verifyEmailOtp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: personal.email, otp: emailOtp }),
-      });
-
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.detail?.[0]?.msg || data?.message || "Invalid email OTP");
-      }
+      const resData = await api.post(`/verifyEmailOtp`, { email: personal.email, otp: emailOtp });
 
       setEmailVerified(true);
       setMessage("✅ Email verified!");
@@ -323,7 +291,7 @@ export default function SignupPagePartner() {
     try {
       const name = newServiceName.trim();
 
-      const resData = await api.post(`/services`,JSON.stringify({ name }));
+      const resData = await api.post(`/services`,{ name });
 
       if (resData?.id) {
           await fetchServices();
@@ -354,7 +322,10 @@ export default function SignupPagePartner() {
       if (!personal.firstName || !personal.lastName || !personal.email || !personal.password) {
         throw new Error("Please fill all required personal information fields");
       }
-      if (!professional.qualification || !professional.licenseNo || !professional.clinicName) {
+        if (!emailVerified) {
+            throw new Error("Please verify your email before submitting registration");
+        }
+      if (!professional.qualification || !professional.licenseNo || !professional.clinicName || !professional.clinic_latitude || !professional.clinic_longitude) {
         throw new Error("Please fill all required professional information fields");
       }
 
@@ -390,6 +361,8 @@ export default function SignupPagePartner() {
       formData.append("address", professional.address);
       formData.append("landmark", professional.landmark);
       formData.append("clinic_name", professional.clinicName);
+        formData.append("clinic_latitude", professional.clinic_latitude.toString());
+        formData.append("clinic_longitude", professional.clinic_longitude.toString());
       formData.append("location", professional.location);
 
       // important: send validated service ids as comma separated string
@@ -661,8 +634,48 @@ export default function SignupPagePartner() {
                       setEmailOtp("");
                     }}
                   />
+                    <button
+                        onClick={handleSendEmailOtp}
+                        disabled={!personal.email || loading}
+                        className="px-3 py-2 rounded-md bg-indigo-500 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                        {loading ? "Sending..." : "Send Email OTP"}
+                    </button>
                 </div>
               </div>
+
+                <div className="mb-4">
+                    <FieldLabel required>Email OTP</FieldLabel>
+                    <div className="relative">
+                        <input
+                            type={showEmailOtp ? "text" : "password"}
+                            placeholder="Enter email OTP"
+                            className="w-full border rounded-md px-3 py-2 placeholder-gray-400"
+                            value={emailOtp}
+                            onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ""))}
+                            disabled={emailVerified}
+                        />
+                        <div className="absolute right-2 top-2 flex items-center gap-2">
+                            <button type="button" onClick={() => setShowEmailOtp(!showEmailOtp)} className="text-gray-500">
+                                {showEmailOtp ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleVerifyEmailOtp}
+                                disabled={!emailOtp || emailVerified || loading}
+                                className="px-2 py-1 rounded text-white bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-xs"
+                            >
+                                Verify
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {emailVerified && (
+                    <div className="flex items-center text-green-600 mb-4">
+                        <CheckCircle2 className="mr-2" /> Email Verified
+                    </div>
+                )}
 
               <div className="mb-4">
                 <FieldLabel required>Password</FieldLabel>
@@ -686,7 +699,8 @@ export default function SignupPagePartner() {
                     !personal.firstName ||
                     !personal.lastName ||
                     !personal.email ||
-                    !personal.password
+                    !personal.password ||
+                      !emailVerified
                   }
                   className="w-full ml-auto py-2 px-4 bg-blue-500 text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
@@ -764,6 +778,15 @@ export default function SignupPagePartner() {
                 />
               </div>
 
+                <div className="mb-3">
+                    <FieldLabel required>Clinic Location</FieldLabel>
+                    <div className="w-full border rounded-md px-3 py-2">
+                        <MapSelector lat={professional?.clinic_latitude} lng={professional?.clinic_longitude} onChange={(lat, lng) => {
+                            setProfessional({ ...professional, clinic_latitude: lat, clinic_longitude:  lng})
+                        }}/>
+                    </div>
+                </div>
+
               <div className="mb-3">
                 <FieldLabel>Location</FieldLabel>
                 <input
@@ -816,35 +839,35 @@ export default function SignupPagePartner() {
                   <div className="text-sm text-gray-500 mb-2">No services loaded — you can create one or paste IDs below.</div>
                 )}
 
-                <div className="mt-2 text-xs text-gray-600">If a service is missing, create it here:</div>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="text"
-                    placeholder="New service name"
-                    className="flex-1 border rounded-md px-3 py-2"
-                    value={newServiceName}
-                    onChange={(e) => setNewServiceName(e.target.value)}
-                  />
-                  <button
-                    onClick={handleCreateService}
-                    disabled={!newServiceName.trim() || loading}
-                    className="px-3 py-2 rounded-md bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    Create
-                  </button>
-                </div>
+                {/*<div className="mt-2 text-xs text-gray-600">If a service is missing, create it here:</div>*/}
+                {/*<div className="flex gap-2 mt-2">*/}
+                {/*  <input*/}
+                {/*    type="text"*/}
+                {/*    placeholder="New service name"*/}
+                {/*    className="flex-1 border rounded-md px-3 py-2"*/}
+                {/*    value={newServiceName}*/}
+                {/*    onChange={(e) => setNewServiceName(e.target.value)}*/}
+                {/*  />*/}
+                {/*  <button*/}
+                {/*    onClick={handleCreateService}*/}
+                {/*    disabled={!newServiceName.trim() || loading}*/}
+                {/*    className="px-3 py-2 rounded-md bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"*/}
+                {/*  >*/}
+                {/*    Create*/}
+                {/*  </button>*/}
+                {/*</div>*/}
 
-                <div className="mt-3 text-xs text-gray-600">Or add other existing service IDs (comma separated):</div>
-                <input
-                  type="text"
-                  placeholder="e.g. 1,2,3"
-                  className="w-full border rounded-md px-3 py-2 mt-1"
-                  value={otherServiceIds}
-                  onChange={(e) => setOtherServiceIds(e.target.value)}
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  Selected: {selectedServiceIds.length} {selectedServiceIds.length === 0 ? " (none)" : ""}
-                </div>
+                {/*<div className="mt-3 text-xs text-gray-600">Or add other existing service IDs (comma separated):</div>*/}
+                {/*<input*/}
+                {/*  type="text"*/}
+                {/*  placeholder="e.g. 1,2,3"*/}
+                {/*  className="w-full border rounded-md px-3 py-2 mt-1"*/}
+                {/*  value={otherServiceIds}*/}
+                {/*  onChange={(e) => setOtherServiceIds(e.target.value)}*/}
+                {/*/>*/}
+                {/*<div className="text-xs text-gray-500 mt-1">*/}
+                {/*  Selected: {selectedServiceIds.length} {selectedServiceIds.length === 0 ? " (none)" : ""}*/}
+                {/*</div>*/}
               </div>
 
               <div className="mb-4">
