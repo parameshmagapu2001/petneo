@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
@@ -565,10 +565,17 @@ export default function SignupPageUser() {
         </div>
       </div>
 
-      {/* Right Section */}
-      <div className="hidden md:flex md:w-1/2 bg-blue-50 items-center justify-center p-12">
-        <Image src="/images/signup-illustration.svg" alt="Signup Illustration" width={500} height={500} />
-      </div>
+        {/* Right Side - Image */}
+        <div className="hidden md:flex w-1/2 bg-blue-400 items-center justify-center px-8 md:px-12 lg:px-16 py-12 relative">
+            <div className="bg-blue-300 bg-opacity-30 p-10 rounded-lg text-white text-center relative max-w-md w-full">
+                <h2 className="text-2xl font-semibold mb-8">Welcome to PetNeo - <br /> Connecting Pets & Vets</h2>
+                <Image src="/images/dog1.svg" alt="Dog" width={380} height={380} className="mx-auto relative z-10" />
+                <div className="flex justify-center gap-2 mt-6">
+                    <span className="w-3 h-3 rounded-full bg-white" />
+                    <span className="w-3 h-3 rounded-full bg-white opacity-50" />
+                </div>
+            </div>
+        </div>
     </div>
   );
 }
