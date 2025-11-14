@@ -14,7 +14,7 @@ import {
     defaultNumberOfDays, defaultTimeSlotInMin,
     transformAvailability, VISIT_TYPES
 } from "./cVetAppointmentBooking";
-import isAppointmentInFuture from "@/utils/common";
+import {isAppointmentInFuture} from "@/utils/common";
 
 export type AppointmentStatusType = 'booked' | 'cancelled' | 'completed';
 export interface AppointmentDetails {
