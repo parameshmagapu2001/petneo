@@ -287,6 +287,10 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                     </div>
                 </PopupModel>
 
+                {vets.length === 0 &&
+                    <div className="flex items-center justify-items-center grid grid-cols-1 min-h-30">
+                        <span>No Appointments to show</span>
+                    </div>}
                 {/* Vet cards grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-20 gap-y-10 px-10">
                     {vets.map((vet) => (

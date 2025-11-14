@@ -37,9 +37,9 @@ interface AppointmentBookingPayload {
 }
 
 export enum VISIT_ID {
-    CLINIC_VISIT = "In-clinic",
-    HOME_VISIT = "In-home",
-    ONLINE = "Tele"
+    CLINIC_VISIT = "in-clinic",
+    HOME_VISIT = "in-home",
+    ONLINE = "tele"
 }
 
 type VISIT_TYPE = {
