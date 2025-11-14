@@ -62,6 +62,9 @@ export function clearAuth()  {
             sessionStorage.removeItem(k);
         } catch {}
     });
+
+    // Clear cookie
+    document.cookie = 'authToken=; path=/; max-age=0; SameSite=Strict';
 };
 
 // --- Wrapper for fetch with auth ---
