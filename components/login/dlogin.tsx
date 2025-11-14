@@ -71,7 +71,7 @@ export default function LoginPage() {
     return s.toLowerCase().startsWith("bearer ") ? s.slice(7) : s;
   };
 
-  const saveTokensToLocalStorage = (resp: LoginResponse | string | null) => {
+  const saveTokensToLocalStorageAndCookie = (resp: LoginResponse | string | null) => {
     try {
       ["petneo_token","accessToken","access_token","token","auth_token","vetToken","refreshToken","refresh_token"].forEach(k => localStorage.removeItem(k));
 
@@ -96,6 +96,7 @@ export default function LoginPage() {
           localStorage.setItem("accessToken", token);
           localStorage.setItem("token", token);
           localStorage.setItem("auth_token", token);
+          setTokenCookie(token);
         }
       }
 
@@ -147,6 +148,15 @@ export default function LoginPage() {
     }
   };
 
+    function setTokenCookie(token: string) {
+        const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
+
+        // Note: httpOnly cookies can ONLY be set from server
+        // From client, we can set regular cookies (not httpOnly)
+        // Middleware will still see this cookie
+        document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Strict`;
+    }
+
   // ---------- VERIFY OTP using query params ----------
   const handleVerifyOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -168,8 +178,7 @@ export default function LoginPage() {
 
       if (!res.ok) throw new Error(json?.message || json?.detail || "Invalid OTP");
 
-      saveTokensToLocalStorage(json);
-
+      saveTokensToLocalStorageAndCookie(json);
       setMessage("✅ Login successful! Redirecting...");
       setTimeout(() => {
         const userType = json?.user_type ?? agentTab ? "vet" : "user";
