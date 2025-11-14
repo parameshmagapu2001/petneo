@@ -73,7 +73,13 @@ export default function LoginPage() {
 
   const saveTokensToLocalStorageAndCookie = (resp: LoginResponse | string | null) => {
     try {
-      ["petneo_token","accessToken","access_token","token","auth_token","vetToken","refreshToken","refresh_token"].forEach(k => localStorage.removeItem(k));
+        if (agentTab) {
+            //remove the partner token
+            localStorage.removeItem("partnerAccessToken");
+        } else {
+            //remove the customer token
+            localStorage.removeItem("accessToken");
+        }
 
       let rawToken: string | null = null;
       let refresh: string | null = null;
@@ -92,11 +98,14 @@ export default function LoginPage() {
       if (rawToken) {
         const token = normalizeToken(rawToken);
         if (token) {
-          localStorage.setItem("petneo_token", token);
-          localStorage.setItem("accessToken", token);
-          localStorage.setItem("token", token);
-          localStorage.setItem("auth_token", token);
-          setTokenCookie(token);
+            if (agentTab) {
+                //vet token
+                localStorage.setItem("partnerAccessToken", token);
+            } else {
+                //customer token
+                localStorage.setItem("accessToken", token);
+            }
+            setTokenCookie(token, agentTab);
         }
       }
 
@@ -148,13 +157,13 @@ export default function LoginPage() {
     }
   };
 
-    function setTokenCookie(token: string) {
+    function setTokenCookie(token: string, isAgent: boolean) {
         const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
 
         // Note: httpOnly cookies can ONLY be set from server
         // From client, we can set regular cookies (not httpOnly)
         // Middleware will still see this cookie
-        document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Strict`;
+        document.cookie = `${isAgent ? "partner" : "customer"}AuthToken=${token}; path=/; max-age=${maxAge}; SameSite=Strict`;
     }
 
   // ---------- VERIFY OTP using query params ----------

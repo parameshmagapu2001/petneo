@@ -55,7 +55,7 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
-            const vetTodaySummary = api.get("/appointments/vetTodaySummary");
+            const vetTodaySummary = api.get("/appointments/vetTodaySummary", undefined, "partner");
             Promise.all([vetTodaySummary]).then(([vetTodaySummaryRes]) => {
                 //setting the partner data
                 setPartnerDetails(vetTodaySummaryRes)
@@ -96,7 +96,7 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
 
     function handleLogOut(): void {
         setIsOpen(false);
-        clearAuth();
+        clearAuth("partner");
         if (typeof window !== "undefined") window.location.href = "/login";
         else router.push("/login")
     }
