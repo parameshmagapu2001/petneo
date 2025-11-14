@@ -2,10 +2,10 @@
 import {FaCirclePlus} from "react-icons/fa6";
 import React, {useEffect, useRef, useState} from "react";
 import {api} from "@/utils/api";
-import {PartnerDetails} from "@/app/partner/layout";
-import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
+import {PartnerDetails} from "@/app/partner/(pages)/layout";
+import FullScreenLoader from "../../../../../components/customer/fullScreenLoader";
 import {useRouter} from "next/navigation";
-import PartnerAppointmentCard from "../../../../components/partner/PartnerAppointmentCard";
+import PartnerAppointmentCard from "../../../../../components/partner/PartnerAppointmentCard";
 
 interface ProgressBarProps {
     percentage: number;

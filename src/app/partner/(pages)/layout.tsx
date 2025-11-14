@@ -9,9 +9,9 @@ import {
     FaUserFriends
 } from "react-icons/fa";
 import {Menu, X} from "lucide-react";
-import SimpleOverlay from "../../../components/customer/simpleOverlay";
+import SimpleOverlay from "../../../../components/customer/simpleOverlay";
 import React, {useEffect, useRef, useState} from "react";
-import FullScreenLoader from "../../../components/customer/fullScreenLoader";
+import FullScreenLoader from "../../../../components/customer/fullScreenLoader";
 import {api, clearAuth} from "@/utils/api";
 import Link from "next/link";
 import {useRouter} from "next/navigation";

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Poppins } from "next/font/google";
 import { api } from "@/utils/api";
 import {FaPen} from "react-icons/fa";
-import {MapSelector} from "../../../../components/customer/MapSelector";
+import {MapSelector} from "../../../../../components/customer/MapSelector";
 
 const poppins = Poppins({
     subsets: ["latin"],
