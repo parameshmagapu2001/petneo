@@ -52,7 +52,13 @@ export function middleware(request: NextRequest) {
     }
 
     // All other routes require valid token
-    const token = request.cookies.get('authToken')?.value;
+    let token;
+    if (pathname.startsWith('/partner')) {
+        token = request.cookies.get('partnerAuthToken')?.value;
+    } else if (pathname.startsWith('/customer')) {
+        token = request.cookies.get('customerAuthToken')?.value;
+    }
+
 
     // No token found
     if (!token) {

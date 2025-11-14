@@ -167,11 +167,11 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                     setError(null);
 
                     // Use api wrapper for GET so it handles Authorization + ngrok header (if configured)
-                    const data = (await api.get("/vet/myBio")) as APIVet;
+                    const data = (await api.get("/vet/myBio", undefined, "partner")) as APIVet;
                     setProfile(data);
                     setForm(toFormModel(data));
 
-                    const servicesData = (await api.get("/services") as ServiceType[]);
+                    const servicesData = (await api.get("/services", undefined, "partner") as ServiceType[]);
                     setServicesAvailable(servicesData);
                 } catch (e: any) {
                     console.error("MyBio GET error:", e);
@@ -213,10 +213,10 @@ export default function PartnerMyBioPage(): React.JSX.Element {
             if (profilePic) fd.append("profile_picture", profilePic);
             if (certificate) fd.append("certification_document", certificate);
 
-            const res = await api.formDataPut("/vet/updateBio", fd);
+            const res = await api.formDataPut("/vet/updateBio", fd, "partner");
 
             //fetching the myBio again to refresh the data
-            const data = (await api.get("/vet/myBio")) as APIVet;
+            const data = (await api.get("/vet/myBio", undefined, "partner")) as APIVet;
             setProfile(data);
             setForm(toFormModel(data));
 
@@ -290,7 +290,7 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                 </div>
             )}
 
-            <div className={`min-h-screen bg-gray-50 p-4 md:p-6 lg:p-10 ${poppins.className}`}>
+            <div className={`bg-blue-50 p-4 md:p-6 lg:p-10 ${poppins.className}`}>
                 <div className="max-w-6xl mx-auto bg-white shadow-lg border border-gray-100 rounded-2xl p-6 md:p-8 lg:p-12">
                     {error && <p className="mb-4 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 

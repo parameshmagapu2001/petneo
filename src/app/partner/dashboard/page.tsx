@@ -38,7 +38,7 @@ export default function PartnerDashboard()  {
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
-            const vetTodaySummary = api.get("/appointments/vetTodaySummary");
+            const vetTodaySummary = api.get("/appointments/vetTodaySummary", undefined, "partner");
             Promise.all([vetTodaySummary]).then(([vetTodaySummaryRes]) => {
                 //setting the partner data
                 setPartnerDetails(vetTodaySummaryRes)
