@@ -157,7 +157,7 @@ export default function PetDetailsPage() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`px-6 py-2 rounded-full font-semibold text-sm transition-all duration-300 hover:translate-y-[-2px] ${
+                                className={`px-6 py-2 rounded-full cursor-pointer font-semibold text-sm transition-all duration-300 hover:translate-y-[-2px] ${
                                     activeTab === tab.id
                                         ? 'bg-pink-600 text-white'
                                         : 'bg-pink-200 text-pink-600'
@@ -273,7 +273,7 @@ export default function PetDetailsPage() {
                                                 <p className="text-base font-bold text-gray-900 mb-1">
                                                     {vaccination.vaccination_name}
                                                 </p>
-                                                <p className="flex flex-col text-sm text-gray-600">
+                                                <div className="flex flex-col text-sm text-gray-600">
                                                     <div className="flex flex-nowrap mb-1">
                                                         <FaSyringe size={15} className="mr-2 text-purple-600" />
                                                         <span>{vaccination.dose_type}</span>
@@ -282,13 +282,13 @@ export default function PetDetailsPage() {
                                                         <FaCalendarAlt size={15} className="mr-2 text-purple-600" />
                                                         <span>{formatDate(vaccination.date_vaccinated)}</span>
                                                     </div>
-                                                </p>
+                                                </div>
                                             </div>
                                             <MdCheckCircle className="text-2xl text-cyan-500 flex-shrink-0" />
                                         </div>
                                     ))}
                                 </div>
-                                <button className="w-full bg-purple-200 text-purple-600 py-3 rounded-xl font-semibold mb-8 hover:bg-purple-300 transition-colors flex items-center justify-center gap-2">
+                                <button className="w-full bg-purple-200 text-purple-600 cursor-pointer py-3 rounded-xl font-semibold mb-8 hover:bg-purple-300 transition-colors flex items-center justify-center gap-2">
                                     <FaPlus /> Add New
                                 </button>
 
