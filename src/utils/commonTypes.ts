@@ -41,14 +41,14 @@ export interface PetOwnerDetails {
     contact_number: string;
 }
 
-export interface PartnerPetAppointmentDetials {
+export interface PartnerPetAppointmentDetails {
     appointment_id: number;
     date: string;
     start_time: string;
     end_time: string;
     reason: string | null;
-    status: 'booked' | 'completed';
-    visit_type: 'in-clinic' | 'online';
+    status: 'booked' | 'completed' | 'cancelled' | 'no-show';
+    visit_type: 'in-clinic' | 'tele' | 'in-home';
 }
 
 export interface PetVaccinationDetails {
@@ -62,4 +62,12 @@ export interface PetPrescriptionDetails {
     id: number;
     appointment_id: number;
     prescription_file_url: string;
+}
+
+export interface PartnerPetCompleteDetails {
+    visit_history: PartnerPetAppointmentDetails[];
+    pet: PartnerPetDetails;
+    Owner: PetOwnerDetails;
+    vaccinations: PetVaccinationDetails[];
+    prescriptions: PetPrescriptionDetails[];
 }
