@@ -12,91 +12,11 @@ import FullScreenLoader from "../../../../../../../components/customer/fullScree
 import {
     PartnerPetAppointmentDetails,
     PartnerPetCompleteDetails,
-    PartnerPetDetails, PetNewVaccinationDetails,
+    PartnerPetDetails, PetNewPrescriptionDetails, PetNewVaccinationDetails,
     PetOwnerDetails, PetPrescriptionDetails, PetVaccinationDetails
 } from "@/utils/commonTypes";
 import PopupModel from "../../../../../../../components/customer/popupModel";
-
-// Sample Data
-const SAMPLE_PET_DATA = {
-    visit_history: [
-        {
-            appointment_id: 174,
-            date: '2025-11-13',
-            start_time: '10:00 AM',
-            end_time: '10:30 AM',
-            reason: null,
-            status: 'booked' as const,
-            visit_type: 'in-clinic' as const,
-        },
-        {
-            appointment_id: 173,
-            date: '2025-11-10',
-            start_time: '02:00 PM',
-            end_time: '02:30 PM',
-            reason: 'Regular check-up',
-            status: 'completed' as const,
-            visit_type: 'in-clinic' as const,
-        },
-    ],
-    pet: {
-        id: 19,
-        name: 'Rocky',
-        species: 'Dog',
-        gender: 'Male',
-        breeding: 'German Shepard',
-        age: '12 months',
-        weight: 5,
-        licence: '1235454',
-        profile_picture:
-            'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=400&fit=crop',
-    },
-    Owner: {
-        name: 'Mohan',
-        address: 'Hyd',
-        contact_number: '5456791234',
-    },
-    vaccinations: [
-        {
-            id: 17,
-            vaccination_name: 'Parvovirus',
-            date_vaccinated: '2025-05-12',
-            dose_type: 'Booster dose',
-        },
-        {
-            id: 18,
-            vaccination_name: 'Rabies',
-            date_vaccinated: '2025-05-12',
-            dose_type: 'Booster dose',
-        },
-        {
-            id: 19,
-            vaccination_name: 'Lyme',
-            date_vaccinated: '2025-05-12',
-            dose_type: 'Booster dose',
-        },
-        {
-            id: 20,
-            vaccination_name: 'Tetanus',
-            date_vaccinated: '2025-09-03',
-            dose_type: 'When Needed',
-        },
-    ],
-    prescriptions: [
-        {
-            id: 8,
-            appointment_id: 50,
-            prescription_file_url:
-                'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop',
-        },
-        {
-            id: 7,
-            appointment_id: 142,
-            prescription_file_url:
-                'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop',
-        },
-    ],
-};
+import {AlertCircle} from "lucide-react";
 
 export default function PetDetailsPage() {
     const params = useParams();
@@ -218,6 +138,70 @@ export default function PetDetailsPage() {
         } else {
             alert("Please provide all the details");
         }
+    };
+
+
+    const [pastAppointments, setPastAppointments] = useState<PartnerPetAppointmentDetails[]>([]);
+    // Filter and sort past appointments on mount
+    useEffect(() => {
+        const filterPastAppointments = () => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const past = visit_history?.filter((apt) => {
+                const aptDate = new Date(apt.date + 'T00:00:00');
+                return aptDate < today;
+            });
+
+            // Sort by date descending (most recent first)
+            past?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setPastAppointments(past || []);
+        };
+
+        filterPastAppointments();
+    }, [visit_history]);
+
+    const [newPrescriptionRecord, setNewPrescriptionRecord] = useState<PetNewPrescriptionDetails>({});
+    const [isAddPrescriptionPopupOpen, setIsAddPrescriptionPopupOpen] = useState<boolean>(false);
+    const handleAddPrescription = () => {
+        setIsAddPrescriptionPopupOpen(true);
+    };
+    const handlePrescriptionPopupCancel = () => {
+        setNewPrescriptionRecord({});
+        setIsAddPrescriptionPopupOpen(false);
+    };
+    const handleNewPrescriptionRecordChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        setNewPrescriptionRecord({
+            ...newPrescriptionRecord,
+            [e.target.name]: e.target.value
+        });
+    };
+    const handlePrescriptionPopupPrimaryAction = async () => {
+        if (newPrescriptionRecord?.appointment_id && newPrescriptionRecord?.file ) {
+            const formData = new FormData();
+            formData.append("appointment_id", newPrescriptionRecord.appointment_id);
+            formData.append("file", newPrescriptionRecord.file);
+            formData.append("text", newPrescriptionRecord?.text || "");
+            //send the details to backend and close the popup.
+            setLoading(true);
+            const createPrescriptionRecordResponse = await api.formDatapost("/pets/addPrescription", formData, "partner");
+            setLoading(false);
+            if (createPrescriptionRecordResponse?.success) {
+                //refreshing the vaccinations list
+                fetchCompletePetDetails();
+            } else {
+                //TODO error handling
+            }
+            setIsAddPrescriptionPopupOpen(false);
+        } else {
+            alert("Please provide all the details");
+        }
+    };
+
+    const handleViewPrescription = (prescription: PetPrescriptionDetails) => {
+        return () => {
+            window.open(prescription.file_url);
+        };
     };
 
     return (
@@ -405,7 +389,7 @@ export default function PetDetailsPage() {
                                         onClick={handleAddVaccination}>
                                     <FaPlus /> Add New
                                 </button>
-                                <PopupModel open={isAddVaccinationPopupOpen} onCancel={handleVaccinationPopupCancel} onPrimary={handleVaccinationPopupPrimaryAction} primaryLabel="Save">
+                                <PopupModel open={isAddVaccinationPopupOpen} onCancel={handleVaccinationPopupCancel} onPrimary={handleVaccinationPopupPrimaryAction} primaryLabel="Add">
                                     <form className="w-full max-w-lg bg-white rounded-xl px-8 py-10 shadow-lg">
                                         <h2 className="text-base font-bold mb-8 text-center">Enter Vaccination Details</h2>
                                         <div className="mb-3 text-sm">
@@ -456,18 +440,75 @@ export default function PetDetailsPage() {
                                         <div
                                             key={prescription.id}
                                             className="aspect-square bg-gradient-to-br from-cyan-100 to-cyan-50 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform flex items-center justify-center relative"
-                                        >
-                                            <Image
-                                                src={prescription.prescription_file_url}
-                                                alt={`Prescription ${prescription.id}`}
-                                                fill
-                                                className="object-cover"
-                                            />
+                                            onClick={handleViewPrescription(prescription)}>
+                                            <img className="object-cover" alt={`Prescription ${prescription.id}`} src="/images/customer/prescription.png"/>
                                         </div>
                                     ))}
-                                    <div className="aspect-square bg-purple-200 rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform text-3xl">
+                                    <div className="aspect-square bg-purple-200 rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform text-3xl"
+                                    onClick={handleAddPrescription}>
                                         <FaPlus className="text-purple-600" />
                                     </div>
+                                    <PopupModel open={isAddPrescriptionPopupOpen} onCancel={handlePrescriptionPopupCancel} onPrimary={handlePrescriptionPopupPrimaryAction} primaryLabel="Add">
+                                        <form className="space-y-6 mb-4">
+                                            <h2 className="text-base font-bold mb-8 text-center">Enter Prescription Details</h2>
+                                            {/* Appointment Dropdown */}
+                                            <div>
+                                                <label htmlFor="appointment_id" className="block text-sm font-medium text-[#134252] mb-2">
+                                                    Select Appointment <span className="text-[#c0152f]">*</span>
+                                                </label>
+                                                <select
+                                                    id="appointment_id"
+                                                    name="appointment_id"
+                                                    value={newPrescriptionRecord?.appointment_id || ""}
+                                                    onChange={handleNewPrescriptionRecordChange}
+                                                    required
+                                                    disabled={pastAppointments.length === 0}
+                                                    className="w-full px-3 py-2 border border-[#e0e0e0] rounded-lg focus:outline-none focus:border-[#2180a1] focus:ring-2 focus:ring-[#2180a1]/10 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                                >
+                                                    <option value="">-- Choose a past appointment --</option>
+                                                    {pastAppointments.map((apt) => (
+                                                        <option key={apt.appointment_id} value={apt.appointment_id}>
+                                                            {formatDate(apt.date)} - {apt.start_time} to {apt.end_time}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-xs text-[#626c7c] mt-1">Only past appointments are shown</p>
+
+                                                {pastAppointments.length === 0 && (
+                                                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#c0152f] flex items-start gap-2">
+                                                        <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                                                        <span>No past appointments found. Create a prescription once an appointment is completed.</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Notes/Prescription Text */}
+                                            <div>
+                                                <label  htmlFor="text" className="block text-sm font-medium text-[#134252] mb-2">
+                                                    Notes / Prescription Text <span className="text-[#c0152f]">*</span>
+                                                </label>
+                                                <textarea
+                                                    id="text"
+                                                    name="text"
+                                                    value={newPrescriptionRecord?.text || ""}
+                                                    onChange={handleNewPrescriptionRecordChange}
+                                                    placeholder="Enter prescription notes, dosage, instructions..."
+                                                    required
+                                                    rows={5}
+                                                    className="w-full px-3 py-2 border border-[#e0e0e0] rounded-lg focus:outline-none focus:border-[#2180a1] focus:ring-2 focus:ring-[#2180a1]/10 transition-colors resize-none"
+                                                />
+                                                <p className="text-xs text-[#626c7c] mt-1">Provide detailed prescription information</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Prescription File</label>
+                                                <input
+                                                    type="file"
+                                                    onChange={(e) => setNewPrescriptionRecord({...newPrescriptionRecord, file: e.target.files ? e.target.files[0] : null})}
+                                                    className="w-full border rounded-lg px-3 py-2 bg-white"
+                                                />
+                                            </div>
+                                        </form>
+                                    </PopupModel>
                                 </div>
                             </div>
                         )}
