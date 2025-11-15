@@ -54,14 +54,14 @@ export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded
             </div>
 
             {/*Action buttons*/}
-            <div className="flex justify-center">
+            <div className={`flex flex-row ${isRescheduleNeeded ? "justify-between" : "justify-center"}`}>
                 {isRescheduleNeeded &&
-                    <button className="flex-1 px-4 py-2 border-2 border-pink-600 text-pink-600 rounded-lg font-medium hover:bg-pink-50 transition">
+                    <button className="w-[45%] px-4 py-2 border-2 border-pink-600 text-pink-600 rounded-lg font-medium hover:bg-pink-50 transition">
                         Reschedule
                     </button>
                 }
                 { isViewDetailsNeeded &&
-                    <button className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition">
+                    <button className="w-[45%] px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition">
                         View Details
                     </button>
                 }
