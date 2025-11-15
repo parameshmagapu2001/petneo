@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { FaCalendarAlt } from 'react-icons/fa';
 import {PartnerAppointment} from "@/utils/commonTypes";
 import {formatDate1, getRemainingTime} from "@/utils/common";
+import {useRouter} from "next/navigation";
 
 interface PartnerAppointmentCardProps {
     isCountdownNeeded?: boolean;
@@ -14,6 +15,12 @@ interface PartnerAppointmentCardProps {
 }
 
 export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded= true, isViewDetailsNeeded=false, isRescheduleNeeded=false }: PartnerAppointmentCardProps) {
+    const router = useRouter();
+    const handleViewDetails = () => {
+        //need to route to myAppointments/petDetails page
+        router.push(`/partner/myAppointments/petDetails/${appointment.pet.id}`);
+    }
+
     return (
         <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col gap-4 w-full max-w-sm border border-gray-100">
             {/* Header with Calendar Icon and Time */}
@@ -61,7 +68,8 @@ export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded
                     </button>
                 }
                 { isViewDetailsNeeded &&
-                    <button className="w-[45%] px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition">
+                    <button className="w-[45%] px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition"
+                    onClick={handleViewDetails}>
                         View Details
                     </button>
                 }
