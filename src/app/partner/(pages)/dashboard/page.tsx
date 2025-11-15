@@ -59,7 +59,7 @@ export default function PartnerDashboard()  {
                 <section className="bg-white rounded-lg shadow-md p-6 flex justify-between items-center">
                     <div className="flex items-center space-x-4">
                         <img
-                            src="../images/customer/paws.png"
+                            src="/images/customer/paws.png"
                             alt="paws"
                         />
                         <div>
@@ -96,7 +96,7 @@ export default function PartnerDashboard()  {
                     {/* Illustration */}
                     <div className="hidden md:block self-start">
                         <img
-                            src="../images/customer/calender.png"
+                            src="/images/customer/calender.png"
                             alt="Pet management illustration"
                             className="w-28 h-auto select-none pointer-events-none"
                             draggable={false}

@@ -107,7 +107,7 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
                 <header className="flex items-center justify-between px-6 py-3 bg-white shadow">
                     {/* Left: Logo only */}
                     <Link href="/partner/dashboard" className="inline-flex items-center">
-                        <img src="../images/logo.svg" alt="PetNeo" className="h-10" />
+                        <img src="/images/logo.svg" alt="PetNeo" className="h-10" />
                     </Link>
 
                     <nav className="flex items-center space-x-4 text-sm font-semibold">

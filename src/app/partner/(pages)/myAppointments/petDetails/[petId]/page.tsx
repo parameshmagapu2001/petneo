@@ -93,8 +93,8 @@ export default function PetDetailsPage() {
     const params = useParams();
     const petId = params.petId as string;
 
-    const [activeTab, setActiveTab] = useState<'view-details' | 'pet-info' | 'medical-history'>(
-        'view-details'
+    const [activeTab, setActiveTab] = useState<'visit-details' | 'pet-info' | 'medical-history'>(
+        'visit-details'
     );
     const { pet, Owner, visit_history, vaccinations, prescriptions } = SAMPLE_PET_DATA;
 
@@ -150,7 +150,7 @@ export default function PetDetailsPage() {
                     {/* Tab Navigation */}
                     <div className="flex gap-2 mb-8 justify-center flex-wrap">
                         {[
-                            { id: 'view-details', label: 'View Details' },
+                            { id: 'visit-details', label: 'Visit Details' },
                             { id: 'pet-info', label: 'Pet Info' },
                             { id: 'medical-history', label: 'Medical History' },
                         ].map((tab) => (
@@ -170,8 +170,8 @@ export default function PetDetailsPage() {
 
                     {/* Tab Content */}
                     <div className="transition-opacity duration-300">
-                        {/* View Details Tab */}
-                        {activeTab === 'view-details' && (
+                        {/* visit Details Tab */}
+                        {activeTab === 'visit-details' && (
                             <div>
                                 {visit_history.map((appointment) => (
                                     <div
