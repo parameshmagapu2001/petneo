@@ -1,25 +1,107 @@
 'use client';
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Image from 'next/image';
 import { FaCalendarAlt } from 'react-icons/fa';
 import {PartnerAppointment} from "@/utils/commonTypes";
 import {formatDate1, getRemainingTime} from "@/utils/common";
 import {useRouter} from "next/navigation";
+import SlotPicker, {DaySlots} from "../customer/slotPicker";
+import PopupModel from "../customer/popupModel";
+import {
+    convert12hTo24hPlusMinutes,
+    DateTimeSlot, defaultNumberOfDays,
+    defaultTimeSlotInMin, transformAvailability,
+    VISIT_TYPES
+} from "../customer/cVetAppointmentBooking";
+import {api} from "@/utils/api";
+import SimpleLoader from "../common/SimpleLoader";
 
 interface PartnerAppointmentCardProps {
     isCountdownNeeded?: boolean;
     isViewDetailsNeeded?: boolean;
     isRescheduleNeeded?: boolean;
+    refreshCards?: () => void;
     appointment: PartnerAppointment;
 }
 
-export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded= true, isViewDetailsNeeded=false, isRescheduleNeeded=false }: PartnerAppointmentCardProps) {
+export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded= true, isViewDetailsNeeded=false, isRescheduleNeeded=false, refreshCards }: PartnerAppointmentCardProps) {
     const router = useRouter();
     const handleViewDetails = () => {
         //need to route to myAppointments/petDetails page
         router.push(`/partner/myAppointments/petDetails/${appointment.pet.id}`);
     }
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const [isReschedulePopupOpen, setIsReschedulePopupOpen] = useState<boolean>(false);
+    const handleRescheduleAppointment = () => {
+        if (appointment.appointment_id) {
+            setIsReschedulePopupOpen(true);
+        }
+    }
+
+    const handlePopupCancel = () => {
+        setIsReschedulePopupOpen(false);
+        setRescheduleAvailability([]);
+        setSelectedDateTimeSlot(undefined);
+    };
+
+    const handlePrimaryAction = async () => {
+        if (selectedDateTimeSlot && selectedDateTimeSlot.date &&
+            selectedDateTimeSlot.time) {
+            try {
+                setLoading(true);
+                const payload= {
+                    new_date: selectedDateTimeSlot.date,
+                    new_start_time: convert12hTo24hPlusMinutes(selectedDateTimeSlot.time),
+                    new_end_time: convert12hTo24hPlusMinutes(selectedDateTimeSlot.time, defaultTimeSlotInMin),
+                    visit_type: appointment.visit_type,
+                };
+
+                //reschedule the appointment
+                const rescheduleAppointmentRes = await api.put(`/availability/reschedule/${appointment.appointment_id}`, payload, "partner");
+                setLoading(false);
+                if (rescheduleAppointmentRes?.detail === "Appointment rescheduled successfully") {
+                    if (isRescheduleNeeded && refreshCards) {
+                        refreshCards();
+                    }
+                }
+            } catch (e) {
+                //TODO error scenario
+            } finally {
+                setLoading(false);
+                setIsReschedulePopupOpen(false);
+            }
+        } else {
+            alert("Please choose a slot to reschedule");
+        }
+    }
+
+    const [selectedDateTimeSlot, setSelectedDateTimeSlot] = useState<DateTimeSlot>();
+    function handleSlotPickerValueChange(selected: { date: string; time: string; }): void {
+        setSelectedDateTimeSlot(selected);
+    }
+
+    const [rescheduleAvailability, setRescheduleAvailability] = useState<DaySlots[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            if (isReschedulePopupOpen && appointment.appointment_id) {
+                try {
+                    //fetching the reschedule slots.
+                    setLoading(true);
+                    const fetchRescheduleSlots = await api.get(`/availability/${appointment.appointment_id}/rescheduleSlots`, {days: defaultNumberOfDays});
+                    if (Array.isArray(fetchRescheduleSlots)) {
+                        setRescheduleAvailability(transformAvailability(fetchRescheduleSlots));
+                    }
+                } catch (e) {
+                    //TODO error handling scenario.
+                } finally {
+                    setLoading(false);
+                }
+            }
+        })();
+    }, [isReschedulePopupOpen]);
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col gap-4 w-full max-w-sm border border-gray-100">
@@ -63,7 +145,8 @@ export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded
             {/*Action buttons*/}
             <div className={`flex flex-row ${isRescheduleNeeded ? "justify-between" : "justify-center"}`}>
                 {isRescheduleNeeded &&
-                    <button className="w-[45%] px-4 py-2 border-2 border-pink-600 text-pink-600 rounded-lg font-medium hover:bg-pink-50 transition">
+                    <button className="w-[45%] px-4 py-2 border-2 border-pink-600 text-pink-600 rounded-lg font-medium hover:bg-pink-50 transition"
+                    onClick={handleRescheduleAppointment}>
                         Reschedule
                     </button>
                 }
@@ -75,6 +158,13 @@ export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded
                 }
 
             </div>
+            <PopupModel open={isReschedulePopupOpen} onCancel={handlePopupCancel} onPrimary={handlePrimaryAction} primaryLabel="Reschedule">
+                <div className="flex sticky bg-white top-0 z-50 justify-center">
+                    <span className="text-md font-semibold text-pink-600">Reschedule Appointments</span>
+                </div>
+                <SlotPicker vetAvailability={rescheduleAvailability} onChange={handleSlotPickerValueChange}/>
+                <SimpleLoader isLoading={loading}/>
+            </PopupModel>
         </div>
     );
 }
