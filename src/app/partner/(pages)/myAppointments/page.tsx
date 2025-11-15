@@ -37,8 +37,8 @@ export default function PartnerMyAppointmentsPage()  {
         const keyMap: Record<TabType, keyof PartnerMyAppointments> = {
             Upcoming: 'upcoming',
             Completed: 'completed',
-            Ongoing: 'ongoing',
-            'No Show': 'no_show',
+            Ongoing: 'on-going',
+            'No Show': 'no-show',
         };
         return keyMap[tab];
     };
@@ -50,8 +50,7 @@ export default function PartnerMyAppointmentsPage()  {
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">My Appointments</h1>
-                        <p className="text-gray-600">Manage and track your pet's appointments</p>
+                        <h1 className="text-xl font-bold text-gray-900">My Appointments</h1>
                     </div>
 
                     {/* Tabs */}

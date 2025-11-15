@@ -18,7 +18,7 @@ export interface PartnerPet {
 
 export interface PartnerMyAppointments {
     upcoming: PartnerAppointment[];
-    ongoing: PartnerAppointment[];
+    'on-going': PartnerAppointment[];
     completed: PartnerAppointment[];
-    no_show: PartnerAppointment[];
+    'no-show': PartnerAppointment[];
 }
