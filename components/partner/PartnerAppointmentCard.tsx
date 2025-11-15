@@ -7,20 +7,24 @@ import {PartnerAppointment} from "@/utils/commonTypes";
 import {formatDate1, getRemainingTime} from "@/utils/common";
 
 interface PartnerAppointmentCardProps {
+    isCountdownNeeded: boolean;
+    isViewDetailsNeeded: boolean;
+    isRescheduleNeeded: boolean;
     appointment: PartnerAppointment;
 }
 
-export default function PartnerAppointmentCard ({ appointment }: PartnerAppointmentCardProps) {
+export default function PartnerAppointmentCard ({ appointment, isCountdownNeeded= true, isViewDetailsNeeded=false, isRescheduleNeeded=false }: PartnerAppointmentCardProps) {
     return (
         <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col gap-4 w-full max-w-sm border border-gray-100">
             {/* Header with Calendar Icon and Time */}
-            <div className="flex items-center gap-2 bg-blue-100 rounded-lg p-3">
-                <FaCalendarAlt className="text-blue-600 text-sm"/>
-                <span className="text-blue-600 text-sm font-semibold">
-        Your next Appointment in{' '}
-                    <span className="text-blue-700 underline font-bold">{getRemainingTime(appointment.date, appointment.time)}</span>
-      </span>
-            </div>
+            {isCountdownNeeded &&
+                <div className="flex items-center gap-2 bg-blue-100 rounded-lg p-3">
+                    <FaCalendarAlt className="text-blue-600 text-sm"/>
+                    <span className="text-blue-600 text-sm font-semibold">
+                    Your next Appointment in{' '}
+                        <span className="text-blue-700 underline font-bold">{getRemainingTime(appointment.date, appointment.time)}</span>
+                </span>
+                </div>}
             {/* Main Content */}
             <div className="flex gap-4 items-center">
                 {/* Pet Image */}
@@ -47,6 +51,21 @@ export default function PartnerAppointmentCard ({ appointment }: PartnerAppointm
             {/*  {appointment.visitType}*/}
             {/*</span>*/}
             {/*    </div>*/}
+            </div>
+
+            {/*Action buttons*/}
+            <div className="flex justify-center">
+                {isRescheduleNeeded &&
+                    <button className="flex-1 px-4 py-2 border-2 border-pink-600 text-pink-600 rounded-lg font-medium hover:bg-pink-50 transition">
+                        Reschedule
+                    </button>
+                }
+                { isViewDetailsNeeded &&
+                    <button className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition">
+                        View Details
+                    </button>
+                }
+
             </div>
         </div>
     );
