@@ -13,21 +13,25 @@ export default function PartnerMyAppointmentsPage()  {
 
     const [appointmentsData, setAppointmentsData] = useState<PartnerMyAppointments>();
     const hasFetched = useRef(false);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
+    const fetchMyAppointmentsData = () => {
+        setLoading(true);
+        const myAppointmentsDataPromise = api.get("/appointments/myAppointments", undefined, "partner");
+        Promise.all([myAppointmentsDataPromise]).then(([myAppointmentsDataRes]) => {
+            //setting my appointments data
+            setAppointmentsData(myAppointmentsDataRes);
+
+            hasFetched.current = false;
+            setLoading(false);
+        }).catch((error) => {
+            setLoading(false);
+            //TODO handle error cases
+        })
+    };
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
-            const myAppointmentsDataPromise = api.get("/appointments/myAppointments", undefined, "partner");
-            Promise.all([myAppointmentsDataPromise]).then(([myAppointmentsDataRes]) => {
-                //setting my appointments data
-                setAppointmentsData(myAppointmentsDataRes);
-
-                hasFetched.current = false;
-                setLoading(false);
-            }).catch((error) => {
-                setLoading(false);
-                //TODO handle error cases
-            })
+            fetchMyAppointmentsData();
         }
     }, []);
 
@@ -44,6 +48,10 @@ export default function PartnerMyAppointmentsPage()  {
     };
 
     const appointments = appointmentsData?.[getTabKey(currentTab)] || [];
+
+    const refreshTheAppointments = () => {
+        fetchMyAppointmentsData();
+    }
     return (
         <>
             <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
@@ -86,6 +94,7 @@ export default function PartnerMyAppointmentsPage()  {
                                     isCountdownNeeded={false}
                                     isViewDetailsNeeded={true}
                                     isRescheduleNeeded={currentTab === 'Upcoming'}
+                                    refreshCards={refreshTheAppointments}
                                 />
                             ))}
                         </div>
