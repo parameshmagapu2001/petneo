@@ -15,3 +15,10 @@ export interface PartnerPet {
     breed: string;
     profile_picture: string;
 }
+
+export interface PartnerMyAppointments {
+    upcoming: PartnerAppointment[];
+    ongoing: PartnerAppointment[];
+    completed: PartnerAppointment[];
+    no_show: PartnerAppointment[];
+}
