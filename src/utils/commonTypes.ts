@@ -65,10 +65,16 @@ export interface PetNewVaccinationDetails {
     dose_type?: string;
 }
 
+export interface PetNewPrescriptionDetails {
+    appointment_id?: string;
+    text?: string
+    file?: File | null;
+}
+
 export interface PetPrescriptionDetails {
     id: number;
     appointment_id: number;
-    prescription_file_url: string;
+    file_url: string;
 }
 
 export interface PartnerPetCompleteDetails {
