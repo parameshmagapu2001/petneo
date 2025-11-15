@@ -12,9 +12,10 @@ import FullScreenLoader from "../../../../../../../components/customer/fullScree
 import {
     PartnerPetAppointmentDetails,
     PartnerPetCompleteDetails,
-    PartnerPetDetails,
+    PartnerPetDetails, PetNewVaccinationDetails,
     PetOwnerDetails, PetPrescriptionDetails, PetVaccinationDetails
 } from "@/utils/commonTypes";
+import PopupModel from "../../../../../../../components/customer/popupModel";
 
 // Sample Data
 const SAMPLE_PET_DATA = {
@@ -103,22 +104,26 @@ export default function PetDetailsPage() {
 
     const [petCompleteDetails, setPetCompleteDetails] = useState<PartnerPetCompleteDetails>();
 
+    const fetchCompletePetDetails = () => {
+        const petDetailsDataPromise = api.get(`/pets/${petId}`, undefined, "partner");
+        Promise.all([petDetailsDataPromise]).then(([petDetailsDataRes]) => {
+            //setting the partner data
+            setPetCompleteDetails(petDetailsDataRes)
+
+            hasFetched.current = false;
+            setLoading(false);
+        }).catch((error) => {
+            setLoading(false);
+            //TODO handle error cases
+        })
+    };
+
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
-            const petDetailsDataPromise = api.get(`/pets/${petId}`, undefined, "partner");
-            Promise.all([petDetailsDataPromise]).then(([petDetailsDataRes]) => {
-                //setting the partner data
-                setPetCompleteDetails(petDetailsDataRes)
-
-                hasFetched.current = false;
-                setLoading(false);
-            }).catch((error) => {
-                setLoading(false);
-                //TODO handle error cases
-            })
+            fetchCompletePetDetails();
         }
     }, []);
 
@@ -167,6 +172,53 @@ export default function PetDetailsPage() {
             { icon: FaMapLocationDot, label: 'Address', value: Owner?.address  || "" }
         ];
     }, [Owner]);
+
+    const today = new Date();
+    const [newVaccinationRecord, setNewVaccinationRecord] = useState<PetNewVaccinationDetails>({});
+    const [isAddVaccinationPopupOpen, setIsAddVaccinationPopupOpen] = useState<boolean>(false);
+    useEffect(() => {
+        if(isAddVaccinationPopupOpen) {
+            setNewVaccinationRecord({pet_id: petId});
+        } else {
+            setNewVaccinationRecord({});
+        }
+    }, [isAddVaccinationPopupOpen]);
+    const handleAddVaccination = () => {
+        setIsAddVaccinationPopupOpen(true);
+    };
+    const handleVaccinationPopupCancel = () => {
+        setIsAddVaccinationPopupOpen(false);
+    };
+    const handleNewVaccinationRecordChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setNewVaccinationRecord({
+            ...newVaccinationRecord,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleVaccinationPopupPrimaryAction = async () => {
+        if (newVaccinationRecord?.pet_id && newVaccinationRecord?.date_vaccinated &&
+            newVaccinationRecord?.vaccination_name && newVaccinationRecord?.dose_type) {
+            const formData = new FormData();
+            formData.append("pet_id", newVaccinationRecord.pet_id.toString());
+            formData.append("date_vaccinated", newVaccinationRecord.date_vaccinated);
+            formData.append("vaccination_name", newVaccinationRecord.vaccination_name);
+            formData.append("dose_type", newVaccinationRecord.dose_type);
+            //send the details to backend and close the popup.
+            setLoading(true);
+            const createVaccinationRecordResponse = await api.formDatapost("/pets/addVaccination", formData, "partner");
+            setLoading(false);
+            if (createVaccinationRecordResponse?.success) {
+                //refreshing the vaccinations list
+                fetchCompletePetDetails();
+            } else {
+                //TODO error handling
+            }
+            setIsAddVaccinationPopupOpen(false);
+        } else {
+            alert("Please provide all the details");
+        }
+    };
 
     return (
         <>
@@ -349,9 +401,52 @@ export default function PetDetailsPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <button className="w-full bg-purple-200 text-purple-600 cursor-pointer py-3 rounded-xl font-semibold mb-8 hover:bg-purple-300 transition-colors flex items-center justify-center gap-2">
+                                <button className="w-full bg-purple-200 text-purple-600 cursor-pointer py-3 rounded-xl font-semibold mb-8 hover:bg-purple-300 transition-colors flex items-center justify-center gap-2"
+                                        onClick={handleAddVaccination}>
                                     <FaPlus /> Add New
                                 </button>
+                                <PopupModel open={isAddVaccinationPopupOpen} onCancel={handleVaccinationPopupCancel} onPrimary={handleVaccinationPopupPrimaryAction} primaryLabel="Save">
+                                    <form className="w-full max-w-lg bg-white rounded-xl px-8 py-10 shadow-lg">
+                                        <h2 className="text-base font-bold mb-8 text-center">Enter Vaccination Details</h2>
+                                        <div className="mb-3 text-sm">
+                                            <label htmlFor="vaccination_name" className="block font-semibold mb-1">Vaccination Name *</label>
+                                            <input
+                                                type="text"
+                                                id="vaccination_name"
+                                                name="vaccination_name"
+                                                value={newVaccinationRecord?.vaccination_name || ""}
+                                                onChange={handleNewVaccinationRecordChange}
+                                                required
+                                                className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="mb-3 text-sm">
+                                            <label htmlFor="date_vaccinated" className="block font-semibold mb-1">Date of vaccination *</label>
+                                            <input
+                                                type="date"
+                                                id="date_vaccinated"
+                                                name="date_vaccinated"
+                                                value={newVaccinationRecord?.date_vaccinated || ""}
+                                                onChange={handleNewVaccinationRecordChange}
+                                                max={today.toISOString().split('T')[0]}
+                                                className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="mb-3 text-sm">
+                                            <label htmlFor="dose_type" className="block font-semibold mb-1">Dose type *</label>
+                                            <input
+                                                type="text"
+                                                id="dose_type"
+                                                name="dose_type"
+                                                value={newVaccinationRecord?.dose_type || ""}
+                                                onChange={handleNewVaccinationRecordChange}
+                                                placeholder="Annual"
+                                                required
+                                                className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 focus:outline-none"
+                                            />
+                                        </div>
+                                    </form>
+                                </PopupModel>
 
                                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     Prescriptions
