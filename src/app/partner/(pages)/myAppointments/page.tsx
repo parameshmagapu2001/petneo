@@ -1,144 +1,35 @@
 "use client";
 
 import {PartnerMyAppointments} from "@/utils/commonTypes";
-import {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import PartnerAppointmentCard from "../../../../../components/partner/PartnerAppointmentCard";
-
-const appointmentsData: PartnerMyAppointments = {
-    upcoming: [
-        {
-            appointment_id: 200,
-            date: '2025-11-20',
-            time: '11:00 AM',
-            status: 'scheduled',
-            reason: 'General Visit',
-            visit_type: 'In-clinic',
-            pet: {
-                id: 36,
-                name: 'Rocky',
-                species: 'Dog',
-                breed: 'German Shepherd',
-                profile_picture: 'https://images.unsplash.com/photo-1633722715463-d30628519f5d?w=200&h=200&fit=crop',
-            },
-        },
-        {
-            appointment_id: 201,
-            date: '2025-11-22',
-            time: '2:30 PM',
-            status: 'scheduled',
-            reason: 'Vaccination',
-            visit_type: 'In-clinic',
-            pet: {
-                id: 37,
-                name: 'Luna',
-                species: 'Dog',
-                breed: 'Golden Retriever',
-                profile_picture: 'https://images.unsplash.com/photo-1587300411515-150663888a0f?w=200&h=200&fit=crop',
-            },
-        },
-        {
-            appointment_id: 202,
-            date: '2025-11-25',
-            time: '10:00 AM',
-            status: 'scheduled',
-            reason: 'General Visit',
-            visit_type: 'Home-visit',
-            pet: {
-                id: 38,
-                name: 'Mittens',
-                species: 'Cat',
-                breed: 'Persian',
-                profile_picture: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=200&h=200&fit=crop',
-            },
-        },
-    ],
-    ongoing: [
-        {
-            appointment_id: 195,
-            date: '2025-11-15',
-            time: '9:00 AM',
-            status: 'in-progress',
-            reason: 'Check-up',
-            visit_type: 'In-clinic',
-            pet: {
-                id: 35,
-                name: 'Charlie',
-                species: 'Dog',
-                breed: 'Labrador',
-                profile_picture: 'https://images.unsplash.com/photo-1633722715463-d30628519f5d?w=200&h=200&fit=crop',
-            },
-        },
-    ],
-    completed: [
-        {
-            appointment_id: 168,
-            date: '2025-10-23',
-            time: '11:30 AM',
-            status: 'completed',
-            reason: 'General Visit',
-            visit_type: 'In-clinic',
-            pet: {
-                id: 21,
-                name: 'Rocky',
-                species: 'Dog',
-                breed: 'German Shepherd',
-                profile_picture: 'https://images.unsplash.com/photo-1633722715463-d30628519f5d?w=200&h=200&fit=crop',
-            },
-        },
-        {
-            appointment_id: 151,
-            date: '2025-10-15',
-            time: '10:30 AM',
-            status: 'completed',
-            reason: 'Vaccination',
-            visit_type: 'Home-visit',
-            pet: {
-                id: 36,
-                name: 'Buddy',
-                species: 'Dog',
-                breed: 'Golden Retriever',
-                profile_picture: 'https://images.unsplash.com/photo-1587300411515-150663888a0f?w=200&h=200&fit=crop',
-            },
-        },
-        {
-            appointment_id: 154,
-            date: '2025-10-14',
-            time: '9:30 AM',
-            status: 'completed',
-            reason: 'General Visit',
-            visit_type: 'In-clinic',
-            pet: {
-                id: 19,
-                name: 'Bella',
-                species: 'Cat',
-                breed: 'Persian',
-                profile_picture: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=200&h=200&fit=crop',
-            },
-        },
-    ],
-    no_show: [
-        {
-            appointment_id: 185,
-            date: '2025-11-10',
-            time: '2:00 PM',
-            status: 'no-show',
-            reason: 'General Visit',
-            visit_type: 'In-clinic',
-            pet: {
-                id: 42,
-                name: 'Max',
-                species: 'Dog',
-                breed: 'Beagle',
-                profile_picture: 'https://images.unsplash.com/photo-1633722715463-d30628519f5d?w=200&h=200&fit=crop',
-            },
-        },
-    ]
-};
+import {api} from "@/utils/api";
+import FullScreenLoader from "../../../../../components/customer/fullScreenLoader";
 
 const TABS = ['Upcoming', 'Completed', 'Ongoing', 'No Show'] as const;
 type TabType = (typeof TABS)[number];
 
 export default function PartnerMyAppointmentsPage()  {
+
+    const [appointmentsData, setAppointmentsData] = useState<PartnerMyAppointments>();
+    const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    useEffect(() => {
+        if (!hasFetched.current) {
+            hasFetched.current = true;
+            const myAppointmentsDataPromise = api.get("/appointments/myAppointments", undefined, "partner");
+            Promise.all([myAppointmentsDataPromise]).then(([myAppointmentsDataRes]) => {
+                //setting my appointments data
+                setAppointmentsData(myAppointmentsDataRes);
+
+                hasFetched.current = false;
+                setLoading(false);
+            }).catch((error) => {
+                setLoading(false);
+                //TODO handle error cases
+            })
+        }
+    }, []);
 
     const [currentTab, setCurrentTab] = useState<TabType>('Upcoming');
 
@@ -152,7 +43,7 @@ export default function PartnerMyAppointmentsPage()  {
         return keyMap[tab];
     };
 
-    const appointments = appointmentsData[getTabKey(currentTab)] || [];
+    const appointments = appointmentsData?.[getTabKey(currentTab)] || [];
     return (
         <>
             <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
@@ -202,6 +93,7 @@ export default function PartnerMyAppointmentsPage()  {
                     )}
                 </div>
             </div>
+            <FullScreenLoader loading={loading}/>
         </>
     );
 }

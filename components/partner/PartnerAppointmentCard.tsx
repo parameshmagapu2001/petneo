@@ -7,9 +7,9 @@ import {PartnerAppointment} from "@/utils/commonTypes";
 import {formatDate1, getRemainingTime} from "@/utils/common";
 
 interface PartnerAppointmentCardProps {
-    isCountdownNeeded: boolean;
-    isViewDetailsNeeded: boolean;
-    isRescheduleNeeded: boolean;
+    isCountdownNeeded?: boolean;
+    isViewDetailsNeeded?: boolean;
+    isRescheduleNeeded?: boolean;
     appointment: PartnerAppointment;
 }
 
