@@ -1,12 +1,20 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import React, {useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {FaMapLocationDot, FaWeightScale} from "react-icons/fa6";
 import {MdCheckCircle, MdDateRange, MdMale} from "react-icons/md";
 import {FaCalendarAlt, FaClock, FaFileContract, FaPhone, FaPlus, FaSyringe} from "react-icons/fa";
 import Image from "next/image";
 import {LuBone, LuDog} from "react-icons/lu";
+import {api} from "@/utils/api";
+import FullScreenLoader from "../../../../../../../components/customer/fullScreenLoader";
+import {
+    PartnerPetAppointmentDetails,
+    PartnerPetCompleteDetails,
+    PartnerPetDetails,
+    PetOwnerDetails, PetPrescriptionDetails, PetVaccinationDetails
+} from "@/utils/commonTypes";
 
 // Sample Data
 const SAMPLE_PET_DATA = {
@@ -93,10 +101,45 @@ export default function PetDetailsPage() {
     const params = useParams();
     const petId = params.petId as string;
 
+    const [petCompleteDetails, setPetCompleteDetails] = useState<PartnerPetCompleteDetails>();
+
+    const hasFetched = useRef(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    useEffect(() => {
+        if (!hasFetched.current) {
+            hasFetched.current = true;
+            const petDetailsDataPromise = api.get(`/pets/${petId}`, undefined, "partner");
+            Promise.all([petDetailsDataPromise]).then(([petDetailsDataRes]) => {
+                //setting the partner data
+                setPetCompleteDetails(petDetailsDataRes)
+
+                hasFetched.current = false;
+                setLoading(false);
+            }).catch((error) => {
+                setLoading(false);
+                //TODO handle error cases
+            })
+        }
+    }, []);
+
     const [activeTab, setActiveTab] = useState<'visit-details' | 'pet-info' | 'medical-history'>(
         'visit-details'
     );
-    const { pet, Owner, visit_history, vaccinations, prescriptions } = SAMPLE_PET_DATA;
+    const pet = useMemo<PartnerPetDetails | undefined>(() => {
+        return petCompleteDetails?.pet;
+    }, [petCompleteDetails]);
+    const Owner = useMemo<PetOwnerDetails | undefined>(() => {
+        return petCompleteDetails?.Owner;
+    }, [petCompleteDetails]);
+    const visit_history = useMemo<PartnerPetAppointmentDetails[] | undefined>(() => {
+        return petCompleteDetails?.visit_history;
+    }, [petCompleteDetails]);
+    const vaccinations = useMemo<PetVaccinationDetails[] | undefined>(() => {
+        return petCompleteDetails?.vaccinations;
+    }, [petCompleteDetails]);
+    const prescriptions = useMemo<PetPrescriptionDetails[] | undefined>(() => {
+        return petCompleteDetails?.prescriptions;
+    }, [petCompleteDetails]);
 
     const formatDate = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = {
@@ -107,40 +150,44 @@ export default function PetDetailsPage() {
         return new Date(dateString).toLocaleDateString('en-US', options);
     };
 
-    const infoFields = [
-        { icon: LuBone, label: 'Species', value: pet.species },
-        { icon: LuDog, label: 'Breeding', value: pet.breeding },
-        { icon: MdMale, label: 'Gender', value: pet.gender },
-        { icon: MdDateRange, label: 'Age', value: pet.age },
-        { icon: FaWeightScale, label: 'Weight', value: `${pet.weight} Kgs` },
-        { icon: FaFileContract, label: 'Licence', value: pet.licence },
-    ];
+    const infoFields = useMemo(() => {
+        return [
+            { icon: LuBone, label: 'Species', value: pet?.species || "" },
+            { icon: LuDog, label: 'Breeding', value: pet?.breeding || "" },
+            { icon: MdMale, label: 'Gender', value: pet?.gender || "" },
+            { icon: MdDateRange, label: 'Age', value: pet?.age || "" },
+            { icon: FaWeightScale, label: 'Weight', value: `${pet?.weight  || ""} Kgs` },
+            { icon: FaFileContract, label: 'Licence', value: pet?.licence  || "" },
+        ];
+    }, [pet]);
 
-    const ownerInfoFields = [
-        { icon: FaPhone, label: 'Contact', value: Owner.contact_number },
-        { icon: FaMapLocationDot, label: 'Address', value: Owner.address }
-    ];
+    const ownerInfoFields = useMemo(() => {
+        return [
+            { icon: FaPhone, label: 'Contact', value: Owner?.contact_number  || "" },
+            { icon: FaMapLocationDot, label: 'Address', value: Owner?.address  || "" }
+        ];
+    }, [Owner]);
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
+            <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
                 <div className="max-w-2xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
                         <div className="flex flex-nowrap items-center">
                             <div className="relative w-25 h-25 mx-6">
                                 <Image
-                                    src={pet.profile_picture}
-                                    alt={pet.name}
+                                    src={pet?.profile_picture || "/images/d.png"}
+                                    alt={pet?.name   || ""}
                                     fill
                                     className="rounded-full border-4 border-white shadow-lg object-cover"
                                     priority
                                 />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-gray-900 mb-2">{pet.name}</h1>
+                                <h1 className="text-xl font-bold text-gray-900 mb-2">{pet?.name  || ""}</h1>
                                 <p className="text-gray-600 text-xs">
-                                    {pet.species} | {pet.age}
+                                    {pet?.species  || ""} | {pet?.age  || ""}
                                 </p>
                             </div>
                         </div>
@@ -173,7 +220,14 @@ export default function PetDetailsPage() {
                         {/* visit Details Tab */}
                         {activeTab === 'visit-details' && (
                             <div>
-                                {visit_history.map((appointment) => (
+                                {(!visit_history ||  visit_history.length === 0) &&
+                                    (
+                                        <div className="text-center py-12">
+                                            <p className="text-gray-500">No Visit History</p>
+                                        </div>
+                                    )
+                                }
+                                {visit_history?.map((appointment) => (
                                     <div
                                         key={appointment.appointment_id}
                                         className="bg-white border-2 border-purple-200 rounded-xl p-5 mb-5 flex justify-between items-center gap-4"
@@ -212,7 +266,7 @@ export default function PetDetailsPage() {
                             <div>
                                 <div className="w-full bg-blue-100 border-2 border-blue-400 rounded-lg p-4 my-8">
                                     <span className="text-base font-medium text-gray-700">Pet Name:</span>
-                                    <span className="ml-2 text-gray-900 font-semibold text-base">{pet.name}</span>
+                                    <span className="ml-2 text-gray-900 font-semibold text-base">{pet?.name || ""}</span>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 mb-6">
@@ -235,7 +289,7 @@ export default function PetDetailsPage() {
 
                                 <div className="w-full bg-blue-100 border-2 border-blue-400 rounded-lg p-4 my-8">
                                     <span className="text-base font-medium text-gray-700">Owner Name:</span>
-                                    <span className="ml-2 text-gray-900 font-semibold text-base">{Owner.name}</span>
+                                    <span className="ml-2 text-gray-900 font-semibold text-base">{Owner?.name || ""}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 mb-6">
                                     {ownerInfoFields.map((field, index) => {
@@ -264,7 +318,14 @@ export default function PetDetailsPage() {
                                     Vaccinations
                                 </h2>
                                 <div className="mb-4">
-                                    {vaccinations.map((vaccination) => (
+                                    {(!vaccinations ||  vaccinations.length === 0) &&
+                                        (
+                                            <div className="text-center py-12">
+                                                <p className="text-gray-500">No Vaccinations</p>
+                                            </div>
+                                        )
+                                    }
+                                    {vaccinations?.map((vaccination) => (
                                         <div
                                             key={vaccination.id}
                                             className="bg-purple-50 border-l-4 text-purple-600 p-4 mb-5 rounded-lg flex justify-between items-center"
@@ -296,7 +357,7 @@ export default function PetDetailsPage() {
                                     Prescriptions
                                 </h2>
                                 <div className="grid grid-cols-6 gap-3">
-                                    {prescriptions.map((prescription) => (
+                                    {prescriptions?.map((prescription) => (
                                         <div
                                             key={prescription.id}
                                             className="aspect-square bg-gradient-to-br from-cyan-100 to-cyan-50 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform flex items-center justify-center relative"
@@ -318,6 +379,7 @@ export default function PetDetailsPage() {
                     </div>
                 </div>
             </div>
+            <FullScreenLoader loading={loading}/>
         </>
     );
 }
