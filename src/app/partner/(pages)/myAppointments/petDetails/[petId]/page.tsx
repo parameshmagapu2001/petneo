@@ -1,13 +1,12 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import {useState} from "react";
+import React, {useState} from "react";
 import {FaMapLocationDot, FaWeightScale} from "react-icons/fa6";
 import {MdCheckCircle, MdDateRange, MdMale} from "react-icons/md";
-import {FaClock, FaFileContract, FaPhone, FaPlus} from "react-icons/fa";
-import { GiPawFront } from 'react-icons/gi';
-import {BiSolidInjection} from "react-icons/bi";
+import {FaCalendarAlt, FaClock, FaFileContract, FaPhone, FaPlus, FaSyringe} from "react-icons/fa";
 import Image from "next/image";
+import {LuBone, LuDog} from "react-icons/lu";
 
 // Sample Data
 const SAMPLE_PET_DATA = {
@@ -109,12 +108,17 @@ export default function PetDetailsPage() {
     };
 
     const infoFields = [
-        { icon: GiPawFront, label: 'Species', value: pet.species },
-        { icon: GiPawFront, label: 'Breeding', value: pet.breeding },
+        { icon: LuBone, label: 'Species', value: pet.species },
+        { icon: LuDog, label: 'Breeding', value: pet.breeding },
         { icon: MdMale, label: 'Gender', value: pet.gender },
         { icon: MdDateRange, label: 'Age', value: pet.age },
         { icon: FaWeightScale, label: 'Weight', value: `${pet.weight} Kgs` },
         { icon: FaFileContract, label: 'Licence', value: pet.licence },
+    ];
+
+    const ownerInfoFields = [
+        { icon: FaPhone, label: 'Contact', value: Owner.contact_number },
+        { icon: FaMapLocationDot, label: 'Address', value: Owner.address }
     ];
 
     return (
@@ -122,20 +126,25 @@ export default function PetDetailsPage() {
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
                 <div className="max-w-2xl mx-auto">
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="relative w-32 h-32 mx-auto mb-4">
-                            <Image
-                                src={pet.profile_picture}
-                                alt={pet.name}
-                                fill
-                                className="rounded-full border-4 border-white shadow-lg object-cover"
-                                priority
-                            />
+                    <div className="mb-8">
+                        <div className="flex flex-nowrap items-center">
+                            <div className="relative w-25 h-25 mx-6">
+                                <Image
+                                    src={pet.profile_picture}
+                                    alt={pet.name}
+                                    fill
+                                    className="rounded-full border-4 border-white shadow-lg object-cover"
+                                    priority
+                                />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-900 mb-2">{pet.name}</h1>
+                                <p className="text-gray-600 text-xs">
+                                    {pet.species} | {pet.age}
+                                </p>
+                            </div>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{pet.name}</h1>
-                        <p className="text-gray-600 text-sm">
-                            {pet.species} | {pet.age}
-                        </p>
+
                     </div>
 
                     {/* Tab Navigation */}
@@ -174,21 +183,24 @@ export default function PetDetailsPage() {
                                                 <FaClock />
                                             </div>
                                             <div>
-                                                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">
-                                                    {appointment.status === 'completed' ? 'Completed' : 'Today'}
+                                                <p className="text-sm text-gray-900 uppercase font-bold mb-1">
+                                                    {appointment.date}
                                                 </p>
-                                                <p className="text-base font-bold text-gray-900 mb-1">
+                                                <p className="text-sm font-bold text-gray-900 mb-1">
                                                     {appointment.start_time} - {appointment.end_time}
                                                 </p>
-                                                <p className="text-sm text-gray-600">
-                                                    {appointment.reason || 'Regular check up'}
+                                                <p className="text-xs text-gray-600">
+                                                    {appointment.visit_type === 'in-clinic'
+                                                        ? 'Consultation'
+                                                        : appointment.visit_type === 'tele'
+                                                            ? 'Online'
+                                                            : 'Home Visit'
+                                                    }
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="bg-cyan-300 text-cyan-900 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0">
-                                            {appointment.visit_type === 'in-clinic'
-                                                ? 'Consultation'
-                                                : 'Online'}
+                                        <div className="bg-cyan-300 text-cyan-900 uppercase px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0">
+                                            {appointment.status}
                                         </div>
                                     </div>
                                 ))}
@@ -198,12 +210,10 @@ export default function PetDetailsPage() {
                         {/* Pet Info Tab */}
                         {activeTab === 'pet-info' && (
                             <div>
-                                <input
-                                    type="text"
-                                    value={`Pet Name: ${pet.name}`}
-                                    readOnly
-                                    className="w-full bg-blue-100 px-4 py-3 rounded-xl border border-blue-200 text-gray-900 mb-4 font-medium"
-                                />
+                                <div className="w-full bg-blue-100 border-2 border-blue-400 rounded-lg p-4 my-8">
+                                    <span className="text-base font-medium text-gray-700">Pet Name:</span>
+                                    <span className="ml-2 text-gray-900 font-semibold text-base">{pet.name}</span>
+                                </div>
 
                                 <div className="grid grid-cols-2 gap-4 mb-6">
                                     {infoFields.map((field, index) => {
@@ -211,10 +221,10 @@ export default function PetDetailsPage() {
                                         return (
                                             <div
                                                 key={index}
-                                                className="bg-purple-50 p-4 rounded-xl border border-purple-100"
+                                                className="bg-purple-100 p-4 rounded-xl border border-purple-300 shadow-lg"
                                             >
-                                                <p className="text-xs text-gray-600 mb-2 capitalize flex items-center gap-1.5">
-                                                    <IconComponent className="text-base text-purple-600" />
+                                                <p className="text-sm text-gray-600 mb-2 capitalize flex items-center gap-1.5">
+                                                    <IconComponent className="text-lg text-purple-600" />
                                                     {field.label}
                                                 </p>
                                                 <p className="text-base font-bold text-gray-900">{field.value}</p>
@@ -223,34 +233,26 @@ export default function PetDetailsPage() {
                                     })}
                                 </div>
 
-                                <div className="bg-blue-100 p-4 rounded-xl">
-                                    <div className="mb-4">
-                                        <p className="text-xs text-blue-900 uppercase font-semibold mb-2 flex items-center gap-2">
-                                            <GiPawFront className="text-base" />
-                                            Owner Name
-                                        </p>
-                                        <p className="text-base font-semibold text-gray-900">
-                                            {Owner.name}
-                                        </p>
-                                    </div>
-                                    <div className="mb-4">
-                                        <p className="text-xs text-blue-900 uppercase font-semibold mb-2 flex items-center gap-2">
-                                            <FaPhone className="text-base" />
-                                            Contact
-                                        </p>
-                                        <p className="text-base font-semibold text-gray-900">
-                                            {Owner.contact_number}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-blue-900 uppercase font-semibold mb-2 flex items-center gap-2">
-                                            <FaMapLocationDot className="text-base" />
-                                            Address
-                                        </p>
-                                        <p className="text-base font-semibold text-gray-900">
-                                            {Owner.address}
-                                        </p>
-                                    </div>
+                                <div className="w-full bg-blue-100 border-2 border-blue-400 rounded-lg p-4 my-8">
+                                    <span className="text-base font-medium text-gray-700">Owner Name:</span>
+                                    <span className="ml-2 text-gray-900 font-semibold text-base">{Owner.name}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    {ownerInfoFields.map((field, index) => {
+                                        const IconComponent = field.icon;
+                                        return (
+                                            <div
+                                                key={index}
+                                                className="bg-purple-100 p-4 rounded-xl border border-purple-300 shadow-lg"
+                                            >
+                                                <p className="text-sm text-gray-600 mb-2 capitalize flex items-center gap-1.5">
+                                                    <IconComponent className="text-lg text-purple-600" />
+                                                    {field.label}
+                                                </p>
+                                                <p className="text-base font-bold text-gray-900">{field.value}</p>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -258,38 +260,42 @@ export default function PetDetailsPage() {
                         {/* Medical History Tab */}
                         {activeTab === 'medical-history' && (
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <BiSolidInjection className="text-pink-600" />
+                                <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     Vaccinations
                                 </h2>
                                 <div className="mb-4">
                                     {vaccinations.map((vaccination) => (
                                         <div
                                             key={vaccination.id}
-                                            className="bg-purple-50 border-l-4 border-pink-600 p-4 mb-3 rounded-lg flex justify-between items-center"
+                                            className="bg-purple-50 border-l-4 text-purple-600 p-4 mb-5 rounded-lg flex justify-between items-center"
                                         >
                                             <div className="flex-1">
                                                 <p className="text-base font-bold text-gray-900 mb-1">
                                                     {vaccination.vaccination_name}
                                                 </p>
-                                                <p className="text-sm text-gray-600">
-                                                    <span>{vaccination.dose_type}</span> •{' '}
-                                                    <span>{formatDate(vaccination.date_vaccinated)}</span>
+                                                <p className="flex flex-col text-sm text-gray-600">
+                                                    <div className="flex flex-nowrap mb-1">
+                                                        <FaSyringe size={15} className="mr-2 text-purple-600" />
+                                                        <span>{vaccination.dose_type}</span>
+                                                    </div>
+                                                    <div className="flex flex-nowrap">
+                                                        <FaCalendarAlt size={15} className="mr-2 text-purple-600" />
+                                                        <span>{formatDate(vaccination.date_vaccinated)}</span>
+                                                    </div>
                                                 </p>
                                             </div>
                                             <MdCheckCircle className="text-2xl text-cyan-500 flex-shrink-0" />
                                         </div>
                                     ))}
                                 </div>
-                                <button className="w-full bg-pink-200 text-pink-600 py-3 rounded-xl font-semibold mb-8 hover:bg-pink-300 transition-colors flex items-center justify-center gap-2">
+                                <button className="w-full bg-purple-200 text-purple-600 py-3 rounded-xl font-semibold mb-8 hover:bg-purple-300 transition-colors flex items-center justify-center gap-2">
                                     <FaPlus /> Add New
                                 </button>
 
                                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <FaFileContract className="text-pink-600" />
                                     Prescriptions
                                 </h2>
-                                <div className="grid grid-cols-3 gap-3 sm:grid-cols-2">
+                                <div className="grid grid-cols-6 gap-3">
                                     {prescriptions.map((prescription) => (
                                         <div
                                             key={prescription.id}
@@ -303,8 +309,8 @@ export default function PetDetailsPage() {
                                             />
                                         </div>
                                     ))}
-                                    <div className="aspect-square bg-pink-200 rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform text-3xl">
-                                        <FaPlus className="text-pink-600" />
+                                    <div className="aspect-square bg-purple-200 rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform text-3xl">
+                                        <FaPlus className="text-purple-600" />
                                     </div>
                                 </div>
                             </div>
