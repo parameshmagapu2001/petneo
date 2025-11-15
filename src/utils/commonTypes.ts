@@ -58,6 +58,13 @@ export interface PetVaccinationDetails {
     dose_type: string;
 }
 
+export interface PetNewVaccinationDetails {
+    pet_id?: string;
+    vaccination_name?: string;
+    date_vaccinated?: string;
+    dose_type?: string;
+}
+
 export interface PetPrescriptionDetails {
     id: number;
     appointment_id: number;
