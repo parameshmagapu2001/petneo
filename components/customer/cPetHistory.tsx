@@ -4,6 +4,9 @@ import React, {useEffect, useRef, useState} from "react";
 import {api} from "@/utils/api";
 import FullScreenLoader from "./fullScreenLoader";
 import PopupModel from "./popupModel";
+import {ErrorBanner} from "../common/ErrorBanner";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {removeItemById} from "@/utils/common";
 
 interface C_PetHistoryProps {
     petId: number;
@@ -46,6 +49,10 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
     const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
     const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
     const [visitHistory, setVisitHistory] = useState<VisitHistoryDetails[]>([]);
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
 
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -53,6 +60,7 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
         if (petId > 0) {
             //fetching the pet details
             setLoading(true);
+            setErrors(removeItemById(errors, "get-my-pet-history-api"));
             const petDetailsResponse = api.get(`/pets/user/${petId}`);
             Promise.all([petDetailsResponse]).then(([res1]) => {
                 if (res1?.vaccinations && Array.isArray(res1.vaccinations)) {
@@ -88,9 +96,16 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
 
                 }
                 setLoading(false);
-            }).catch((e) => {
+            }).catch((error) => {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-my-pet-history-api',
+                        title: `API Error while getting your pet's medical history details`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
                 setLoading(false);
-                //TODO handle error scenario
             });
         }
     };
@@ -126,17 +141,32 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
             formData.append("date_vaccinated", newVaccinationRecord.date_vaccinated);
             formData.append("vaccination_name", newVaccinationRecord.vaccination_name);
             formData.append("dose_type", newVaccinationRecord.dose_type);
-            //send the details to backend and close the popup.
-            setLoading(true);
-            const createVaccinationRecordResponse = await api.formDatapost("/petsuser/addVaccination", formData);
-            setLoading(false);
-            if (createVaccinationRecordResponse?.success) {
-                //refreshing the vaccinations list
-                fetchAndAssignVaccinationsList();
-            } else {
-                //TODO error handling
+            try {
+                //send the details to backend and close the popup.
+                setLoading(true);
+                setErrors(removeItemById(errors, "add-vaccination-api"));
+                const createVaccinationRecordResponse = await api.formDatapost("/petsuser/addVaccination", formData);
+
+                if (createVaccinationRecordResponse?.success) {
+                    //refreshing the vaccinations list
+                    fetchAndAssignVaccinationsList();
+                }
+            } catch (error: any) {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'add-vaccination-api',
+                        title: `API Error while adding the vaccination details for your pet`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+                setIsPopupOpen(false);
             }
-            setIsPopupOpen(false);
+
+
+
         } else {
             alert("Please provide all the details");
         }
@@ -160,6 +190,16 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             <div className="max-w-2xl mx-auto mt-8">
                 {/* Tab Navigation */}
                 <div className="flex gap-2 mb-8 justify-center flex-wrap">
@@ -330,7 +370,6 @@ export default function C_PetHistory({petId} : C_PetHistoryProps) {
                     )}
                 </div>
             </div>
-
         </>
 
     );

@@ -10,6 +10,9 @@ import SlotPicker, { DaySlots, TimeSlot } from "./slotPicker";
 import AppointmentStatus from "./appointmentStatus";
 import { api } from "@/utils/api";
 import FullScreenLoader from "./fullScreenLoader";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../common/ErrorBanner";
+import {ErrorAlert} from "@/utils/commonTypes";
 
 interface C_VetAppointmentBookingProps {
     user: User | null;
@@ -130,6 +133,11 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
 
     const [appointmentId, setAppointmentId] = useState<number>();
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     async function handleConfirmBtnClick (): Promise<void> {
         if (selectedVisitType && selectedDateTimeSlot && selectedDateTimeSlot.date && 
             selectedDateTimeSlot.time && selectedService && selectedPet
@@ -143,13 +151,31 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
                     return;
                 }
             }
-            setLoading(true);
-            //fetching services
-            const servicesRes = await api.get("/services");
-            const serviceObj = servicesRes?.find((item: any) => item.name === selectedService);
-            setLoading(false);
-            //building the payload
-            payload= { ...payload,
+
+            let servicesRes;
+            let serviceObj;
+            try {
+                setLoading(true);
+                setErrors(removeItemById(errors, "get-services-api"));
+                //fetching services
+                servicesRes = await api.get("/services");
+                serviceObj = servicesRes?.find((item: any) => item.name === selectedService);
+                setLoading(false);
+            } catch(error: any) {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-services-api',
+                        title: `API Error while fetching the services`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+                setLoading(false);
+            }
+
+            if (serviceObj) {
+                //building the payload
+                payload= { ...payload,
                     vet_id: vet?.id,
                     appointment_date: selectedDateTimeSlot.date,
                     start_time: convert12hTo24hPlusMinutes(selectedDateTimeSlot.time),
@@ -159,13 +185,27 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
                     pet_id: selectedPet?.id
                 };
 
-             setLoading(true);
-            //sending the appointment details
-            const createAppointmentRes = await api.post("/user/appointment/add", payload);
-            setAppointmentId(createAppointmentRes?.appointment);
+                try {
+                    setLoading(true);
+                    setErrors(removeItemById(errors, "add-appointment-api"));
+                    //sending the appointment details
+                    const createAppointmentRes = await api.post("/user/appointment/add", payload);
+                    setAppointmentId(createAppointmentRes?.appointment);
 
-            setLoading(false);
-            setScreenType(SCREEN_TYPE.CONFIRMATION);
+                    setLoading(false);
+                    setScreenType(SCREEN_TYPE.CONFIRMATION);
+                } catch(error: any) {
+                    setErrors(curr => [
+                        ...curr,
+                        {
+                            id: 'add-appointment-api',
+                            title: `API Error while creating your appointment`,
+                            message: error.message || 'Unknown error'
+                        }
+                    ]);
+                    setLoading(false);
+                }
+            }
         } else {
             alert("Please provide the information");
         }
@@ -178,6 +218,7 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
     useEffect(() => {
             if (vet?.id && !hasFetched.current) {
             hasFetched.current = true;
+                setErrors(removeItemById(errors, "get-available-slots-api"));
             const fetchVetSlots = api.get(`/availability/${vet.id}/slots`, {days: defaultNumberOfDays});
             Promise.all([fetchVetSlots]).then(([res1]) => {
                 if (Array.isArray(res1)) {
@@ -185,7 +226,15 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
                     setLoading(false);
                 }
             }).catch((error) => {
-                //TODO handle error cases
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-available-slots-api',
+                        title: `API Error while getting available slots for booking`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+                setLoading(false);
             });
         }
     }, [vet?.id]);
@@ -310,6 +359,16 @@ export default function C_VetAppointmentBooking({ user, vet, userPets, selectedS
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             {screenType === SCREEN_TYPE.BOOKING && renderBookingScreen()}
             {screenType === SCREEN_TYPE.CONFIRMATION && renderConfirmationScreen()}
             <FullScreenLoader loading={loading}/>

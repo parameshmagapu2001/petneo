@@ -10,6 +10,9 @@ import {VISIT_ID} from "./cVetAppointmentBooking";
 import PopupModel from "./popupModel";
 import LocationSelector, {Home_Visit_Address} from "./locationSelector";
 import DistanceSlider from "./DistanceSlider";
+import {removeItemById} from "@/utils/common";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {ErrorBanner} from "../common/ErrorBanner";
 
 
 interface C_VetDetailsProps {
@@ -138,6 +141,10 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
     const [nearbyRadius, setNearbyRadius] = useState<number>(defaultNearByRadius);
     const [actualNearByRadius, setActualNearByRadius] = useState<number>(defaultNearByRadius);
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
     const [vets, setVets] = useState<Vet[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -180,6 +187,8 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                     }
                 }
             }
+
+            setErrors(removeItemById(errors, "get-near-by-vets-api"));
             const fetchNearByVets = api.get("/user/nearby-vets", queryParams);
             Promise.all([fetchNearByVets]).then(([res1]) => {
                 const vetsLocal: Vet[] = [];
@@ -201,7 +210,16 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                 setLoading(false);
                 hasFetched.current = false;
             }).catch((error) => {
-                //TODO handle error scenarios
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-near-by-vets-api',
+                        title: `API Error while fetching near by Vets`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+                setLoading(false);
+                hasFetched.current = false;
             });
         }
     }, [coordinates, addressCoordinates, actualNearByRadius]);
@@ -244,6 +262,16 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             <div className="bg-gray-50 min-h-screen p-6">
                 {/* Header with count, search, and filter */}
                 <div className="flex flex-wrap items-center mb-8 gap-4">
@@ -280,7 +308,8 @@ export default function C_VetDetails({ selectedServiceVisitType, selectedService
                                 onChange={handleNearByRadiusChange}
                             />
                         </div>
-                        <div>
+                        <div className="flex flex-col justify-center">
+                            <label className="block text-sm font-semibold mb-2">Addresses</label>
                             <LocationSelector onSelectedAddressChange={handleSelectedAddressChange}
                                               selectedAddressProp={selectedAddress} />
                         </div>
