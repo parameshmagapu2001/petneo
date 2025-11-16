@@ -8,6 +8,9 @@ import FullScreenLoader from "./fullScreenLoader";
 import { FaCamera, FaPen } from "react-icons/fa";
 import { spec } from "node:test/reporters";
 import ConfirmationPopup from "./ConfirmationPopup";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {ErrorBanner} from "../common/ErrorBanner";
+import {removeItemById} from "@/utils/common";
 
 interface C_PetInfoProps {
     petId: number;
@@ -83,12 +86,15 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
     const [petCompleteDetails, setPetCompleteDetails] = useState<PetCompleteDetails>({petId: petId});
     const [isEditMode, setIsEditMode] = useState<boolean>(petCompleteDetails?.petId < 0);
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         if (!hasFetched.current) {
              hasFetched.current = true;
+            setErrors(removeItemById(errors, "pet-info-api-error"));
             //fetching the species
             const speciesResponse = api.get("/user/species");
             let petDetailsResponse;
@@ -127,13 +133,27 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
                         setBreeds(speciesListlocal.find((item) => item.type === res2.pet.species)?.breeds || []);
                     }
                 }
+
+            }).catch((error) => {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'pet-info-api-error',
+                        title: `API Error`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+            }).finally(() => {
+                hasFetched.current = false;
                 setLoading(false);
-            }).catch(() => {
-                //TODO error handling.
             });
         }
         
     }, []);
+
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setPetCompleteDetails({
@@ -179,19 +199,29 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
     const handleRecoverPopupConfirm = async () => {
         try {
             setLoading(true);
+            setErrors(removeItemById(errors, "pet-recover-api"));
             const recoverResponse = await api.post(`/pets/recoverPet/${recoveredPetId}`, {});
             setLoading(false);
-
-            //closer the confirmation popup
-            setIsRecoverPopupOpen(false);
 
             if (recoverResponse?.success) {
                 //go to myPets page
                 goToMyPets();
+            } else {
+                throw new Error (recoverResponse?.detail || "Unable to recover the pet");
             }
 
-        } catch {
-            //TODO error scenarios
+        } catch (error: any) {
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'pet-recover-api',
+                    title: `API Error while recovering your pet`,
+                    message: error.message || 'Unknown error'
+                }
+            ]);
+        } finally {
+            //closer the confirmation popup
+            setIsRecoverPopupOpen(false);
             setLoading(false);
         }
     };
@@ -228,12 +258,26 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
         }
         try {
             setLoading(true);
+            setErrors(removeItemById(errors, "generic-pet-api"));
             let petIdLocal;
             let isActionSuccess;
 
             if (petCompleteDetails.petId < 0) {
                 //creating the pet
-                const createPetResponse = await api.formDatapost("/pets/addPet", formData);
+                let createPetResponse;
+                try {
+                    setErrors(removeItemById(errors, "add-pet-api"));
+                    createPetResponse = await api.formDatapost("/pets/addPet", formData);
+                } catch (e: any) {
+                    setErrors(curr => [
+                        ...curr,
+                        {
+                            id: 'add-pet-api',
+                            title: `API Error while adding pet`,
+                            message: e.message || 'Unknown error'
+                        }
+                    ]);
+                }
                 if (createPetResponse?.success) {
                     isActionSuccess = true;
                     setLoading(false);
@@ -245,12 +289,24 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
                     setIsRecoverPopupOpen(true);
                     return;
                 } else {
-                    //TODO handle error scenario
                     setLoading(false);
                 }
             } else {
                 //editing an existing pet
-                const editPetResponse = await api.formDataPut(`/pets/updatePet/${petCompleteDetails.petId}`, formData);
+                let editPetResponse;
+                try {
+                    setErrors(removeItemById(errors, "update-pet-api"));
+                    editPetResponse = await api.formDataPut(`/pets/updatePet/${petCompleteDetails.petId}`, formData);
+                } catch (e: any) {
+                    setErrors(curr => [
+                        ...curr,
+                        {
+                            id: 'update-pet-api',
+                            title: `API Error while updating pet`,
+                            message: e.message || 'Unknown error'
+                        }
+                    ]);
+                }
                 if (editPetResponse?.success) {
                     isActionSuccess=true;
                     setLoading(false);
@@ -258,7 +314,6 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
                     petIdLocal = editPetResponse?.pet_id;
 
                 } else {
-                    //TODO handle error scenario
                     setLoading(false);
                 }
             }
@@ -275,14 +330,19 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
                         profile_picture: petDetailsResponse.pet?.profile_picture,
                         petId: petDetailsResponse.pet?.id
                     });
-                } else {
-                    //TODO handle error scenario
                 }
                 //setting the editmode false
                 setIsEditMode(false);
             }
-        } catch(e) {
-            //TODO handle error scenario
+        } catch (e: any) {
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'generic-pet-api',
+                    title: `API Error not able to get the information requested`,
+                    message: e.message || 'Unknown error'
+                }
+            ]);
             setLoading(false);
         }
 
@@ -305,206 +365,230 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
     const handleConfirmationPopupConfirm = async () => {
         try {
             setLoading(true);
+            setErrors(removeItemById(errors, "delete-pet-api"));
             const deleteResponse = await api.delete(`/pets/deletePet/${petCompleteDetails.petId}`);
             setLoading(false);
-
-            //closer the confirmation popup
-            setIsConfirmationPopupOpen(false);
 
             if (deleteResponse?.success) {
                 //go to myPets page
                 goToMyPets();
             }
 
-        } catch {
-            //TODO error scenarios
+        } catch(error: any) {
+            if (errors?.findIndex((item) => item.id === 'delete-pet-api') < 0) {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'delete-pet-api',
+                        title: `API Error while deleting your pet information`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+            }
+
+        } finally {
+            //closer the confirmation popup
+            setIsConfirmationPopupOpen(false);
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
-            <form className="w-full max-w-sm bg-transparent rounded-lg p-4">
-                {/* Pet Name */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="petName">Pet Name</label>
-                    <input
-                        type="text"
-                        id="petName"
-                        name="name"
-                        value={petCompleteDetails?.name || ""}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!isEditMode}
-                    />
-                </div>
-                {/* Type */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="type">Type</label>
-                    <select
-                        id="type"
-                        name="species"
-                        value={petCompleteDetails?.species || ""}
-                        onChange={handleSpeciesChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!isEditMode || !(petTypes?.length > 0)}
-                    >
-                        <option value="" disabled hidden>Select</option>
-                        {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
-                    </select>
-                </div>
-                {/* Breed */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="breed">Breed</label>
-                    <select
-                        id="breed"
-                        name="breeding"
-                        value={petCompleteDetails?.breeding || ""}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!isEditMode || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
-                    >
-                        <option value="" disabled hidden>Select Breed</option>
-                        {breeds.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
-                    </select>
-                </div>
-                {/* Date Of Birth ? AGE */}
-                {!isEditMode ?
+        <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
+            <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
+                <form className="w-full max-w-sm bg-transparent rounded-lg p-4">
+                    {/* Pet Name */}
                     <div className="mb-4 relative">
-                        <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
+                        <label className="block font-semibold mb-1" htmlFor="petName">Pet Name</label>
                         <input
                             type="text"
-                            id="age"
-                            name="age"
-                            value={calculateAge(petCompleteDetails?.dob || "") || ""}
+                            id="petName"
+                            name="name"
+                            value={petCompleteDetails?.name || ""}
                             onChange={handleChange}
                             className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
                             disabled={!isEditMode}
                         />
-                    </div> :  
-                    <div className="mb-4 relative">
-                        <label className="block font-semibold mb-1" htmlFor="dob">Date of Birth</label>
-                        <input
-                            type="date"
-                            id="dob"
-                            name="dob"
-                            value={petCompleteDetails?.dob || ""}
-                            onChange={handleChange}
-                            max={today.toISOString().split('T')[0]}
-                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        />
-                    </div>}
-                {/* Gender */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="gender">Gender</label>
-                    <select
-                        id="gender"
-                        name="gender"
-                        value={petCompleteDetails?.gender || ""}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!isEditMode}
-                    >
-                        <option value="" disabled hidden>Select</option>
-                        {GENDERS.map(gender => <option key={gender} value={gender}>{gender}</option>)}
-                    </select>
-                </div>
-                {/* Weight */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="weight">Pet Weight</label>
-                    <input
-                        type="text"
-                        id="weight"
-                        name="weight"
-                        value={petCompleteDetails?.weight || ""}
-                        placeholder="Enter Pet Weight"
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!isEditMode}
-                    />
-                </div>
-                {/*Licence*/}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="licence">Licence</label>
-                    <input
-                        type="text"
-                        id="licence"
-                        name="licence"
-                        value={petCompleteDetails?.licence || ""}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
-                        disabled={!isEditMode}
-                    />
-                </div>
-                {/* Pet Photo */}
-                <div className="mb-4 relative">
-                    <label className="block font-semibold mb-1" htmlFor="photo">Pet Photo</label>
-                    <div id="photo">
-                        {petCompleteDetails?.profile_picture ? 
-                            <img
-                                src={petCompleteDetails.profile_picture}
-                                alt="pet"
-                                className="w-full h-40 object-cover rounded-md bg-white"
-                            /> : 
-                            <FaCamera className="text-gray-400 text-3xl w-full h-40 object-cover rounded-md bg-white" />}
-                        
-                        {isEditMode &&
-                            <>
-                                {/* Edit (pencil) icon */}
-                                <button
-                                    type="button"
-                                    onClick={handleEditPhotoClick}
-                                    className="absolute bottom-2 right-2 bg-pink-500 text-white p-2 rounded-full shadow-md hover:bg-pink-600"
-                                    >
-                                    <FaPen size={12} />
-                                </button>
-
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    ref={profileImageInputRef}
-                                    onChange={handleProfileImageFileChange}
-                                />
-                            </>}  
-                    </div> 
-                </div>
-                {isEditMode ?
-                    <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onSave}>
-                        Save
-                    </button> :
-                    <div className="flex flex-row justify-between">
-                        <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
-                            Edit
-                        </button>
-                        <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onDelete}>
-                            Delete
-                        </button>
                     </div>
-                    }
-            </form>
-            {/* Confirmation Popup */}
-            <ConfirmationPopup
-                isOpen={isConfirmationPopupOpen}
-                message="Are you sure you want to delete the pet?"
-                onConfirm={handleConfirmationPopupConfirm}
-                onCancel={handleConfirmationPopupCancel}
-                confirmText="Yes, Delete"
-                cancelText="No, Cancel"
-                confirmButtonColor="bg-pink-500 hover:bg-pink-600"
-            />
+                    {/* Type */}
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="type">Type</label>
+                        <select
+                            id="type"
+                            name="species"
+                            value={petCompleteDetails?.species || ""}
+                            onChange={handleSpeciesChange}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            disabled={!isEditMode || !(petTypes?.length > 0)}
+                        >
+                            <option value="" disabled hidden>Select</option>
+                            {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                    </div>
+                    {/* Breed */}
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="breed">Breed</label>
+                        <select
+                            id="breed"
+                            name="breeding"
+                            value={petCompleteDetails?.breeding || ""}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            disabled={!isEditMode || !(petCompleteDetails?.species) || !(breeds?.length > 0)}
+                        >
+                            <option value="" disabled hidden>Select Breed</option>
+                            {breeds.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+                        </select>
+                    </div>
+                    {/* Date Of Birth ? AGE */}
+                    {!isEditMode ?
+                        <div className="mb-4 relative">
+                            <label className="block font-semibold mb-1" htmlFor="dob">Age</label>
+                            <input
+                                type="text"
+                                id="age"
+                                name="age"
+                                value={calculateAge(petCompleteDetails?.dob || "") || ""}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                                disabled={!isEditMode}
+                            />
+                        </div> :
+                        <div className="mb-4 relative">
+                            <label className="block font-semibold mb-1" htmlFor="dob">Date of Birth</label>
+                            <input
+                                type="date"
+                                id="dob"
+                                name="dob"
+                                value={petCompleteDetails?.dob || ""}
+                                onChange={handleChange}
+                                max={today.toISOString().split('T')[0]}
+                                className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            />
+                        </div>}
+                    {/* Gender */}
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="gender">Gender</label>
+                        <select
+                            id="gender"
+                            name="gender"
+                            value={petCompleteDetails?.gender || ""}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            disabled={!isEditMode}
+                        >
+                            <option value="" disabled hidden>Select</option>
+                            {GENDERS.map(gender => <option key={gender} value={gender}>{gender}</option>)}
+                        </select>
+                    </div>
+                    {/* Weight */}
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="weight">Pet Weight</label>
+                        <input
+                            type="text"
+                            id="weight"
+                            name="weight"
+                            value={petCompleteDetails?.weight || ""}
+                            placeholder="Enter Pet Weight"
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            disabled={!isEditMode}
+                        />
+                    </div>
+                    {/*Licence*/}
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="licence">Licence</label>
+                        <input
+                            type="text"
+                            id="licence"
+                            name="licence"
+                            value={petCompleteDetails?.licence || ""}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                            disabled={!isEditMode}
+                        />
+                    </div>
+                    {/* Pet Photo */}
+                    <div className="mb-4 relative">
+                        <label className="block font-semibold mb-1" htmlFor="photo">Pet Photo</label>
+                        <div id="photo">
+                            {petCompleteDetails?.profile_picture ?
+                                <img
+                                    src={petCompleteDetails.profile_picture}
+                                    alt="pet"
+                                    className="w-full h-40 object-cover rounded-md bg-white"
+                                /> :
+                                <FaCamera className="text-gray-400 text-3xl w-full h-40 object-cover rounded-md bg-white" />}
 
-            {/* Recover Popup */}
-            <ConfirmationPopup
-                isOpen={isRecoverPopupOpen}
-                message={recoverMessage}
-                onConfirm={handleRecoverPopupConfirm}
-                onCancel={handleRecoverPopupCancel}
-                confirmText="Yes"
-                cancelText="No"
-                confirmButtonColor="bg-pink-500 hover:bg-pink-600"
-            />
-            <FullScreenLoader loading={loading}/>
-        </div>
+                            {isEditMode &&
+                                <>
+                                    {/* Edit (pencil) icon */}
+                                    <button
+                                        type="button"
+                                        onClick={handleEditPhotoClick}
+                                        className="absolute bottom-2 right-2 bg-pink-500 text-white p-2 rounded-full shadow-md hover:bg-pink-600"
+                                    >
+                                        <FaPen size={12} />
+                                    </button>
+
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        ref={profileImageInputRef}
+                                        onChange={handleProfileImageFileChange}
+                                    />
+                                </>}
+                        </div>
+                    </div>
+                    {isEditMode ?
+                        <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onSave}>
+                            Save
+                        </button> :
+                        <div className="flex flex-row justify-between">
+                            <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
+                                Edit
+                            </button>
+                            <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onDelete}>
+                                Delete
+                            </button>
+                        </div>
+                    }
+                </form>
+                {/* Confirmation Popup */}
+                <ConfirmationPopup
+                    isOpen={isConfirmationPopupOpen}
+                    message="Are you sure you want to delete the pet?"
+                    onConfirm={handleConfirmationPopupConfirm}
+                    onCancel={handleConfirmationPopupCancel}
+                    confirmText="Yes, Delete"
+                    cancelText="No, Cancel"
+                    confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+                />
+
+                {/* Recover Popup */}
+                <ConfirmationPopup
+                    isOpen={isRecoverPopupOpen}
+                    message={recoverMessage}
+                    onConfirm={handleRecoverPopupConfirm}
+                    onCancel={handleRecoverPopupCancel}
+                    confirmText="Yes"
+                    cancelText="No"
+                    confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+                />
+                <FullScreenLoader loading={loading}/>
+            </div>
+        </>
+
     );
 }

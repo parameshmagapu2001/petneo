@@ -2,6 +2,8 @@
 
 
 // appointmentHelper.ts
+import {ErrorAlert} from "@/utils/commonTypes";
+
 export function isAppointmentInFuture(
     appointmentDate: string, // "2025-11-14"
     appointmentTime: string  // "09:00 AM"
@@ -89,5 +91,14 @@ export function formatDate1(dateStr: string): string {
     };
 
     return date.toLocaleDateString('en-US', options);
+}
+
+export function removeItemById (errorArray: ErrorAlert[], id: string) {
+    const idx = errorArray.findIndex((item) => item.id === id);
+    if (idx > -1) {
+        errorArray.splice(idx, 1)
+        return errorArray;
+    }
+    return errorArray;
 }
 

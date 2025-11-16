@@ -28,6 +28,15 @@ import {PageType} from "./constants";
 import C_PetHistory from "../../../../components/customer/cPetHistory";
 import C_MyBio from "../../../../components/customer/cMyBio";
 import {setupForegroundNotifications} from "@/lib/firebase/utils";
+import {ErrorBanner} from "../../../../components/common/ErrorBanner";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {Poppins} from "next/font/google";
+import {removeItemById} from "@/utils/common";
+
+const poppins = Poppins({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+});
 
 export interface DayStatus {
     day: string;
@@ -75,6 +84,8 @@ export interface Pet {
 }
 
 export default function CustomerDashboard()  {
+
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
 
     type BreadCrumb = {
         id: PageType;
@@ -173,6 +184,7 @@ export default function CustomerDashboard()  {
         if (pageType === PageType.DASHBOARD) {
             if (!hasFetched.current) {
                 hasFetched.current = true;
+                setErrors(removeItemById(errors, "home-get-api"));
                 const userHomeFetch = api.get("/user/home");
                 const servicesDataFetch = api.get("/services");
                 Promise.all([userHomeFetch, servicesDataFetch]).then(([res1, res2]) => {
@@ -191,15 +203,23 @@ export default function CustomerDashboard()  {
                         pets.push(pet)
                     })
                     setUserPets(pets);
-                    hasFetched.current = false;
                     setLoading(false);
                 }).catch((error) => {
+                    setErrors(curr => [
+                        ...curr,
+                        {
+                            id: 'home-get-api',
+                            title: `API Error while getting your information`,
+                            message: error.message || 'Unknown error'
+                        }
+                    ]);
                     setLoading(false);
-                    //TODO handle error cases
                     if (error?.message.includes("403")) {
                         handleLogOut();
                     }
-                })
+                }).finally (() => {
+                    hasFetched.current = false;
+                });
             }         
         }
          
@@ -244,8 +264,12 @@ export default function CustomerDashboard()  {
         SetSelectedServiceId(serviceBackendData?.find((item) => item.name === service.serviceName)?.id);
     }
 
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
   return (
-     <div className="min-h-screen bg-[#e1e5f8] text-gray-900 font-sans">
+     <div className={`min-h-screen bg-[#e1e5f8] text-gray-900 font-sans ${poppins.className}`}>
          <div className="sticky top-0 z-50">
              {/* Header */}
              <header className="flex items-center justify-between px-6 py-3 bg-white shadow">
@@ -341,6 +365,16 @@ export default function CustomerDashboard()  {
 
 
       <main className={`${isOpen ? "blur-sm pointer-events-none" : ""} overflow-auto`}>
+          {/* Show all visible error banners */}
+          {errors.map(e => (
+              <ErrorBanner
+                  key={e.id}
+                  title={e.title}
+                  message={e.message}
+                  visible={true}
+                  onDismiss={() => handleDismiss(e.id)}
+              />
+          ))}
         {pageType === PageType.DASHBOARD && <C_DashboardMain user={user} pets={userPets} onViewPetDetails={viewPetDetails} onPageTypeChange = {handlePageTypeChange} onServiceSelection={handleServiceSelection}/>}
         {pageType === PageType.VET_DETAILS && <C_VetDetails onVetSelection={handleVetSelection}
                                                             selectedServiceVisitType={selectedServiceVisitType}
