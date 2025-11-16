@@ -3,13 +3,15 @@
 import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from "@/utils/api";
 import { form } from "framer-motion/client";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import FullScreenLoader from "./fullScreenLoader";
 import { FaCamera, FaPen } from "react-icons/fa";
 import { spec } from "node:test/reporters";
+import ConfirmationPopup from "./ConfirmationPopup";
 
 interface C_PetInfoProps {
     petId: number;
+    onDeletePet: () => void;
 }
 interface PetCompleteDetails {
     petId: number;
@@ -72,7 +74,7 @@ function calculateAge(dob: string): string {
 }
 
 
-export default function C_PetInfo({ petId }: C_PetInfoProps) {
+export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
     const GENDERS = ["Male", "Female"];
 
     const [speciesList, setSpeciesList] = useState<Species[]>([]);
@@ -246,6 +248,35 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
         setIsEditMode(true);
     };
 
+    const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState<boolean>(false);
+    const onDelete = () => {
+        //open the confirmation popup
+        setIsConfirmationPopupOpen(true);
+    };
+    const handleConfirmationPopupCancel = () => {
+        //closer the confirmation popup
+        setIsConfirmationPopupOpen(false);
+    }
+
+    const handleConfirmationPopupConfirm = async () => {
+        try {
+            setLoading(true);
+            const deleteResponse = await api.delete(`/pets/deletePet/${petCompleteDetails.petId}`);
+            setLoading(false);
+
+            //closer the confirmation popup
+            setIsConfirmationPopupOpen(false);
+
+            if (deleteResponse?.success) {
+                //go to myPets page
+                onDeletePet();
+            }
+
+        } catch {
+            //TODO error scenarios
+        }
+    };
+
     return (
         <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
             <form className="w-full max-w-sm bg-transparent rounded-lg p-4">
@@ -397,11 +428,26 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
                     <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onSave}>
                         Save
                     </button> :
-                    <button type="button" className="w-full bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
-                        Edit
-                    </button>}
+                    <div className="flex flex-row justify-between">
+                        <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onEdit}>
+                            Edit
+                        </button>
+                        <button type="button" className="w-[40%] bg-[#d14d91] hover:bg-[#bc3575] text-white font-bold py-3 rounded-full mt-6 transition-colors duration-300" onClick={onDelete}>
+                            Delete
+                        </button>
+                    </div>
+                    }
             </form>
-
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={isConfirmationPopupOpen}
+                message="Are you sure you want to delete the pet?"
+                onConfirm={handleConfirmationPopupConfirm}
+                onCancel={handleConfirmationPopupCancel}
+                confirmText="Yes, Delete"
+                cancelText="No, Cancel"
+                confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+            />
             <FullScreenLoader loading={loading}/>
         </div>
     );
