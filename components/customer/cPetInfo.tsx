@@ -11,7 +11,7 @@ import ConfirmationPopup from "./ConfirmationPopup";
 
 interface C_PetInfoProps {
     petId: number;
-    onDeletePet: () => void;
+    goToMyPets: () => void;
 }
 interface PetCompleteDetails {
     petId: number;
@@ -74,7 +74,7 @@ function calculateAge(dob: string): string {
 }
 
 
-export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
+export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
     const GENDERS = ["Male", "Female"];
 
     const [speciesList, setSpeciesList] = useState<Species[]>([]);
@@ -167,6 +167,35 @@ export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
            });
     };
 
+    const [isRecoverPopupOpen, setIsRecoverPopupOpen] = useState<boolean>(false);
+    const [recoverMessage, setRecoverMessage] = useState<string>("");
+    const [recoveredPetId, setRecoveredPetId] = useState<number>();
+    const handleRecoverPopupCancel = () => {
+        //closer the recover popup
+        setIsRecoverPopupOpen(false);
+        setRecoveredPetId(undefined);
+    }
+
+    const handleRecoverPopupConfirm = async () => {
+        try {
+            setLoading(true);
+            const recoverResponse = await api.post(`/pets/recoverPet/${recoveredPetId}`, {});
+            setLoading(false);
+
+            //closer the confirmation popup
+            setIsRecoverPopupOpen(false);
+
+            if (recoverResponse?.success) {
+                //go to myPets page
+                goToMyPets();
+            }
+
+        } catch {
+            //TODO error scenarios
+            setLoading(false);
+        }
+    };
+
     const onSave = async (): Promise<void> => {
         //constructing the payload
         const formData = new FormData();
@@ -200,30 +229,41 @@ export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
 
         setLoading(true);
         let petIdLocal;
+        let isActionSuccess;
 
         if (petCompleteDetails.petId < 0) {
             //creating the pet
             const createPetResponse = await api.formDatapost("/pets/addPet", formData);
             if (createPetResponse?.success) {
+                isActionSuccess = true;
                 setLoading(false);
                 petIdLocal = createPetResponse?.pet_id;
+            } else if (createPetResponse?.deleted) {
+                setLoading(false);
+                setRecoverMessage(createPetResponse?.message || "");
+                setRecoveredPetId(createPetResponse?.pet_id);
+                setIsRecoverPopupOpen(true);
+                return;
             } else {
                 //TODO handle error scenario
+                setLoading(false);
             }
         } else {
             //editing an existing pet
             const editPetResponse = await api.formDataPut(`/pets/updatePet/${petCompleteDetails.petId}`, formData);
             if (editPetResponse?.success) {
+                isActionSuccess=true;
                 setLoading(false);
                 //assigning the petId
                 petIdLocal = editPetResponse?.pet_id;
 
             } else {
                 //TODO handle error scenario
+                setLoading(false);
             }
         }
 
-        if (!!petIdLocal) {
+        if (!!petIdLocal && isActionSuccess) {
             //fetch the latest data and assign the required fields
             setLoading(true);
             const petDetailsResponse = await api.get(`/pets/user/${petIdLocal}`);
@@ -238,10 +278,9 @@ export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
             } else {
                 //TODO handle error scenario
             }
+            //setting the editmode false
+            setIsEditMode(false);
         }
-
-        //setting the editmode false
-        setIsEditMode(false);
     };
 
     const onEdit = (): void => {
@@ -269,11 +308,12 @@ export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
 
             if (deleteResponse?.success) {
                 //go to myPets page
-                onDeletePet();
+                goToMyPets();
             }
 
         } catch {
             //TODO error scenarios
+            setLoading(false);
         }
     };
 
@@ -446,6 +486,17 @@ export default function C_PetInfo({ petId, onDeletePet }: C_PetInfoProps) {
                 onCancel={handleConfirmationPopupCancel}
                 confirmText="Yes, Delete"
                 cancelText="No, Cancel"
+                confirmButtonColor="bg-pink-500 hover:bg-pink-600"
+            />
+
+            {/* Recover Popup */}
+            <ConfirmationPopup
+                isOpen={isRecoverPopupOpen}
+                message={recoverMessage}
+                onConfirm={handleRecoverPopupConfirm}
+                onCancel={handleRecoverPopupCancel}
+                confirmText="Yes"
+                cancelText="No"
                 confirmButtonColor="bg-pink-500 hover:bg-pink-600"
             />
             <FullScreenLoader loading={loading}/>
