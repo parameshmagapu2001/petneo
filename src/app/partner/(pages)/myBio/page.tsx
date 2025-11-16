@@ -166,7 +166,6 @@ export default function PartnerMyBioPage(): React.JSX.Element {
                     setLoading(true);
                     setError(null);
 
-                    // Use api wrapper for GET so it handles Authorization + ngrok header (if configured)
                     const data = (await api.get("/vet/myBio", undefined, "partner")) as APIVet;
                     setProfile(data);
                     setForm(toFormModel(data));

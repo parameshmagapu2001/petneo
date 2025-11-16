@@ -18,7 +18,9 @@ import {useRouter} from "next/navigation";
 import {PiClockCountdownBold} from "react-icons/pi";
 import {IoMdNotifications} from "react-icons/io";
 import {Poppins} from "next/font/google";
-import {PartnerAppointment} from "@/utils/commonTypes";
+import {ErrorAlert, PartnerAppointment} from "@/utils/commonTypes";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../../../../components/common/ErrorBanner";
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -50,11 +52,17 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
 
     const [partnerDetails, setPartnerDetails] = useState<PartnerDetails>({});
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
+            setErrors(removeItemById(errors, "home-get-api"));
             const vetTodaySummary = api.get("/appointments/vetTodaySummary", undefined, "partner");
             Promise.all([vetTodaySummary]).then(([vetTodaySummaryRes]) => {
                 //setting the partner data
@@ -64,7 +72,14 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
                 setLoading(false);
             }).catch((error) => {
                 setLoading(false);
-                //TODO handle error cases
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'home-get-api',
+                        title: `API Error while getting your information`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
                 if (error?.message.includes("403")) {
                     handleLogOut();
                 }
@@ -177,6 +192,16 @@ export default function PartnerLayout({ children }: { children: React.ReactNode;
             </SimpleOverlay>}
 
             <main className={`${isOpen ? "blur-sm pointer-events-none" : ""} overflow-auto`}>
+                {/* Show all visible error banners */}
+                {errors.map(e => (
+                    <ErrorBanner
+                        key={e.id}
+                        title={e.title}
+                        message={e.message}
+                        visible={true}
+                        onDismiss={() => handleDismiss(e.id)}
+                    />
+                ))}
                 {children}
             </main>
             <FullScreenLoader loading={loading}/>

@@ -6,6 +6,9 @@ import {PartnerDetails} from "@/app/partner/(pages)/layout";
 import FullScreenLoader from "../../../../../components/customer/fullScreenLoader";
 import {useRouter} from "next/navigation";
 import PartnerAppointmentCard from "../../../../../components/partner/PartnerAppointmentCard";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../../../../../components/common/ErrorBanner";
 
 interface ProgressBarProps {
     percentage: number;
@@ -32,12 +35,18 @@ function ProgressBar ({ percentage }: ProgressBarProps) {
 export default function PartnerDashboard()  {
     const router = useRouter();
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     const [partnerDetails, setPartnerDetails] = useState<PartnerDetails>({});
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
+            setErrors(removeItemById(errors, "get-appointments-summary-api"));
             const vetTodaySummary = api.get("/appointments/vetTodaySummary", undefined, "partner");
             Promise.all([vetTodaySummary]).then(([vetTodaySummaryRes]) => {
                 //setting the partner data
@@ -47,13 +56,30 @@ export default function PartnerDashboard()  {
                 setLoading(false);
             }).catch((error) => {
                 setLoading(false);
-                //TODO handle error cases
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-appointments-summary-api',
+                        title: `API Error while getting appointments summary`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
             })
         }
     }, []);
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             <div className="px-6 py-6 max-w-7xl mx-auto space-y-10">
                 {/* Greeting & My Pets */}
                 <section className="bg-white rounded-lg shadow-md p-6 flex justify-between items-center">
