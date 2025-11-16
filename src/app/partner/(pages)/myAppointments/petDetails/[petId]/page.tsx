@@ -10,6 +10,7 @@ import {LuBone, LuDog} from "react-icons/lu";
 import {api} from "@/utils/api";
 import FullScreenLoader from "../../../../../../../components/customer/fullScreenLoader";
 import {
+    ErrorAlert,
     PartnerPetAppointmentDetails,
     PartnerPetCompleteDetails,
     PartnerPetDetails, PetNewPrescriptionDetails, PetNewVaccinationDetails,
@@ -17,14 +18,22 @@ import {
 } from "@/utils/commonTypes";
 import PopupModel from "../../../../../../../components/customer/popupModel";
 import {AlertCircle} from "lucide-react";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../../../../../../../components/common/ErrorBanner";
 
 export default function PetDetailsPage() {
     const params = useParams();
     const petId = params.petId as string;
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     const [petCompleteDetails, setPetCompleteDetails] = useState<PartnerPetCompleteDetails>();
 
     const fetchCompletePetDetails = () => {
+        setErrors(curr => removeItemById(curr, "get-pet-details-api"));
         const petDetailsDataPromise = api.get(`/pets/${petId}`, undefined, "partner");
         Promise.all([petDetailsDataPromise]).then(([petDetailsDataRes]) => {
             //setting the partner data
@@ -34,7 +43,14 @@ export default function PetDetailsPage() {
             setLoading(false);
         }).catch((error) => {
             setLoading(false);
-            //TODO handle error cases
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'get-pet-details-api',
+                    title: `API Error while fetching pets details`,
+                    message: error.message || 'Unknown error'
+                }
+            ]);
         })
     };
 
@@ -124,17 +140,32 @@ export default function PetDetailsPage() {
             formData.append("date_vaccinated", newVaccinationRecord.date_vaccinated);
             formData.append("vaccination_name", newVaccinationRecord.vaccination_name);
             formData.append("dose_type", newVaccinationRecord.dose_type);
-            //send the details to backend and close the popup.
-            setLoading(true);
-            const createVaccinationRecordResponse = await api.formDatapost("/pets/addVaccination", formData, "partner");
-            setLoading(false);
-            if (createVaccinationRecordResponse?.success) {
-                //refreshing the vaccinations list
-                fetchCompletePetDetails();
-            } else {
-                //TODO error handling
+
+            let createVaccinationRecordResponse;
+            try {
+                //send the details to backend and close the popup.
+                setLoading(true);
+                setErrors(curr => removeItemById(curr, "create-vaccination-api"));
+                createVaccinationRecordResponse = await api.formDatapost("/pets/addVaccination", formData, "partner");
+                setLoading(false);
+
+                if (createVaccinationRecordResponse?.success) {
+                    //refreshing the vaccinations list
+                    fetchCompletePetDetails();
+                }
+            } catch(error: any) {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'create-vaccination-api',
+                        title: `API Error while creating vaccination record`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+                setIsAddVaccinationPopupOpen(false);
             }
-            setIsAddVaccinationPopupOpen(false);
         } else {
             alert("Please provide all the details");
         }
@@ -182,17 +213,32 @@ export default function PetDetailsPage() {
             formData.append("appointment_id", newPrescriptionRecord.appointment_id);
             formData.append("file", newPrescriptionRecord.file);
             formData.append("text", newPrescriptionRecord?.text || "");
-            //send the details to backend and close the popup.
-            setLoading(true);
-            const createPrescriptionRecordResponse = await api.formDatapost("/pets/addPrescription", formData, "partner");
-            setLoading(false);
-            if (createPrescriptionRecordResponse?.success) {
-                //refreshing the vaccinations list
-                fetchCompletePetDetails();
-            } else {
-                //TODO error handling
+
+            let createPrescriptionRecordResponse;
+            try {
+                //send the details to backend and close the popup.
+                setLoading(true);
+                setErrors(curr => removeItemById(curr, "create-prescription-api"));
+                createPrescriptionRecordResponse = await api.formDatapost("/pets/addPrescription", formData, "partner");
+                setLoading(false);
+                if (createPrescriptionRecordResponse?.success) {
+                    //refreshing the vaccinations list
+                    fetchCompletePetDetails();
+                }
+            } catch (error: any) {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'create-prescription-api',
+                        title: `API Error while creating prescription record`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+                setIsAddPrescriptionPopupOpen(false);
             }
-            setIsAddPrescriptionPopupOpen(false);
+
         } else {
             alert("Please provide all the details");
         }
@@ -206,6 +252,16 @@ export default function PetDetailsPage() {
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
                 <div className="max-w-2xl mx-auto">
                     {/* Header */}

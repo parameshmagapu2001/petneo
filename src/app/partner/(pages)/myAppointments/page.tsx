@@ -1,10 +1,12 @@
 "use client";
 
-import {PartnerMyAppointments} from "@/utils/commonTypes";
+import {ErrorAlert, PartnerMyAppointments} from "@/utils/commonTypes";
 import React, {useEffect, useRef, useState} from "react";
 import PartnerAppointmentCard from "../../../../../components/partner/PartnerAppointmentCard";
 import {api} from "@/utils/api";
 import FullScreenLoader from "../../../../../components/customer/fullScreenLoader";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../../../../../components/common/ErrorBanner";
 
 const TABS = ['Upcoming', 'Completed', 'Ongoing', 'No Show'] as const;
 type TabType = (typeof TABS)[number];
@@ -12,10 +14,17 @@ type TabType = (typeof TABS)[number];
 export default function PartnerMyAppointmentsPage()  {
 
     const [appointmentsData, setAppointmentsData] = useState<PartnerMyAppointments>();
+
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(false);
     const fetchMyAppointmentsData = () => {
         setLoading(true);
+        setErrors(curr => removeItemById(curr, "get-my-appointments-api"));
         const myAppointmentsDataPromise = api.get("/appointments/myAppointments", undefined, "partner");
         Promise.all([myAppointmentsDataPromise]).then(([myAppointmentsDataRes]) => {
             //setting my appointments data
@@ -25,7 +34,14 @@ export default function PartnerMyAppointmentsPage()  {
             setLoading(false);
         }).catch((error) => {
             setLoading(false);
-            //TODO handle error cases
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'get-my-appointments-api',
+                    title: `API Error while fetching your appointments`,
+                    message: error.message || 'Unknown error'
+                }
+            ]);
         })
     };
     useEffect(() => {
@@ -54,6 +70,16 @@ export default function PartnerMyAppointmentsPage()  {
     }
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
