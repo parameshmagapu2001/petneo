@@ -251,17 +251,17 @@ export default function CustomerDashboard()  {
              <header className="flex items-center justify-between px-6 py-3 bg-white shadow">
                  {/* Left: Logo only */}
                  <div>
-                     <img src="../images/logo.svg" alt="PetNeo" className="h-10" />
+                     <img src="/images/logo.svg" alt="PetNeo" className="h-10" />
                  </div>
 
                  <nav className="flex items-center space-x-4 text-sm font-semibold">
-                     <button
-                         type="button"
-                         className="flex items-center gap-2 bg-yellow-400 rounded-md px-4 py-2 font-semibold shadow hover:bg-yellow-500 transition"
-                     >
-                         <FaExclamationTriangle className="w-6 h-6" />
-                         Emergency
-                     </button>
+                     {/*<button*/}
+                     {/*    type="button"*/}
+                     {/*    className="flex items-center gap-2 bg-yellow-400 rounded-md px-4 py-2 font-semibold shadow hover:bg-yellow-500 transition"*/}
+                     {/*>*/}
+                     {/*    <FaExclamationTriangle className="w-6 h-6" />*/}
+                     {/*    Emergency*/}
+                     {/*</button>*/}
                      <div className="flex items-center space-x-2">
                          <span>Hello,</span>
                          <span className="font-semibold text-pink-600">{user?.name}</span>

@@ -226,61 +226,66 @@ export default function C_PetInfo({ petId, goToMyPets }: C_PetInfoProps) {
         if (petCompleteDetails.profile_picture_file) {
             formData.append("profile_picture", petCompleteDetails.profile_picture_file);
         }
-
-        setLoading(true);
-        let petIdLocal;
-        let isActionSuccess;
-
-        if (petCompleteDetails.petId < 0) {
-            //creating the pet
-            const createPetResponse = await api.formDatapost("/pets/addPet", formData);
-            if (createPetResponse?.success) {
-                isActionSuccess = true;
-                setLoading(false);
-                petIdLocal = createPetResponse?.pet_id;
-            } else if (createPetResponse?.deleted) {
-                setLoading(false);
-                setRecoverMessage(createPetResponse?.message || "");
-                setRecoveredPetId(createPetResponse?.pet_id);
-                setIsRecoverPopupOpen(true);
-                return;
-            } else {
-                //TODO handle error scenario
-                setLoading(false);
-            }
-        } else {
-            //editing an existing pet
-            const editPetResponse = await api.formDataPut(`/pets/updatePet/${petCompleteDetails.petId}`, formData);
-            if (editPetResponse?.success) {
-                isActionSuccess=true;
-                setLoading(false);
-                //assigning the petId
-                petIdLocal = editPetResponse?.pet_id;
-
-            } else {
-                //TODO handle error scenario
-                setLoading(false);
-            }
-        }
-
-        if (!!petIdLocal && isActionSuccess) {
-            //fetch the latest data and assign the required fields
+        try {
             setLoading(true);
-            const petDetailsResponse = await api.get(`/pets/user/${petIdLocal}`);
-            setLoading(false);
-            if (petDetailsResponse?.pet) {
-                //assigning the required fields
-                setPetCompleteDetails({
-                    ...petCompleteDetails,
-                    profile_picture: petDetailsResponse.pet?.profile_picture,
-                    petId: petDetailsResponse.pet?.id
-                });
+            let petIdLocal;
+            let isActionSuccess;
+
+            if (petCompleteDetails.petId < 0) {
+                //creating the pet
+                const createPetResponse = await api.formDatapost("/pets/addPet", formData);
+                if (createPetResponse?.success) {
+                    isActionSuccess = true;
+                    setLoading(false);
+                    petIdLocal = createPetResponse?.pet_id;
+                } else if (createPetResponse?.deleted) {
+                    setLoading(false);
+                    setRecoverMessage(createPetResponse?.message || "");
+                    setRecoveredPetId(createPetResponse?.pet_id);
+                    setIsRecoverPopupOpen(true);
+                    return;
+                } else {
+                    //TODO handle error scenario
+                    setLoading(false);
+                }
             } else {
-                //TODO handle error scenario
+                //editing an existing pet
+                const editPetResponse = await api.formDataPut(`/pets/updatePet/${petCompleteDetails.petId}`, formData);
+                if (editPetResponse?.success) {
+                    isActionSuccess=true;
+                    setLoading(false);
+                    //assigning the petId
+                    petIdLocal = editPetResponse?.pet_id;
+
+                } else {
+                    //TODO handle error scenario
+                    setLoading(false);
+                }
             }
-            //setting the editmode false
-            setIsEditMode(false);
+
+            if (!!petIdLocal && isActionSuccess) {
+                //fetch the latest data and assign the required fields
+                setLoading(true);
+                const petDetailsResponse = await api.get(`/pets/user/${petIdLocal}`);
+                setLoading(false);
+                if (petDetailsResponse?.pet) {
+                    //assigning the required fields
+                    setPetCompleteDetails({
+                        ...petCompleteDetails,
+                        profile_picture: petDetailsResponse.pet?.profile_picture,
+                        petId: petDetailsResponse.pet?.id
+                    });
+                } else {
+                    //TODO handle error scenario
+                }
+                //setting the editmode false
+                setIsEditMode(false);
+            }
+        } catch(e) {
+            //TODO handle error scenario
+            setLoading(false);
         }
+
     };
 
     const onEdit = (): void => {
