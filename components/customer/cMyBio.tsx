@@ -6,6 +6,9 @@ import {FaCamera, FaPen} from "react-icons/fa";
 import FullScreenLoader from "./fullScreenLoader";
 import ConfirmationPopup from "./ConfirmationPopup";
 import router from "next/router";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../common/ErrorBanner";
 
 interface UserBio {
     id?: number;
@@ -20,6 +23,10 @@ interface UserBio {
 export default function C_MyBio() {
 
     const [userBio, setUserBio] = useState<UserBio | null>(null);
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
 
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
@@ -27,7 +34,7 @@ export default function C_MyBio() {
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
-
+            setErrors(removeItemById(errors, "get-my-bio-api"));
             const myBioResponse = api.get(`/user/profile`);
 
             Promise.all([myBioResponse]).then(([res1]) => {
@@ -36,9 +43,16 @@ export default function C_MyBio() {
                     setUserBio(res1);
                 }
                 setLoading(false);
-            }).catch(() => {
+            }).catch((error: any) => {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-my-bio-api',
+                        title: `API Error while getting your profile`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
                 setLoading(false);
-                //TODO error handling.
             });
         }
     }, []);
@@ -85,19 +99,28 @@ export default function C_MyBio() {
             formData.append("profile_picture", userBio.profile_picture_file);
         }
 
-        setLoading(true);
-
-        //editing an existing pet
-        const editPetResponse = await api.formDataPut(`/user/updateProfile`, formData);
-        if (editPetResponse?.success) {
-            setLoading(false);
-        } else {
-            //TODO handle error scenario
+        try{
+            setLoading(true);
+            setErrors(removeItemById(errors, "save-my-bio-api"));
+            //editing an existing user
+            const editUserResponse = await api.formDataPut(`/user/updateProfile`, formData);
+            if (editUserResponse?.success) {
+                setLoading(false);
+            }
+            //setting the editmode false
+            setIsEditMode(false);
+        } catch(error: any) {
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'save-my-bio-api',
+                    title: `API Error while updating your profile`,
+                    message: error.message || 'Unknown error'
+                }
+            ]);
             setLoading(false);
         }
 
-        //setting the editmode false
-        setIsEditMode(false);
     };
 
     const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState<boolean>(false);
@@ -110,7 +133,7 @@ export default function C_MyBio() {
         try {
             //open the loader
             setLoading(true);
-
+            setErrors(removeItemById(errors, "delete-my-account-api"));
             //delete api call
             await api.delete(`/user/deleteAccount`);
 
@@ -124,9 +147,18 @@ export default function C_MyBio() {
             clearAuth();
             if (typeof window !== "undefined") window.location.href = "/login";
             else router.push("/login")
-        } catch(e) {
+        } catch(error: any) {
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'delete-my-account-api',
+                    title: `API Error while deleting your account`,
+                    message: error.message || 'Unknown error'
+                }
+            ]);
             setLoading(false);
-            //TODO error handling
+            //closer the confirmation popup
+            setIsConfirmationPopupOpen(false);
         }
     }
 
@@ -137,6 +169,16 @@ export default function C_MyBio() {
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             <div className="bg-[#eaeaff] min-h-screen flex flex-col items-center pt-8">
                 <form className="w-full max-w-md bg-transparent rounded-lg p-4">
                     {/* User Photo */}
