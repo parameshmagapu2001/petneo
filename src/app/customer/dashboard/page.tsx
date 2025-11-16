@@ -229,7 +229,7 @@ export default function CustomerDashboard()  {
         setSelectedPetId(petId);
         handlePageTypeChange(PageType.PET_INFO);
     }
-    function onDeletePet() {
+    function goToMyPets() {
         handlePageTypeChange(PageType.MY_PETS);
     }
     const viewPetHistory = (petId: number): void => {
@@ -352,7 +352,7 @@ export default function CustomerDashboard()  {
                                                                                    selectedServiceVisitType={selectedServiceVisitType}
                                                                                    selectedServiceId={selectedServiceId}/>}
         {pageType === PageType.MY_PETS && <C_MyPets onViewPetDetails={viewPetDetails} onViewPetHistory={viewPetHistory}/>}
-        {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId} onDeletePet={onDeletePet}/>}
+        {pageType === PageType.PET_INFO && <C_PetInfo petId={selectedPetId} goToMyPets={goToMyPets}/>}
         {pageType === PageType.PET_HISTORY && <C_PetHistory petId={selectedPetId}/>}
         {pageType === PageType.MY_APPOINTMENTS && <C_MyAppointments onPageTypeChange={handlePageTypeChange}/>}
           {pageType === PageType.MY_BIO && <C_MyBio/>}
