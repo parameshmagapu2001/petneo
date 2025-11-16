@@ -3,12 +3,15 @@
 import { Pet } from "@/app/customer/dashboard/page";
 import { PageType } from "@/app/customer/dashboard/constants";
 import { api } from "@/utils/api";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaFilter } from "react-icons/fa";
 import AppointmentStatus, { AppointmentDetails, AppointmentStatusType } from "./appointmentStatus";
 import { VISIT_ID, VISIT_TYPES } from "./cVetAppointmentBooking";
 import DoctorCard from "./doctorCard";
 import FullScreenLoader from "./fullScreenLoader";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../common/ErrorBanner";
 
 interface C_MyAppointmentsProps {
     onPageTypeChange: (pageType: PageType) => void;
@@ -47,12 +50,18 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
 
     const appointmentsToShow = selectedTab === "active" ? activeAppointments : selectedTab === 'completed' ? completedAppointment : cancelledAppointments;
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
             if (!hasFetched.current) {
             hasFetched.current = true;
+            setErrors(removeItemById(errors, "get-my-appointments-api"));
             const userAppointmentDataFetch = api.get("/user/appointment/myAppointments");
             Promise.all([userAppointmentDataFetch]).then(([res1]) => {
                 if (Array.isArray(res1?.appointments)) {
@@ -65,7 +74,15 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
                     setLoading(false);
                 }
             }).catch((error) => {
-                //TODO handle error cases
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-my-appointments-api',
+                        title: `API Error while getting your appointments`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
+                setLoading(false);
             });
         }
     }, []);
@@ -73,20 +90,43 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetails | null>(null);
 
     async function fetchAndSetSelectedAppointmentDetails(app: AppointmentDetails): Promise<void> {
-        setLoading(true);
-        //fetching appointment details
-        // fetching this only for service and clinic details
-        const userAppointmentRes = await api.get(`/user/appointment/${app.id}`);
-        app.service = userAppointmentRes?.service;
-        app.location = userAppointmentRes.visit_type === VISIT_ID.CLINIC_VISIT ? userAppointmentRes?.clinic_location :
-                       userAppointmentRes.visit_type === VISIT_ID.HOME_VISIT ? userAppointmentRes?.Visit_address?.address :
-                       userAppointmentRes.visit_type === VISIT_ID.ONLINE ? "Online" : "";
-        setSelectedAppointment(app);
-        setLoading(false);
+        try {
+            setLoading(true);
+            setErrors(removeItemById(errors, "get-my-appointment-api"));
+            //fetching appointment details
+            // fetching this only for service and clinic details
+            const userAppointmentRes = await api.get(`/user/appointment/${app.id}`);
+            app.service = userAppointmentRes?.service;
+            app.location = userAppointmentRes.visit_type === VISIT_ID.CLINIC_VISIT ? userAppointmentRes?.clinic_location :
+                userAppointmentRes.visit_type === VISIT_ID.HOME_VISIT ? userAppointmentRes?.Visit_address?.address :
+                    userAppointmentRes.visit_type === VISIT_ID.ONLINE ? "Online" : "";
+            setSelectedAppointment(app);
+            setLoading(false);
+        } catch (error: any) {
+            setErrors(curr => [
+                ...curr,
+                {
+                    id: 'get-my-appointment-api',
+                    title: `API Error while getting your appointment selected`,
+                    message: error.message || 'Unknown error'
+                }
+            ]);
+            setLoading(false);
+        }
     }
 
     return (
         <>
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             {!selectedAppointment && 
             <div className="min-h-screen bg-purple-50 px-10 py-6">
                 {/* Tabs and search section */}
@@ -132,6 +172,11 @@ export default function C_MyAppointments({ onPageTypeChange }: C_MyAppointmentsP
                     <FaFilter className="text-pink-500 text-xl" />
                     </div>
                 </div>
+
+                {appointmentsToShow.length === 0 &&
+                    <div className="flex items-center justify-items-center grid grid-cols-1 min-h-30">
+                        <span>No Appointments to show</span>
+                    </div>}
                 {/* Grid of cards */}
                 <div className="grid grid-cols-3 gap-x-6 gap-y-8">
                     {appointmentsToShow.map(app => (

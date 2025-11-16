@@ -11,6 +11,9 @@ import FullScreenLoader from "./fullScreenLoader";
 import DoctorCard from "./doctorCard";
 import router from "next/router";
 import {VISIT_ID} from "./cVetAppointmentBooking";
+import {ErrorAlert} from "@/utils/commonTypes";
+import {removeItemById} from "@/utils/common";
+import {ErrorBanner} from "../common/ErrorBanner";
 
 
 export enum ServiceName {
@@ -100,6 +103,11 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
     onPageTypeChange(PageType.MY_APPOINTMENTS);
     };
 
+    const [errors, setErrors] = useState<ErrorAlert[]>([]);
+    const handleDismiss = (id: string) => {
+        setErrors(curr => curr.filter(e => e.id !== id));
+    };
+
     const [myAppointments, setMyAppointments] = useState<AppointmentDetails[]>([]);
     const hasFetched = useRef(false);
     const [loading, setLoading] = useState<boolean>(true);
@@ -107,6 +115,7 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
     useEffect(() => {
         if (!hasFetched.current) {
             hasFetched.current = true;
+            setErrors(removeItemById(errors, "get-my-appointments-api"));
             const userAppointmentDataFetch = api.get("/user/appointment/myAppointments");
             Promise.all([userAppointmentDataFetch]).then(([res1]) => {
                 if (Array.isArray(res1?.appointments)) {
@@ -116,8 +125,15 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
                     setLoading(false);
                 }
             }).catch((error) => {
+                setErrors(curr => [
+                    ...curr,
+                    {
+                        id: 'get-my-appointments-api',
+                        title: `API Error while getting your appointments`,
+                        message: error.message || 'Unknown error'
+                    }
+                ]);
                 setLoading(false);
-                //TODO handle error cases
                 if (error?.message.includes("403")) {
                     clearAuth();
                     if (typeof window !== "undefined") window.location.href = "/login";
@@ -129,7 +145,16 @@ export default function C_DashboardMain({ user, pets, onViewPetDetails, onPageTy
 
     return (
         <div>
-           
+            {/* Show all visible error banners */}
+            {errors.map(e => (
+                <ErrorBanner
+                    key={e.id}
+                    title={e.title}
+                    message={e.message}
+                    visible={true}
+                    onDismiss={() => handleDismiss(e.id)}
+                />
+            ))}
             {/* Main Content */}
             <div className="px-6 py-6 max-w-7xl mx-auto space-y-10">
                 {/* Greeting & My Pets */}
