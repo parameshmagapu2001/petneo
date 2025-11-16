@@ -186,6 +186,9 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
         if (petCompleteDetails.dob) {
             formData.append("date_of_birth", petCompleteDetails.dob);
         }
+        if (petCompleteDetails.licence) {
+            formData.append("licence", petCompleteDetails.licence);
+        }
         if (petCompleteDetails.weight) {
             formData.append("weight", petCompleteDetails.weight.toString());
         }
@@ -339,6 +342,19 @@ export default function C_PetInfo({ petId }: C_PetInfoProps) {
                         name="weight"
                         value={petCompleteDetails?.weight || ""}
                         placeholder="Enter Pet Weight"
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
+                        disabled={!isEditMode}
+                    />
+                </div>
+                {/*Licence*/}
+                <div className="mb-4 relative">
+                    <label className="block font-semibold mb-1" htmlFor="licence">Licence</label>
+                    <input
+                        type="text"
+                        id="licence"
+                        name="licence"
+                        value={petCompleteDetails?.licence || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-md bg-white focus:outline-none"
                         disabled={!isEditMode}
