@@ -133,6 +133,8 @@ async function request(
       throw new Error(`API error ${res.status}: ${snippet}`);
     } else if (body && (body as any).message) {
       throw new Error((body as any).message);
+    } else if (body && (body as any).detail) {
+        throw new Error((body as any).detail);
     } else {
       throw new Error(`API request failed with status ${res.status}`);
     }
@@ -208,6 +210,8 @@ async function multiPartRequest(
             throw new Error(`API error ${res.status}: ${snippet}`);
         } else if (body && (body as any).message) {
             throw new Error((body as any).message);
+        } else if (body && (body as any).detail) {
+            throw new Error((body as any).detail);
         } else {
             throw new Error(`API request failed with status ${res.status}`);
         }

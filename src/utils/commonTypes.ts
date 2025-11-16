@@ -84,3 +84,9 @@ export interface PartnerPetCompleteDetails {
     vaccinations: PetVaccinationDetails[];
     prescriptions: PetPrescriptionDetails[];
 }
+
+export interface ErrorAlert {
+    id: string; // unique per API call or resource
+    title: string;
+    message: string;
+}
